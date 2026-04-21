@@ -1,4 +1,4 @@
-﻿// lib/features/deadlines/presentation/cubit/deadlines_cubit.dart
+// lib/features/deadlines/presentation/cubit/deadlines_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/deadlines_repository.dart';

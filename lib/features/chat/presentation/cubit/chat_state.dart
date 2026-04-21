@@ -1,4 +1,4 @@
-﻿// lib/features/chat/presentation/cubit/chat_state.dart
+// lib/features/chat/presentation/cubit/chat_state.dart
 part of 'chat_cubit.dart';
 
 abstract class ChatState extends Equatable {

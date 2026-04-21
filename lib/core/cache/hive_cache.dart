@@ -1,4 +1,4 @@
-﻿// lib/core/cache/hive_cache.dart
+// lib/core/cache/hive_cache.dart
 
 import 'package:hive_flutter/hive_flutter.dart';
 

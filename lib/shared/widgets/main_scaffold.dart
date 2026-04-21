@@ -1,4 +1,4 @@
-﻿// lib/shared/widgets/main_scaffold.dart
+// lib/shared/widgets/main_scaffold.dart
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

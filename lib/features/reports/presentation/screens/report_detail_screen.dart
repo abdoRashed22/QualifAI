@@ -1,4 +1,4 @@
-﻿// lib/features/reports/presentation/screens/report_detail_screen.dart
+// lib/features/reports/presentation/screens/report_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -190,7 +190,7 @@ class _ReportDetailView extends StatelessWidget {
                 AppButton(
                   label: 'Ø§Ù„Ø¹ÙˆØ¯Ø© Ø¥Ù„Ù‰ Ø§Ù„Ù…Ù„ÙØ§Øª',
                   variant: AppButtonVariant.ghost,
-                  onPressed: () => context.pop(),
+                  onPressed: () { if (context.canPop()) context.pop(); else context.go(AppRoutes.reports); },
                 ),
               ],
             );

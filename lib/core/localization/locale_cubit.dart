@@ -1,4 +1,4 @@
-﻿// lib/core/localization/locale_cubit.dart
+// lib/core/localization/locale_cubit.dart
 
 import 'dart:ui';
 import 'package:flutter_bloc/flutter_bloc.dart';

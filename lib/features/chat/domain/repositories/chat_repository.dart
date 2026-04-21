@@ -1,4 +1,4 @@
-﻿// lib/features/chat/domain/repositories/chat_repository.dart
+// lib/features/chat/domain/repositories/chat_repository.dart
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 

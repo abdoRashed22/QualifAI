@@ -1,4 +1,4 @@
-﻿// lib/features/admin/presentation/cubit/admin_state.dart
+// lib/features/admin/presentation/cubit/admin_state.dart
 part of 'admin_cubit.dart';
 
 abstract class AdminState extends Equatable {

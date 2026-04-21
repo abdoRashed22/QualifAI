@@ -1,4 +1,4 @@
-﻿// lib/core/errors/failures.dart
+// lib/core/errors/failures.dart
 
 import 'dart:convert';
 import 'package:dio/dio.dart';

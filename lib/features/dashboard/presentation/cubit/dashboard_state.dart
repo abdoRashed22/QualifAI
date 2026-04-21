@@ -1,4 +1,4 @@
-﻿// lib/features/dashboard/presentation/cubit/dashboard_state.dart
+// lib/features/dashboard/presentation/cubit/dashboard_state.dart
 part of 'dashboard_cubit.dart';
 
 class SectionSummary extends Equatable {

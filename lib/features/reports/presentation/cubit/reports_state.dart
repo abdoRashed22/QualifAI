@@ -1,4 +1,4 @@
-﻿// lib/features/reports/presentation/cubit/reports_state.dart
+// lib/features/reports/presentation/cubit/reports_state.dart
 part of 'reports_cubit.dart';
 
 abstract class ReportsState extends Equatable {

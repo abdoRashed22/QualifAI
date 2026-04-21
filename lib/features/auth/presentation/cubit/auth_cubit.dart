@@ -1,4 +1,4 @@
-﻿// lib/features/auth/presentation/cubit/auth_cubit.dart
+// lib/features/auth/presentation/cubit/auth_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../data/models/auth_model.dart';

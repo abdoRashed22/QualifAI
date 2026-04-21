@@ -1,4 +1,4 @@
-﻿# ðŸš€ QualifAI Flutter â€” Complete New Chat Brief
+# ðŸš€ QualifAI Flutter â€” Complete New Chat Brief
 > Ø§Ù„Ù€ brief Ø§Ù„ÙƒØ§Ù…Ù„ Ù„Ù„Ø¨Ø¯Ø¡ ÙÙŠ Ø´Ø§Øª Ø¬Ø¯ÙŠØ¯ Ù†Ø¸ÙŠÙ
 
 ---

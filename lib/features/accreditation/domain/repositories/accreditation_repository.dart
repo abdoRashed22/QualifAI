@@ -1,4 +1,4 @@
-﻿// lib/features/accreditation/domain/repositories/accreditation_repository.dart
+// lib/features/accreditation/domain/repositories/accreditation_repository.dart
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';

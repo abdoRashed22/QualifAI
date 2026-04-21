@@ -1,4 +1,4 @@
-﻿// lib/core/di/injection.dart
+// lib/core/di/injection.dart
 
 import 'package:get_it/get_it.dart';
 import '../api/dio_client.dart';

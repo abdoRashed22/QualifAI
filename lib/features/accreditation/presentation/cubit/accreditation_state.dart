@@ -1,4 +1,4 @@
-﻿// lib/features/accreditation/presentation/cubit/accreditation_state.dart
+// lib/features/accreditation/presentation/cubit/accreditation_state.dart
 part of 'accreditation_cubit.dart';
 
 abstract class AccreditationState extends Equatable {

@@ -1,4 +1,4 @@
-﻿// lib/features/chat/presentation/cubit/chat_cubit.dart
+// lib/features/chat/presentation/cubit/chat_cubit.dart
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';

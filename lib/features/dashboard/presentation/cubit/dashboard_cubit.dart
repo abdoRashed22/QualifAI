@@ -1,4 +1,4 @@
-﻿// lib/features/dashboard/presentation/cubit/dashboard_cubit.dart
+// lib/features/dashboard/presentation/cubit/dashboard_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/dashboard_repository.dart';
@@ -19,15 +19,24 @@ class DashboardCubit extends Cubit<DashboardState> {
         List<SectionSummary> summaries = [];
         if (sections is List) {
           summaries = sections.map<SectionSummary>((s) {
-            final uploaded = (s['uploadedDocuments'] ?? 0) as int;
-            final required = (s['requiredDocumentsCount'] ?? 1) as int;
-            final pct = required > 0 ? (uploaded / required) : 0.0;
+            // Handle BOTH possible field names from API
+            final id = s['sectionId'] ?? s['id'] ?? 0;
+            final name = s['sectionName'] ?? s['name'] ?? '';
+            final uploaded = s['completedDocs'] ?? s['uploadedDocuments'] ?? 0;
+            final total = s['totalDocs'] ?? s['requiredDocumentsCount'] ?? 1;
+            // Use completionPercentage if available, otherwise calculate
+            double pct;
+            if (s['completionPercentage'] != null) {
+              pct = (s['completionPercentage'] as num).toDouble() / 100.0;
+            } else {
+              pct = total > 0 ? (uploaded / total).toDouble() : 0.0;
+            }
             return SectionSummary(
-              id: s['id'] ?? 0,
-              name: s['name'] ?? '',
-              uploadedDocs: uploaded,
-              requiredDocs: required,
-              completionPercent: pct.toDouble().clamp(0.0, 1.0),
+              id: id is int ? id : int.tryParse(id.toString()) ?? 0,
+              name: name.toString(),
+              uploadedDocs: uploaded is int ? uploaded : int.tryParse(uploaded.toString()) ?? 0,
+              requiredDocs: total is int ? total : int.tryParse(total.toString()) ?? 1,
+              completionPercent: pct.clamp(0.0, 1.0),
             );
           }).toList();
         }

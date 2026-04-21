@@ -1,4 +1,4 @@
-﻿// lib/features/deadlines/presentation/cubit/deadlines_state.dart
+// lib/features/deadlines/presentation/cubit/deadlines_state.dart
 part of 'deadlines_cubit.dart';
 
 abstract class DeadlinesState extends Equatable {

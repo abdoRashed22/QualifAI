@@ -1,4 +1,4 @@
-﻿// lib/features/accreditation/presentation/screens/file_upload_screen.dart
+// lib/features/accreditation/presentation/screens/file_upload_screen.dart
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +49,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            context.pop();
+            if (context.canPop()) context.pop(); else context.go(AppRoutes.accreditation);
           }
           if (state is AccreditationError) {
             ScaffoldMessenger.of(ctx).showSnackBar(

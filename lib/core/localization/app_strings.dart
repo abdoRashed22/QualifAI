@@ -1,4 +1,4 @@
-﻿// lib/core/localization/app_strings.dart
+// lib/core/localization/app_strings.dart
 
 class AppStrings {
   // â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
