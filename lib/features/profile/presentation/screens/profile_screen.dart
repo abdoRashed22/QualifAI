@@ -1,4 +1,4 @@
-// lib/features/profile/presentation/screens/profile_screen.dart
+﻿// lib/features/profile/presentation/screens/profile_screen.dart
 
 import 'package:flutter/material.dart';
 
@@ -747,58 +747,43 @@ class _ProfileViewState extends State<_ProfileView> {
 
 
 
-  void _showLogoutDialog(BuildContext context) {
-
-    showDialog(
-
-      context: context,
-
-      builder: (_) => AlertDialog(
-
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-
-        title: const Text('تسجيل الخروج', textAlign: TextAlign.right),
-
-        content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟', textAlign: TextAlign.right),
-
-        actions: [
-
-          TextButton(
-
-            onPressed: () => Navigator.pop(context),
-
-            child: const Text('إلغاء'),
-
-          ),
-
-          ElevatedButton(
-
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-
-            onPressed: () {
-
-              Navigator.pop(context);
-
-              sl<HiveCache>().clearAll();
-
-              context.go(AppRoutes.login);
-
-            },
-
-            child: const Text('تسجيل الخروج', style: TextStyle(color: Colors.white)),
-
-          ),
-
-        ],
-
-      ),
-
-    );
-
-  }
-
-
-
+void _showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+      title: const Text('تسجيل الخروج', textAlign: TextAlign.right),
+      content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟', textAlign: TextAlign.right),
+      actions: [
+        TextButton(
+          // ✅ استخدم dialogContext مش context
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text('إلغاء'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+          onPressed: () async {
+            // ✅ أغلق الـ dialog باستخدام dialogContext
+            Navigator.of(dialogContext).pop();
+            
+            // ✅ امسح الكاش
+            await sl<HiveCache>().clearAll();
+            
+            // ✅ استنى frame جديد
+            await Future.delayed(Duration.zero);
+            
+            // ✅ تأكد إن الـ context الأصلي لسه شغال
+            if (!context.mounted) return;
+            
+            // ✅ روح على Login
+            context.go(AppRoutes.login);
+          },
+          child: const Text('تسجيل الخروج', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+}
   String _roleLabel(String role) {
 
     switch (role) {
