@@ -177,7 +177,7 @@ class ErrorRetry extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©'),
+              label: const Text('إعادة المحاولة'),
             ),
           ],
         ),

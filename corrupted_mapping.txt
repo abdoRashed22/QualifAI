@@ -1,6 +1,2 @@
 mapping = {
-    'Ø¥Ø´Ø¹Ø§Ø±': 'إشعار',
-    'Ø¥Ø¶Ø§Ù\x81Ø©': 'إضافة',
-    'Ø\xadØ¯Ø« Ø®Ø·Ø£ (${response.statusCode})': 'حدث خطأ (${response.statusCode})',
-    'Ø\xadÙ\x81Ø¸': 'حفظ',
 }

@@ -1,4 +1,5 @@
 // lib/features/admin/presentation/screens/admin_dashboard_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -12,14 +13,15 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _AdminItem(icon: Icons.people_outline, label: 'Ø§Ù„Ù…ÙˆØ¸ÙÙˆÙ†', color: AppColors.blue, route: AppRoutes.employees),
-      _AdminItem(icon: Icons.security_outlined, label: 'Ø§Ù„Ø£Ø¯ÙˆØ§Ø± ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª', color: AppColors.adminColor, route: AppRoutes.roles),
-      _AdminItem(icon: Icons.school_outlined, label: 'Ø§Ù„ÙƒÙ„ÙŠØ§Øª', color: AppColors.success, route: AppRoutes.colleges),
-      _AdminItem(icon: Icons.monetization_on_outlined, label: 'Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ÙˆØ§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª', color: AppColors.warning, route: AppRoutes.pricing),
-      _AdminItem(icon: Icons.history_outlined, label: 'Ø³Ø¬Ù„ Ø§Ù„Ø£Ù†Ø´Ø·Ø©', color: AppColors.navyBlue, route: AppRoutes.activityLog),
+      const _AdminItem(icon: Icons.people_outline,        label: 'الموظفون',               color: AppColors.blue,       route: AppRoutes.employees),
+      const _AdminItem(icon: Icons.security_outlined,     label: 'الأدوار والصلاحيات',     color: AppColors.adminColor, route: AppRoutes.roles),
+      const _AdminItem(icon: Icons.school_outlined,       label: 'الكليات',                color: AppColors.success,    route: AppRoutes.colleges),
+      const _AdminItem(icon: Icons.monetization_on_outlined, label: 'الأسعار والاشتراكات', color: AppColors.warning,    route: AppRoutes.pricing),
+      const _AdminItem(icon: Icons.history_outlined,      label: 'سجل الأنشطة',            color: AppColors.navyBlue,   route: AppRoutes.activityLog),
     ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… Ø§Ù„Ù…Ø¯ÙŠØ±')),
+      appBar: AppBar(title: const Text('لوحة تحكم المدير')),
       body: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -27,18 +29,27 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             Container(
               padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(color: AppColors.navyBlue, borderRadius: BorderRadius.circular(16.r)),
+              decoration: BoxDecoration(
+                color: AppColors.navyBlue,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
               child: Row(children: [
-                Text('ðŸ›¡', style: TextStyle(fontSize: 36.sp)),
+                Text('🛡', style: TextStyle(fontSize: 36.sp)),
                 SizedBox(width: 16.w),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('System Admin', style: TextStyle(fontFamily: 'Cairo', fontSize: 16.sp, fontWeight: FontWeight.w700, color: Colors.white)),
-                  Text('ØµÙ„Ø§Ø­ÙŠØ§Øª ÙƒØ§Ù…Ù„Ø©', style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: Colors.white60)),
+                  Text(
+                    'System Admin',
+                    style: TextStyle(fontFamily: 'Cairo', fontSize: 16.sp, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  Text(
+                    'صلاحيات كاملة',
+                    style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: Colors.white60),
+                  ),
                 ]),
               ]),
             ),
             SizedBox(height: 20.h),
-            Text('Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©', style: Theme.of(context).textTheme.titleMedium),
+            Text('الإدارة', style: Theme.of(context).textTheme.titleMedium),
             SizedBox(height: 12.h),
             Expanded(
               child: GridView.count(
@@ -51,7 +62,11 @@ class AdminDashboardScreen extends StatelessWidget {
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Icon(item.icon, size: 32.sp, color: item.color),
                     SizedBox(height: 8.h),
-                    Text(item.label, style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
+                    Text(
+                      item.label,
+                      style: TextStyle(fontFamily: 'Cairo', fontSize: 13.sp, fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
+                    ),
                   ]),
                 )).toList(),
               ),
@@ -63,6 +78,9 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 }
 
-class _AdminItem { final IconData icon; final String label, route; final Color color;
+class _AdminItem {
+  final IconData icon;
+  final String label, route;
+  final Color color;
   const _AdminItem({required this.icon, required this.label, required this.color, required this.route});
 }

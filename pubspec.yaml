@@ -1,4 +1,4 @@
-name: qualif_ai
+﻿name: qualif_ai
 description: QualifAI â€” Academic Quality Management & Accreditation System
 publish_to: 'none'
 version: 1.0.0+1
@@ -53,7 +53,7 @@ dependencies:
   path_provider: ^2.1.4
 
   # Utils
-  intl: ^0.19.0
+  intl: 
   connectivity_plus: ^6.0.5
   jwt_decoder: ^2.0.1
   image_picker: ^1.1.2

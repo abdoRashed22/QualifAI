@@ -1,4 +1,5 @@
 // lib/features/chat/presentation/screens/chat_list_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,14 +17,14 @@ class ChatListScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => sl<ChatCubit>()..loadColleges(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª')),
+        appBar: AppBar(title: const Text('المحادثات')),
         body: BlocBuilder<ChatCubit, ChatState>(
           builder: (ctx, state) {
             if (state is ChatLoading) return const Center(child: CircularProgressIndicator());
             if (state is ChatError) return Center(child: Text(state.message));
             if (state is CollegesLoaded) {
               if (state.colleges.isEmpty) {
-                return const Center(child: Text('Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø­Ø§Ø¯Ø«Ø§Øª'));
+                return const Center(child: Text('لا توجد محادثات'));
               }
               return ListView.separated(
                 padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -31,7 +32,7 @@ class ChatListScreen extends StatelessWidget {
                 separatorBuilder: (_, __) => Divider(height: 0.5.h, thickness: 0.5),
                 itemBuilder: (_, i) {
                   final c = state.colleges[i] as Map<String, dynamic>? ?? {};
-                  final name = c['collegeName'] ?? c['name'] ?? 'ÙƒÙ„ÙŠØ© ${i + 1}';
+                  final name = c['collegeName'] ?? c['name'] ?? 'كلية ${i + 1}';
                   final unread = (c['unreadCount'] ?? 0) as int;
                   return ListTile(
                     onTap: () => context.push(
@@ -40,13 +41,21 @@ class ChatListScreen extends StatelessWidget {
                     trailing: CircleAvatar(
                       backgroundColor: AppColors.blue.withOpacity(0.15),
                       child: Text(
-                        name.isNotEmpty ? name[0] : 'Ùƒ',
-                        style: const TextStyle(fontFamily: 'Cairo', color: AppColors.blue, fontWeight: FontWeight.w700),
+                        name.isNotEmpty ? name[0] : 'ك',
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          color: AppColors.blue,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    title: Text(name, style: const TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w600), textAlign: TextAlign.right),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.right,
+                    ),
                     subtitle: Text(
-                      c['lastMessage'] ?? 'Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©',
+                      c['lastMessage'] ?? 'ابدأ المحادثة',
                       style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp),
                       textAlign: TextAlign.right,
                       maxLines: 1,
@@ -60,7 +69,12 @@ class ChatListScreen extends StatelessWidget {
                             child: Center(
                               child: Text(
                                 '$unread',
-                                style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: Colors.white, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11.sp,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           )

@@ -1,4 +1,3 @@
-// lib/features/dashboard/presentation/screens/dashboard_screen.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,13 +10,31 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../cubit/dashboard_cubit.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final DashboardCubit _cubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = sl<DashboardCubit>();
+    // Only load if not already loaded (avoids reload on every tab switch)
+    if (_cubit.state is DashboardInitial) {
+      _cubit.load();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<DashboardCubit>()..load(),
+    // BlocProvider.value does NOT close the cubit when widget disposes
+    return BlocProvider.value(
+      value: _cubit,
       child: const _DashboardView(),
     );
   }
@@ -29,12 +46,12 @@ class _DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userData = sl<HiveCache>().getUserData();
-    final firstName = userData?['firstName'] ?? 'Ù…Ø³ØªØ®Ø¯Ù…';
+    final firstName = userData?['firstName'] ?? 'مستخدم';
     final role = sl<HiveCache>().getRole() ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©'),
+        title: const Text('الرئيسية'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -56,7 +73,7 @@ class _DashboardView extends StatelessWidget {
                   SizedBox(height: 16.h),
                   OutlinedButton(
                     onPressed: () => ctx.read<DashboardCubit>().load(),
-                    child: const Text('Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©'),
+                    child: const Text('إعادة المحاولة'),
                   ),
                 ],
               ),
@@ -73,7 +90,7 @@ class _DashboardView extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               children: [
-                // â”€â”€ Welcome Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Welcome Card ──────────────────────────
                 Container(
                   padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
@@ -87,7 +104,7 @@ class _DashboardView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'Ù…Ø±Ø­Ø¨Ø§Ù‹ØŒ $firstName ðŸ‘‹',
+                              'مرحباً، $firstName 👋',
                               style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 18.sp,
@@ -106,7 +123,7 @@ class _DashboardView extends StatelessWidget {
                             ),
                             SizedBox(height: 8.h),
                             Text(
-                              'Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: Ø§Ù„ÙŠÙˆÙ…',
+                              'آخر تحديث: اليوم',
                               style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 11.sp,
@@ -117,18 +134,18 @@ class _DashboardView extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 16.w),
-                      Text('ðŸ¤–', style: TextStyle(fontSize: 44.sp)),
+                      Text('🤖', style: TextStyle(fontSize: 44.sp)),
                     ],
                   ),
                 ),
                 SizedBox(height: 16.h),
 
-                // â”€â”€ Stats Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Stats Row ─────────────────────────────
                 Row(
                   children: [
                     Expanded(
                       child: _StatCard(
-                        label: 'Ø¯Ø±Ø¬Ø© Ø§Ù„Ø§ÙƒØªÙ…Ø§Ù„',
+                        label: 'درجة الاكتمال',
                         value: '${(overallPct * 100).round()}%',
                         color: _pctColor(overallPct),
                       ),
@@ -136,7 +153,7 @@ class _DashboardView extends StatelessWidget {
                     SizedBox(width: 10.w),
                     Expanded(
                       child: _StatCard(
-                        label: 'Ø§Ù„Ù…Ù„ÙØ§Øª Ø§Ù„Ù…Ø±ÙÙˆØ¹Ø©',
+                        label: 'الملفات المرفوعة',
                         value: '$totalUploaded',
                         color: AppColors.blue,
                       ),
@@ -144,7 +161,7 @@ class _DashboardView extends StatelessWidget {
                     SizedBox(width: 10.w),
                     Expanded(
                       child: _StatCard(
-                        label: 'Ø§Ù„Ù…Ø¹Ø§ÙŠÙŠØ±',
+                        label: 'المعايير',
                         value: '${sections.length}',
                         color: AppColors.warning,
                       ),
@@ -153,13 +170,14 @@ class _DashboardView extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
 
-                // â”€â”€ Chart Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Chart Card ────────────────────────────
                 if (sections.isNotEmpty) ...[
                   AppCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Ø§Ù„Ø§Ù…ØªØ«Ø§Ù„ Ù„Ù„Ù…Ø¹Ø§ÙŠÙŠØ±', style: Theme.of(context).textTheme.titleMedium),
+                        Text('الامتثال للمعايير',
+                            style: Theme.of(context).textTheme.titleMedium),
                         SizedBox(height: 16.h),
                         SizedBox(
                           height: 180.h,
@@ -175,7 +193,9 @@ class _DashboardView extends StatelessWidget {
                                     showTitles: true,
                                     getTitlesWidget: (val, meta) {
                                       final i = val.toInt();
-                                      if (i >= sections.length) return const SizedBox();
+                                      if (i >= sections.length) {
+                                        return const SizedBox();
+                                      }
                                       return Padding(
                                         padding: EdgeInsets.only(top: 4.h),
                                         child: Text(
@@ -186,9 +206,15 @@ class _DashboardView extends StatelessWidget {
                                     },
                                   ),
                                 ),
-                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                leftTitles: const AxisTitles(
+                                    sideTitles:
+                                        SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(
+                                    sideTitles:
+                                        SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(
+                                    sideTitles:
+                                        SideTitles(showTitles: false)),
                               ),
                               gridData: FlGridData(
                                 drawVerticalLine: false,
@@ -198,16 +224,20 @@ class _DashboardView extends StatelessWidget {
                                 ),
                               ),
                               borderData: FlBorderData(show: false),
-                              barGroups: sections.asMap().entries.map((e) {
-                                final pct = (e.value.completionPercent * 100);
+                              barGroups:
+                                  sections.asMap().entries.map((e) {
+                                final pct =
+                                    (e.value.completionPercent * 100);
                                 return BarChartGroupData(
                                   x: e.key,
                                   barRods: [
                                     BarChartRodData(
                                       toY: pct,
-                                      color: _pctColor(e.value.completionPercent),
+                                      color: _pctColor(
+                                          e.value.completionPercent),
                                       width: 20.w,
-                                      borderRadius: BorderRadius.vertical(top: Radius.circular(4.r)),
+                                      borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(4.r)),
                                     ),
                                   ],
                                 );
@@ -221,20 +251,21 @@ class _DashboardView extends StatelessWidget {
                   SizedBox(height: 16.h),
                 ],
 
-                // â”€â”€ Standards List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── Standards List ────────────────────────
                 AppCard(
                   padding: EdgeInsets.all(16.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('Ø§Ù„Ù…Ø¹Ø§ÙŠÙŠØ±', style: Theme.of(context).textTheme.titleMedium),
+                      Text('المعايير',
+                          style: Theme.of(context).textTheme.titleMedium),
                       SizedBox(height: 12.h),
                       if (sections.isEmpty)
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 20.h),
                           child: Center(
                             child: Text(
-                              'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª',
+                              'لا توجد بيانات',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
@@ -254,11 +285,16 @@ class _DashboardView extends StatelessWidget {
 
   String _roleLabel(String role) {
     switch (role) {
-      case 'system_admin': return 'Ù…Ø¯ÙŠØ± Ø§Ù„Ù†Ø¸Ø§Ù…';
-      case 'quality_manager': return 'Ù…Ø¯ÙŠØ±Ø© Ø§Ù„Ø¬ÙˆØ¯Ø©';
-      case 'quality_employee': return 'Ù…ÙˆØ¸Ù Ø§Ù„Ø¬ÙˆØ¯Ø©';
-      case 'reviewer': return 'Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹';
-      default: return role;
+      case 'system_admin':
+        return 'مدير النظام';
+      case 'quality_manager':
+        return 'مديرة الجودة';
+      case 'quality_employee':
+        return 'موظف الجودة';
+      case 'reviewer':
+        return 'المراجع';
+      default:
+        return role;
     }
   }
 
@@ -274,7 +310,8 @@ class _StatCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatCard({required this.label, required this.value, required this.color});
+  const _StatCard(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +350,11 @@ class _StandardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = section.completionPercent;
-    final color = pct >= 0.7 ? AppColors.success : pct >= 0.4 ? AppColors.warning : AppColors.error;
+    final color = pct >= 0.7
+        ? AppColors.success
+        : pct >= 0.4
+            ? AppColors.warning
+            : AppColors.error;
 
     return Padding(
       padding: EdgeInsets.only(bottom: 14.h),
@@ -332,7 +373,8 @@ class _StandardRow extends StatelessWidget {
                   color: color,
                 ),
               ),
-              Text(section.name, style: Theme.of(context).textTheme.bodyMedium),
+              Text(section.name,
+                  style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
           SizedBox(height: 6.h),

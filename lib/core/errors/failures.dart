@@ -14,16 +14,16 @@ class ServerFailure extends Failure {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure() : super('Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª');
+  const NetworkFailure() : super('لا يوجد اتصال بالإنترنت');
 }
 
 class CacheFailure extends Failure {
-  const CacheFailure() : super('Ø®Ø·Ø£ ÙÙŠ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø­Ù„ÙŠØ©');
+  const CacheFailure() : super('خطأ في قاعدة البيانات المحلية');
 }
 
 class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure()
-      : super('Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¯Ø®ÙˆÙ„ ØºÙŠØ± ØµØ­ÙŠØ­Ø©ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø¬Ø¯Ø¯Ø§Ù‹');
+      : super('بيانات الدخول غير صحيحة، يرجى المحاولة مجدداً');
 }
 
 class ValidationFailure extends Failure {
@@ -31,7 +31,7 @@ class ValidationFailure extends Failure {
 }
 
 class UnknownFailure extends Failure {
-  const UnknownFailure() : super('Ø­Ø¯Ø« Ø®Ø·Ø£ ØºÙŠØ± Ù…ØªÙˆÙ‚Ø¹');
+  const UnknownFailure() : super('حدث خطأ غير متوقع');
 }
 
 Failure dioToFailure(DioException e) {
@@ -51,7 +51,7 @@ Failure dioToFailure(DioException e) {
 }
 
 String _extractMessage(Response? response) {
-  if (response == null) return 'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø®Ø§Ø¯Ù…';
+  if (response == null) return 'حدث خطأ في الخادم';
   try {
     dynamic data = response.data;
     if (data is List<int>) {
@@ -61,7 +61,7 @@ String _extractMessage(Response? response) {
       if (data.trim().startsWith('{') || data.trim().startsWith('[')) {
         data = jsonDecode(data);
       } else {
-        return data.isNotEmpty ? data : 'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø®Ø§Ø¯Ù…';
+        return data.isNotEmpty ? data : 'حدث خطأ في الخادم';
       }
     }
     if (data is Map) {
@@ -77,5 +77,5 @@ String _extractMessage(Response? response) {
       }
     }
   } catch (_) {}
-  return 'Ø­Ø¯Ø« Ø®Ø·Ø£ (${response.statusCode})';
+  return 'حدث خطأ (${response.statusCode})';
 }

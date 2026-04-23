@@ -1,5 +1,3 @@
-// lib/core/di/injection.dart
-
 import 'package:get_it/get_it.dart';
 import '../api/dio_client.dart';
 import '../cache/hive_cache.dart';
@@ -55,7 +53,7 @@ import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
 final sl = GetIt.instance;
 
 Future<void> setupDI() async {
-  // â”€â”€ Core â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Core ──────────────────────────────────────────
   final cache = HiveCache();
   await cache.init();
   sl.registerSingleton<HiveCache>(cache);
@@ -65,7 +63,7 @@ Future<void> setupDI() async {
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl<HiveCache>()));
   sl.registerFactory<LocaleCubit>(() => LocaleCubit(sl<HiveCache>()));
 
-  // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Auth ──────────────────────────────────────────
   sl.registerLazySingleton<AuthRemoteDs>(
     () => AuthRemoteDs(sl<DioClient>().dio),
   );
@@ -74,18 +72,19 @@ Future<void> setupDI() async {
   );
   sl.registerFactory<AuthCubit>(() => AuthCubit(sl<AuthRepository>()));
 
-  // â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Dashboard ─────────────────────────────────────
   sl.registerLazySingleton<DashboardRemoteDs>(
     () => DashboardRemoteDs(sl<DioClient>().dio),
   );
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(sl<DashboardRemoteDs>()),
   );
-  sl.registerFactory<DashboardCubit>(
+  // ✅ lazySingleton so the same cubit instance is reused across tab switches
+  sl.registerLazySingleton<DashboardCubit>(
     () => DashboardCubit(sl<DashboardRepository>()),
   );
 
-  // â”€â”€ Accreditation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Accreditation ─────────────────────────────────
   sl.registerLazySingleton<AccreditationRemoteDs>(
     () => AccreditationRemoteDs(sl<DioClient>().dio),
   );
@@ -96,7 +95,7 @@ Future<void> setupDI() async {
     () => AccreditationCubit(sl<AccreditationRepository>()),
   );
 
-  // â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Notifications ─────────────────────────────────
   sl.registerLazySingleton<NotificationRemoteDs>(
     () => NotificationRemoteDs(sl<DioClient>().dio),
   );
@@ -107,7 +106,7 @@ Future<void> setupDI() async {
     () => NotificationCubit(sl<NotificationRepository>()),
   );
 
-  // â”€â”€ Deadlines â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Deadlines ─────────────────────────────────────
   sl.registerLazySingleton<DeadlinesRemoteDs>(
     () => DeadlinesRemoteDs(sl<DioClient>().dio),
   );
@@ -118,7 +117,7 @@ Future<void> setupDI() async {
     () => DeadlinesCubit(sl<DeadlinesRepository>()),
   );
 
-  // â”€â”€ Chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Chat ──────────────────────────────────────────
   sl.registerLazySingleton<ChatRemoteDs>(
     () => ChatRemoteDs(sl<DioClient>().dio),
   );
@@ -127,25 +126,27 @@ Future<void> setupDI() async {
   );
   sl.registerFactory<ChatCubit>(() => ChatCubit(sl<ChatRepository>()));
 
-  // â”€â”€ Reports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Reports ───────────────────────────────────────
   sl.registerLazySingleton<ReportsRemoteDs>(
     () => ReportsRemoteDs(sl<DioClient>().dio),
   );
   sl.registerLazySingleton<ReportsRepository>(
     () => ReportsRepositoryImpl(sl<ReportsRemoteDs>()),
   );
-  sl.registerFactory<ReportsCubit>(() => ReportsCubit(sl<ReportsRepository>()));
+  sl.registerFactory<ReportsCubit>(
+      () => ReportsCubit(sl<ReportsRepository>()));
 
-  // â”€â”€ Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Profile ───────────────────────────────────────
   sl.registerLazySingleton<ProfileRemoteDs>(
     () => ProfileRemoteDs(sl<DioClient>().dio),
   );
   sl.registerLazySingleton<ProfileRepository>(
     () => ProfileRepositoryImpl(sl<ProfileRemoteDs>()),
   );
-  sl.registerFactory<ProfileCubit>(() => ProfileCubit(sl<ProfileRepository>()));
+  sl.registerFactory<ProfileCubit>(
+      () => ProfileCubit(sl<ProfileRepository>()));
 
-  // â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Admin ─────────────────────────────────────────
   sl.registerLazySingleton<AdminRemoteDs>(
     () => AdminRemoteDs(sl<DioClient>().dio),
   );

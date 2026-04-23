@@ -1,4 +1,5 @@
 // lib/features/admin/presentation/cubit/admin_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/admin_repository.dart';
@@ -18,13 +19,19 @@ class AdminCubit extends Cubit<AdminState> {
   Future<void> createEmployee(Map<String, dynamic> data) async {
     emit(AdminActionLoading());
     final r = await _repo.createEmployee(data);
-    r.fold((f) => emit(AdminError(f.message)), (_) { emit(const AdminActionSuccess('ØªÙ… Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…ÙˆØ¸Ù')); loadEmployees(); });
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) { emit(const AdminActionSuccess('تم إضافة الموظف')); loadEmployees(); },
+    );
   }
 
   Future<void> deleteEmployee(int id) async {
     emit(AdminActionLoading());
     final r = await _repo.deleteEmployee(id);
-    r.fold((f) => emit(AdminError(f.message)), (_) { emit(const AdminActionSuccess('ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…ÙˆØ¸Ù')); loadEmployees(); });
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) { emit(const AdminActionSuccess('تم حذف الموظف')); loadEmployees(); },
+    );
   }
 
   Future<void> loadRoles() async {
@@ -34,7 +41,7 @@ class AdminCubit extends Cubit<AdminState> {
     rolesR.fold(
       (f) => emit(AdminError(f.message)),
       (roles) => permsR.fold(
-        (f) => emit(RolesLoaded(roles, [])),
+        (f) => emit(RolesLoaded(roles, const [])),
         (perms) => emit(RolesLoaded(roles, perms)),
       ),
     );
@@ -43,13 +50,19 @@ class AdminCubit extends Cubit<AdminState> {
   Future<void> createRole(String name, String desc) async {
     emit(AdminActionLoading());
     final r = await _repo.createRole(name, desc);
-    r.fold((f) => emit(AdminError(f.message)), (_) { emit(const AdminActionSuccess('ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø¯ÙˆØ±')); loadRoles(); });
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) { emit(const AdminActionSuccess('تم إنشاء الدور')); loadRoles(); },
+    );
   }
 
   Future<void> deleteRole(int id) async {
     emit(AdminActionLoading());
     final r = await _repo.deleteRole(id);
-    r.fold((f) => emit(AdminError(f.message)), (_) { emit(const AdminActionSuccess('ØªÙ… Ø­Ø°Ù Ø§Ù„Ø¯ÙˆØ±')); loadRoles(); });
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) { emit(const AdminActionSuccess('تم حذف الدور')); loadRoles(); },
+    );
   }
 
   Future<void> loadColleges() async {
@@ -61,7 +74,10 @@ class AdminCubit extends Cubit<AdminState> {
   Future<void> deleteCollege(int id) async {
     emit(AdminActionLoading());
     final r = await _repo.deleteCollege(id);
-    r.fold((f) => emit(AdminError(f.message)), (_) { emit(const AdminActionSuccess('ØªÙ… Ø­Ø°Ù Ø§Ù„ÙƒÙ„ÙŠØ©')); loadColleges(); });
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) { emit(const AdminActionSuccess('تم حذف الكلية')); loadColleges(); },
+    );
   }
 
   Future<void> loadPlans() async {
