@@ -18,6 +18,9 @@ class AdminDashboardScreen extends StatelessWidget {
       const _AdminItem(icon: Icons.school_outlined,       label: 'الكليات',                color: AppColors.success,    route: AppRoutes.colleges),
       const _AdminItem(icon: Icons.monetization_on_outlined, label: 'الأسعار والاشتراكات', color: AppColors.warning,    route: AppRoutes.pricing),
       const _AdminItem(icon: Icons.history_outlined,      label: 'سجل الأنشطة',            color: AppColors.navyBlue,   route: AppRoutes.activityLog),
+      // i want to add a settings page for the admin to change system settings like the logo and the name of the system and other settings and logout option such as in manger screen
+      const _AdminItem(icon: Icons.settings_outlined,    label: 'الإعدادات',              color: AppColors.info,       route: AppRoutes.profile),
+
     ];
 
     return Scaffold(

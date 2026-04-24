@@ -113,24 +113,42 @@ GoRouter buildRouter(HiveCache cache) {
   return GoRouter(
 
     initialLocation: AppRoutes.splash,
+redirect: (context, state) {
+  final isLoggedIn = cache.isLoggedIn;
+  final path = state.matchedLocation;
 
-    redirect: (context, state) {
+  final isAuthRoute = path == AppRoutes.login ||
+      path == AppRoutes.forgotPassword ||
+      path == AppRoutes.splash;
 
-      final isLoggedIn = cache.isLoggedIn;
+  if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
 
-      final isAuthRoute = state.matchedLocation == AppRoutes.login ||
+  if (isLoggedIn && !isAuthRoute) {
+    final role = (cache.getRole() ?? '').toLowerCase();
 
-          state.matchedLocation == AppRoutes.forgotPassword ||
+    // 🔥 دعم كل الحالات
+    final isAdmin =
+        role == 'system_admin' || role == 'admin' || role == '1';
 
-          state.matchedLocation == AppRoutes.splash;
+    final isEmployee =
+        role == 'employee' || role == '2';
 
+    final isQualityManager =
+        role == 'quality_manager' || role == '3';
 
+    // 🔐 حماية Routes
+    if (path.startsWith('/admin') && !isAdmin) {
+      return AppRoutes.dashboard;
+    }
 
-      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
+    // 🔥 أهم سطر
+    if (path == AppRoutes.dashboard) {
+      if (isAdmin) return AppRoutes.adminDashboard;
+    }
+  }
 
-      return null;
-
-    },
+  return null;
+},
 
     routes: [
 
