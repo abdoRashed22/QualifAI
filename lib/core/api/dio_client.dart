@@ -40,9 +40,9 @@ class DioClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          // ✅ Ensure Content-Type (except FormData)
+          // ✅ Ensure Content-Type with charset (except FormData)
           if (options.contentType == null && options.data is! FormData) {
-            options.contentType = 'application/json';
+            options.contentType = 'application/json; charset=utf-8';
           }
 
           print('📤 [REQUEST] ${options.method} ${options.path}');
