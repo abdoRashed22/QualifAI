@@ -1,8 +1,8 @@
-import 'dart:io';
+// lib/features/accreditation/data/remote/accreditation_remote_ds.dart
 
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
-
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/errors/failures.dart';
 
@@ -30,7 +30,15 @@ class AccreditationRemoteDs {
     }
   }
 
-  Future<Map<String, dynamic>> uploadDocument(int reqDocId, File file) async {
+  Future<Map<String, dynamic>> uploadDocument(
+    int reqDocId,
+    File file,
+  ) async {
+    // ✅ مهم جدًا (ماينفعش يتشال)
+    if (!await file.exists()) {
+      throw const ServerFailure('الملف غير موجود، يرجى اختياره مجدداً');
+    }
+
     try {
       final fileName = file.path.split('/').last;
       final ext = fileName.split('.').last.toLowerCase();
@@ -38,14 +46,12 @@ class AccreditationRemoteDs {
       final contentType = switch (ext) {
         'pdf' => MediaType('application', 'pdf'),
         'doc' => MediaType('application', 'msword'),
-        'docx' => MediaType(
-            'application',
+        'docx' => MediaType('application',
             'vnd.openxmlformats-officedocument.wordprocessingml.document'),
         _ => MediaType('application', 'octet-stream'),
       };
 
       final form = FormData.fromMap({
-        // ✅ FIX 1: small letter
         'file': await MultipartFile.fromFile(
           file.path,
           filename: fileName,
@@ -53,27 +59,41 @@ class AccreditationRemoteDs {
         ),
       });
 
-   final res = await _dio.post(
-  ApiEndpoints.uploadDocument(reqDocId),
-  data: form,
-  options: Options(
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-    },
-  ),
-);
+      // ✅ Debug logs من Claude (مفيدة)
+      print('📤 Uploading file: $fileName (${file.lengthSync()} bytes)');
+      print('📤 Endpoint: ${ApiEndpoints.uploadDocument(reqDocId)}');
+
+      final res = await _dio.post(
+        ApiEndpoints.uploadDocument(reqDocId),
+        data: form,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      // ✅ validation من كودك (مهم)
+      if (res.statusCode != 200 && res.statusCode != 201) {
+        throw ServerFailure('فشل رفع الملف: ${res.statusCode}');
+      }
 
       return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
     } on DioException catch (e) {
-      // ✅ FIX 3: debug قوي
-      print("UPLOAD STATUS = ${e.response?.statusCode}");
-      print("UPLOAD DATA = ${e.response?.data}");
+      // ✅ Debug أقوى
+      print('❌ UPLOAD ERROR: ${e.response?.statusCode}');
+      print('❌ Response: ${e.response?.data}');
+      print('❌ Headers: ${e.requestOptions.headers}');
+
       throw dioToFailure(e);
     }
   }
 
-  Future<void> setDeadline(int reqDocId, String deadline, bool oneWeek,
-      bool oneDay, bool onDue) async {
+  Future<void> setDeadline(
+    int reqDocId,
+    String deadline,
+    bool oneWeek,
+    bool oneDay,
+    bool onDue,
+  ) async {
     try {
       await _dio.post(ApiEndpoints.setDeadline(reqDocId), data: {
         'deadline': deadline,

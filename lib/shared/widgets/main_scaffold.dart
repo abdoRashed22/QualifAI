@@ -1,7 +1,5 @@
 // lib/shared/widgets/main_scaffold.dart
 
-
-
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
@@ -14,15 +12,11 @@ import '../../core/di/injection.dart';
 
 import '../../core/cache/hive_cache.dart';
 
-
-
 class MainScaffold extends StatelessWidget {
 
   final Widget child;
 
   final bool isAdmin;
-
-
 
   const MainScaffold({
 
@@ -34,8 +28,6 @@ class MainScaffold extends StatelessWidget {
 
   });
 
-
-
   @override
 
   Widget build(BuildContext context) {
@@ -44,17 +36,11 @@ class MainScaffold extends StatelessWidget {
 
       body: child,
 
-      bottomNavigationBar: isAdmin
-
-          ? _AdminBottomNav(context)
-
-          : _UserBottomNav(context),
+      bottomNavigationBar: isAdmin ? _AdminBottomNav(context) : _UserBottomNav(context),
 
     );
 
   }
-
-
 
   Widget _UserBottomNav(BuildContext context) {
 
@@ -63,8 +49,6 @@ class MainScaffold extends StatelessWidget {
     final role = sl<HiveCache>().getRole() ?? '';
 
     final isManager = role == 'quality_manager' || role == 'system_admin';
-
-
 
     int currentIndex = 0;
 
@@ -78,13 +62,25 @@ class MainScaffold extends StatelessWidget {
 
       currentIndex = 1;
 
-    } else if (location.startsWith('/reports')) currentIndex = 2;
+    } else if (location.startsWith('/chat')) {
 
-    else if (location.startsWith('/notifications')) currentIndex = 3;
+      // ✅ NEW: chat tab index
 
-    else if (location.startsWith('/profile')) currentIndex = 4;
+      currentIndex = 2;
 
+    } else if (location.startsWith('/reports')) {
 
+      currentIndex = 3;
+
+    } else if (location.startsWith('/notifications')) {
+
+      currentIndex = 4;
+
+    } else if (location.startsWith('/profile')) {
+
+      currentIndex = 5;
+
+    }
 
     return Container(
 
@@ -108,19 +104,51 @@ class MainScaffold extends StatelessWidget {
 
         currentIndex: currentIndex,
 
+        // ✅ FIX: type fixed مهم عشان أكتر من 3 tabs ميطلعوش رمادي
+
+        type: BottomNavigationBarType.fixed,
+
         onTap: (i) {
 
           switch (i) {
 
-            case 0: context.go(AppRoutes.dashboard); break;
+            case 0:
 
-            case 1: context.go(AppRoutes.accreditation); break;
+              context.go(AppRoutes.dashboard);
 
-            case 2: context.go(AppRoutes.reports); break;
+              break;
 
-            case 3: context.go(AppRoutes.notifications); break;
+            case 1:
 
-            case 4: context.go(AppRoutes.profile); break;
+              context.go(AppRoutes.accreditation);
+
+              break;
+
+            case 2:
+
+              // ✅ NEW: chat navigation
+
+              context.go(AppRoutes.chatList);
+
+              break;
+
+            case 3:
+
+              context.go(AppRoutes.reports);
+
+              break;
+
+            case 4:
+
+              context.go(AppRoutes.notifications);
+
+              break;
+
+            case 5:
+
+              context.go(AppRoutes.profile);
+
+              break;
 
           }
 
@@ -131,6 +159,10 @@ class MainScaffold extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
 
           BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), activeIcon: Icon(Icons.assignment), label: 'الاعتماد'),
+
+          // ✅ NEW: chat tab
+
+          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), activeIcon: Icon(Icons.chat_bubble), label: 'المحادثات'),
 
           BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), activeIcon: Icon(Icons.bar_chart), label: 'التقارير'),
 
@@ -146,8 +178,6 @@ class MainScaffold extends StatelessWidget {
 
   }
 
-
-
   Widget _AdminBottomNav(BuildContext context) {
 
     final location = GoRouterState.of(context).matchedLocation;
@@ -158,35 +188,71 @@ class MainScaffold extends StatelessWidget {
 
       currentIndex = 1;
 
-    } else if (location.startsWith('/admin/roles')) currentIndex = 2;
+    } else if (location.startsWith('/admin/roles')) {
 
-    else if (location.startsWith('/admin/colleges')) currentIndex = 3;
+      currentIndex = 2;
 
-    else if (location.startsWith('/admin/pricing')) currentIndex = 4;
+    } else if (location.startsWith('/admin/colleges')) {
 
-    else if (location.startsWith('/admin/activity')) currentIndex = 5;
+      currentIndex = 3;
 
+    } else if (location.startsWith('/admin/pricing')) {
 
+      currentIndex = 4;
+
+    } else if (location.startsWith('/admin/activity')) {
+
+      currentIndex = 5;
+
+    }
 
     return BottomNavigationBar(
 
       currentIndex: currentIndex,
 
+      // ✅ FIX: type fixed مهم عشان 6 tabs ميطلعوش رمادي
+
+      type: BottomNavigationBarType.fixed,
+
       onTap: (i) {
 
         switch (i) {
 
-          case 0: context.go(AppRoutes.adminDashboard); break;
+          case 0:
 
-          case 1: context.go(AppRoutes.employees); break;
+            context.go(AppRoutes.adminDashboard);
 
-          case 2: context.go(AppRoutes.roles); break;
+            break;
 
-          case 3: context.go(AppRoutes.colleges); break;
+          case 1:
 
-          case 4: context.go(AppRoutes.pricing); break;
+            context.go(AppRoutes.employees);
 
-          case 5: context.go(AppRoutes.activityLog); break;
+            break;
+
+          case 2:
+
+            context.go(AppRoutes.roles);
+
+            break;
+
+          case 3:
+
+            context.go(AppRoutes.colleges);
+
+            break;
+
+          case 4:
+
+            context.go(AppRoutes.pricing);
+
+            break;
+
+          case 5:
+
+            context.go(AppRoutes.activityLog);
+
+            break;
 
         }
 
@@ -194,7 +260,7 @@ class MainScaffold extends StatelessWidget {
 
       items: const [
 
-        BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: '"لوحة التحكم"'),
+        BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'لوحة التحكم'),
 
         BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'الموظفون'),
 
@@ -213,4 +279,3 @@ class MainScaffold extends StatelessWidget {
   }
 
 }
-

@@ -14,8 +14,6 @@ import '../../../../shared/widgets/app_card.dart';
 
 import '../cubit/admin_cubit.dart';
 
-
-
 class CollegesScreen extends StatelessWidget {
 
   const CollegesScreen({super.key});
@@ -40,8 +38,7 @@ class _CollegesView extends StatelessWidget {
 
     return Scaffold(
 
-    appBar: AppBar(title: const Text('الكليات')),
-  
+      appBar: AppBar(title: const Text('الكليات')),
 
       body: BlocBuilder<AdminCubit, AdminState>(
 
@@ -52,7 +49,6 @@ class _CollegesView extends StatelessWidget {
           if (state is CollegesLoaded) {
 
             if (state.colleges.isEmpty) return const Center(child: Text('لا توجد كليات'));
-
 
             return ListView.separated(
 
@@ -84,7 +80,7 @@ class _CollegesView extends StatelessWidget {
 
                     SizedBox(height: 4.h),
 
-                    Text(c['universityName'] ?? '', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.right),
+                    Text(c['universityName'] ?? c['university'] ?? '', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.right),
 
                   ])),
 
@@ -114,9 +110,7 @@ class _CollegesView extends StatelessWidget {
 
 }
 
-
-
-// â”€â”€ PricingScreen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PricingScreen ─────────────────────────────────────────────────────────────
 
 class PricingScreen extends StatelessWidget {
 
@@ -144,7 +138,6 @@ class _PricingView extends StatelessWidget {
 
       appBar: AppBar(title: const Text('الأسعار والاشتراكات')),
 
-
       body: BlocBuilder<AdminCubit, AdminState>(
 
         builder: (ctx, state) {
@@ -153,8 +146,7 @@ class _PricingView extends StatelessWidget {
 
           if (state is PlansLoaded) {
 
-           if (state.plans.isEmpty) return const Center(child: Text('لا توجد باقات'));
-
+            if (state.plans.isEmpty) return const Center(child: Text('لا توجد باقات'));
 
             return ListView.separated(
 
@@ -192,29 +184,49 @@ class _PricingView extends StatelessWidget {
 
                       decoration: BoxDecoration(color: AppColors.cyan, borderRadius: BorderRadius.circular(20.r)),
 
-                      child: Text('الاشتراك', style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: AppColors.navyBlue, fontWeight: FontWeight.w700))),
+                      child: Text('الأكثر شيوعاً', style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: AppColors.navyBlue, fontWeight: FontWeight.w700))),
 
                     Text(p['name'] ?? '', style: TextStyle(fontFamily: 'Cairo', fontSize: 16.sp, fontWeight: FontWeight.w700, color: isPopular ? Colors.white : null)),
 
                     SizedBox(height: 4.h),
 
-                    Text('Â£ ${p['price'] ?? ''}', style: TextStyle(fontFamily: 'Cairo', fontSize: 28.sp, fontWeight: FontWeight.w700, color: isPopular ? AppColors.cyan : AppColors.navyBlue)),
+                    // ✅ FIX: API بيبعت 'price' كـ double مش string
+
+                    Text('£ ${(p['price'] ?? 0).toStringAsFixed(0)}', style: TextStyle(fontFamily: 'Cairo', fontSize: 28.sp, fontWeight: FontWeight.w700, color: isPopular ? AppColors.cyan : AppColors.navyBlue)),
 
                     Text('/ سنويًا', style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: isPopular ? Colors.white60 : null)),
 
+                    SizedBox(height: 4.h),
+
+                    // ✅ NEW: description من الـ API
+
+                    if ((p['description'] ?? '').toString().isNotEmpty)
+
+                      Text(p['description'].toString(), style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: isPopular ? Colors.white70 : Theme.of(context).disabledColor), textAlign: TextAlign.right),
+
                     SizedBox(height: 12.h),
 
-                    ...features.map((f) => Padding(padding: EdgeInsets.only(bottom: 4.h),
+                    ...features.map((f) {
 
-                      child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                      final fStr = f.toString();
 
-                        Text(f.toString(), style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: isPopular ? Colors.white70 : null)),
+                      // ✅ FIX: skip 'string' placeholder values from API
 
-                        SizedBox(width: 6.w),
+                      if (fStr == 'string' || fStr.isEmpty) return const SizedBox.shrink();
 
-                        Icon(Icons.check_circle_outline, size: 14.sp, color: isPopular ? AppColors.cyan : AppColors.success),
+                      return Padding(padding: EdgeInsets.only(bottom: 4.h),
 
-                      ]))),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+
+                          Text(fStr, style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: isPopular ? Colors.white70 : null)),
+
+                          SizedBox(width: 6.w),
+
+                          Icon(Icons.check_circle_outline, size: 14.sp, color: isPopular ? AppColors.cyan : AppColors.success),
+
+                        ]));
+
+                    }),
 
                   ]),
 
@@ -240,9 +252,7 @@ class _PricingView extends StatelessWidget {
 
 }
 
-
-
-// â”€â”€ ActivityLogScreen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ActivityLogScreen ─────────────────────────────────────────────────────────
 
 class ActivityLogScreen extends StatelessWidget {
 
@@ -304,13 +314,29 @@ class _ActivityView extends StatelessWidget {
 
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
 
+                      SizedBox(height: 2.h),
+
+                      // ✅ FIX: show role from log
+
+                      if ((log['role'] ?? '').toString().isNotEmpty)
+
+                        Text(log['role'].toString(), style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: AppColors.blue)),
+
                       SizedBox(height: 4.h),
 
                       Text(log['action'] ?? log['description'] ?? '', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.right),
 
                       SizedBox(height: 4.h),
 
-                      Text(_fmtDate(log['timestamp'] ?? log['createdAt'] ?? ''), style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: Theme.of(context).disabledColor)),
+                      // ✅ FIX: API بيبعت 'lastModifiedFormatted' مش 'timestamp' أو 'createdAt'
+
+                      Text(
+
+                        log['lastModifiedFormatted'] ?? log['timestamp'] ?? log['createdAt'] ?? '',
+
+                        style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: Theme.of(context).disabledColor),
+
+                      ),
 
                     ])),
 
@@ -342,15 +368,4 @@ class _ActivityView extends StatelessWidget {
 
   }
 
-
-
-  String _fmtDate(String s) {
-
-    try { final d = DateTime.parse(s).toLocal(); return '${d.day}/${d.month}/${d.year}  ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}'; }
-
-    catch(_) { return s; }
-
-  }
-
 }
-

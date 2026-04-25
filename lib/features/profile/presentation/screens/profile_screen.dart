@@ -156,7 +156,7 @@ class _ProfileViewState extends State<_ProfileView> {
 
         listener: (ctx, state) {
 
-          if (state is ProfileLoaded) _populateFields(state.data);
+          if (state is ProfileLoaded) _populateFields(state.profile);
 
           if (state is ProfileUpdateSuccess) {
 
@@ -201,7 +201,7 @@ class _ProfileViewState extends State<_ProfileView> {
 
           final isLoading = state is ProfileUpdating;
 
-          final photoUrl = state is ProfileLoaded ? state.data['photoUrl'] as String? : null;
+          final photoUrl = state is ProfileLoaded ? state.profile['photoUrl'] as String? : null;
 
 
 

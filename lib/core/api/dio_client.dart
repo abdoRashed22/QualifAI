@@ -6,26 +6,75 @@ import '../cache/hive_cache.dart';
 import 'api_endpoints.dart';
 
 class DioClient {
-  late final Dio _dio;
+  final Dio _dio;
+  final HiveCache _cache;
 
-  DioClient(HiveCache cache) {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        responseType: ResponseType.bytes, // âœ… Get raw bytes, decode ourselves
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Accept': 'application/json',
-          'Accept-Charset': 'utf-8',
+  DioClient(this._cache)
+      : _dio = Dio(
+          BaseOptions(
+            baseUrl: ApiEndpoints.baseUrl,
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+            responseType: ResponseType.bytes, // ✅ مهم لدعم UTF-8
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Accept': 'application/json',
+              'Accept-Charset': 'utf-8',
+            },
+          ),
+        ) {
+    _setupInterceptors();
+  }
+
+  void _setupInterceptors() {
+    _dio.interceptors.clear();
+
+    // ✅ Combined Interceptor (Auth + Logging + Error Handling)
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = _cache.getToken();
+
+          // ✅ Bearer Token
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+
+          // ✅ Ensure Content-Type (except FormData)
+          if (options.contentType == null && options.data is! FormData) {
+            options.contentType = 'application/json';
+          }
+
+          print('📤 [REQUEST] ${options.method} ${options.path}');
+          print('📤 [HEADERS] ${options.headers}');
+          print('📤 [BODY] ${options.data}');
+
+          return handler.next(options);
+        },
+        onResponse: (response, handler) {
+          print(
+              '📥 [RESPONSE] ${response.statusCode} ${response.requestOptions.path}');
+          return handler.next(response);
+        },
+        onError: (error, handler) {
+          print('❌ [ERROR] ${error.response?.statusCode} ${error.message}');
+
+          // ✅ Handle 401
+          if (error.response?.statusCode == 401) {
+            _cache.clearAll();
+            // navigation handled in UI
+          }
+
+          return handler.next(error);
         },
       ),
     );
 
-    _dio.interceptors.addAll([
-      _AuthInterceptor(cache),
-      _Utf8DecoderInterceptor(), // âœ… Force UTF-8 decode on every response
+    // ✅ UTF-8 Decoder (IMPORTANT for Arabic)
+    _dio.interceptors.add(_Utf8DecoderInterceptor());
+
+    // ✅ Pretty Logger (debug only)
+    _dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: false,
         requestBody: true,
@@ -33,29 +82,26 @@ class DioClient {
         responseHeader: false,
         compact: true,
         logPrint: (obj) {
-          // Only log in debug mode
           assert(() {
-            // ignore: avoid_print
             print(obj);
             return true;
           }());
         },
       ),
-    ]);
+    );
   }
 
   Dio get dio => _dio;
 }
 
-/// Forces UTF-8 decoding of all API responses.
-/// Without this, Dio reads Arabic/Unicode text as Latin-1 â†’ garbled characters.
+/// ✅ Fix Arabic encoding issue
 class _Utf8DecoderInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (response.data is List<int>) {
       final bytes = response.data as List<int>;
       final decoded = utf8.decode(bytes, allowMalformed: true);
-      // Try to parse as JSON
+
       try {
         response.data = jsonDecode(decoded);
       } catch (_) {
@@ -63,27 +109,5 @@ class _Utf8DecoderInterceptor extends Interceptor {
       }
     }
     handler.next(response);
-  }
-}
-
-class _AuthInterceptor extends Interceptor {
-  final HiveCache _cache;
-  _AuthInterceptor(this._cache);
-
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final token = _cache.getToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
-    }
-    handler.next(options);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
-      _cache.clearAll();
-    }
-    handler.next(err);
   }
 }

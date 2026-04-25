@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/screens/chat_screen.dart
+﻿// lib/features/chat/presentation/screens/chat_screen.dart
 
 import 'package:flutter/material.dart';
 
@@ -14,15 +14,11 @@ import '../../../../core/theme/app_colors.dart';
 
 import '../cubit/chat_cubit.dart';
 
-
-
 class ChatScreen extends StatefulWidget {
 
   final int collegeId;
 
   const ChatScreen({super.key, required this.collegeId});
-
-
 
   @override
 
@@ -30,19 +26,31 @@ class ChatScreen extends StatefulWidget {
 
 }
 
-
-
 class _ChatScreenState extends State<ChatScreen> {
 
   final _msgCtrl = TextEditingController();
 
   final _scrollCtrl = ScrollController();
 
+  // ✅ FIX: store cubit reference so we can call it after dispose check
 
+  late final ChatCubit _cubit;
+
+  @override
+
+  void initState() {
+
+    super.initState();
+
+    _cubit = sl<ChatCubit>()..openChat(widget.collegeId);
+
+  }
 
   @override
 
   void dispose() {
+
+    _cubit.closeChat();
 
     _msgCtrl.dispose();
 
@@ -51,8 +59,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
 
   }
-
-
 
   void _scrollToBottom() {
 
@@ -76,15 +82,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
   }
 
+  void _sendMessage(BuildContext ctx) {
 
+    final text = _msgCtrl.text.trim();
+
+    if (text.isEmpty) return;
+
+    // ✅ FIX: clear immediately for better UX, then send
+
+    _msgCtrl.clear();
+
+    ctx.read<ChatCubit>().sendMessage(text, widget.collegeId);
+
+  }
 
   @override
 
   Widget build(BuildContext context) {
 
-    return BlocProvider(
+    return BlocProvider.value(
 
-      create: (_) => sl<ChatCubit>()..openChat(widget.collegeId),
+      value: _cubit,
 
       child: Scaffold(
 
@@ -108,13 +126,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
                     height: 8.w,
 
-                    decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+
+                        color: AppColors.success,
+
+                        shape: BoxShape.circle),
 
                   ),
 
                   SizedBox(width: 4.w),
 
-                  Text('متصل', style: TextStyle(fontFamily: 'Cairo', fontSize: 12.sp, color: AppColors.success)),
+                  Text('متصل',
+
+                      style: TextStyle(
+
+                          fontFamily: 'Cairo',
+
+                          fontSize: 12.sp,
+
+                          color: AppColors.success)),
 
                 ],
 
@@ -130,13 +160,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
           listener: (ctx, state) {
 
+            // ✅ FIX: scroll to bottom on every MessagesLoaded (including after send)
+
             if (state is MessagesLoaded) _scrollToBottom();
 
           },
 
           builder: (ctx, state) {
 
-            final messages = state is MessagesLoaded ? state.messages : <dynamic>[];
+            final messages =
+
+                state is MessagesLoaded ? state.messages : <dynamic>[];
 
             final cache = sl<HiveCache>();
 
@@ -144,13 +178,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
             final myEmail = myData?['email'] ?? '';
 
-
-
             return Column(
 
               children: [
 
-                // Messages
+                // Messages list
 
                 Expanded(
 
@@ -165,15 +197,24 @@ class _ChatScreenState extends State<ChatScreen> {
                               child: Column(
 
                                 mainAxisSize: MainAxisSize.min,
-children: [
-  Text('💬', style: TextStyle(fontSize: 48.sp)), // رمز فقاعة المحادثة
-  SizedBox(height: 12.h),
-  const Text(
-    'ابدأ المحادثة', 
-    style: TextStyle(fontFamily: 'Cairo'),
-  ),
-],
 
+                                children: [
+
+                                  Text('💬',
+
+                                      style: TextStyle(fontSize: 48.sp)),
+
+                                  SizedBox(height: 12.h),
+
+                                  const Text(
+
+                                    'ابدأ المحادثة',
+
+                                    style: TextStyle(fontFamily: 'Cairo'),
+
+                                  ),
+
+                                ],
 
                               ),
 
@@ -183,15 +224,27 @@ children: [
 
                               controller: _scrollCtrl,
 
-                              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+                              padding: EdgeInsets.fromLTRB(
+
+                                  16.w, 12.h, 16.w, 8.h),
 
                               itemCount: messages.length,
 
                               itemBuilder: (_, i) {
 
-                                final msg = messages[i] as Map<String, dynamic>? ?? {};
+                                final msg = messages[i]
 
-                                final senderEmail = msg['senderEmail'] ?? msg['sender']?['email'] ?? '';
+                                        as Map<String, dynamic>? ??
+
+                                    {};
+
+                                final senderEmail =
+
+                                    msg['senderEmail'] ??
+
+                                        msg['sender']?['email'] ??
+
+                                        '';
 
                                 final isMe = senderEmail == myEmail;
 
@@ -201,9 +254,17 @@ children: [
 
                                   isMe: isMe,
 
-                                  time: msg['sentAt'] ?? msg['createdAt'] ?? '',
+                                  time: msg['sentAt'] ??
 
-                                  senderName: isMe ? 'أنت' : (msg['senderName'] ?? 'المرسل'),
+                                      msg['createdAt'] ??
+
+                                      '',
+
+                                  senderName: isMe
+
+                                      ? 'أنت'
+
+                                      : (msg['senderName'] ?? 'المرسل'),
 
                                 );
 
@@ -213,6 +274,48 @@ children: [
 
                 ),
 
+                // ✅ FIX: show error snackbar if send fails
+
+                if (state is ChatError)
+
+                  Container(
+
+                    color: AppColors.error.withOpacity(0.1),
+
+                    padding: EdgeInsets.symmetric(
+
+                        horizontal: 16.w, vertical: 6.h),
+
+                    child: Row(
+
+                      children: [
+
+                        Icon(Icons.error_outline,
+
+                            size: 14.sp, color: AppColors.error),
+
+                        SizedBox(width: 6.w),
+
+                        Expanded(
+
+                          child: Text(state.message,
+
+                              style: TextStyle(
+
+                                  fontFamily: 'Cairo',
+
+                                  fontSize: 12.sp,
+
+                                  color: AppColors.error)),
+
+                        ),
+
+                      ],
+
+                    ),
+
+                  ),
+
                 // Input bar
 
                 Container(
@@ -221,11 +324,19 @@ children: [
 
                     color: Theme.of(context).scaffoldBackgroundColor,
 
-                    border: Border(top: BorderSide(color: Theme.of(context).dividerColor, width: 0.5)),
+                    border: Border(
+
+                        top: BorderSide(
+
+                            color: Theme.of(context).dividerColor,
+
+                            width: 0.5)),
 
                   ),
 
-                  padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 16.h),
+                  padding:
+
+                      EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 16.h),
 
                   child: Row(
 
@@ -235,17 +346,7 @@ children: [
 
                       GestureDetector(
 
-                        onTap: () {
-
-                          final text = _msgCtrl.text.trim();
-
-                          if (text.isEmpty) return;
-
-                          ctx.read<ChatCubit>().sendMessage(text, widget.collegeId);
-
-                          _msgCtrl.clear();
-
-                        },
+                        onTap: () => _sendMessage(ctx),
 
                         child: Container(
 
@@ -253,9 +354,15 @@ children: [
 
                           height: 44.w,
 
-                          decoration: const BoxDecoration(color: AppColors.navyBlue, shape: BoxShape.circle),
+                          decoration: const BoxDecoration(
 
-                          child: const Icon(Icons.send, color: Colors.white, size: 18),
+                              color: AppColors.navyBlue,
+
+                              shape: BoxShape.circle),
+
+                          child: const Icon(Icons.send,
+
+                              color: Colors.white, size: 18),
 
                         ),
 
@@ -269,7 +376,9 @@ children: [
 
                         child: Container(
 
-                          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                          padding: EdgeInsets.symmetric(
+
+                              horizontal: 14.w, vertical: 10.h),
 
                           decoration: BoxDecoration(
 
@@ -277,7 +386,11 @@ children: [
 
                             borderRadius: BorderRadius.circular(24.r),
 
-                            border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
+                            border: Border.all(
+
+                                color: Theme.of(context).dividerColor,
+
+                                width: 0.5),
 
                           ),
 
@@ -293,15 +406,29 @@ children: [
 
                             minLines: 1,
 
-                            style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp),
+                            style: TextStyle(
+
+                                fontFamily: 'Cairo', fontSize: 14.sp),
 
                             decoration: InputDecoration.collapsed(
 
                               hintText: 'اكتب رسالة...',
 
-                              hintStyle: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp, color: Theme.of(context).disabledColor),
+                              hintStyle: TextStyle(
+
+                                  fontFamily: 'Cairo',
+
+                                  fontSize: 14.sp,
+
+                                  color: Theme.of(context).disabledColor),
 
                             ),
+
+                            // ✅ FIX: send on done keyboard action
+
+                            textInputAction: TextInputAction.send,
+
+                            onSubmitted: (_) => _sendMessage(ctx),
 
                           ),
 
@@ -311,7 +438,11 @@ children: [
 
                       SizedBox(width: 8.w),
 
-                      Icon(Icons.attach_file_outlined, size: 22.sp, color: Theme.of(context).disabledColor),
+                      Icon(Icons.attach_file_outlined,
+
+                          size: 22.sp,
+
+                          color: Theme.of(context).disabledColor),
 
                     ],
 
@@ -335,8 +466,6 @@ children: [
 
 }
 
-
-
 class _MessageBubble extends StatelessWidget {
 
   final String content;
@@ -346,8 +475,6 @@ class _MessageBubble extends StatelessWidget {
   final String time;
 
   final String senderName;
-
-
 
   const _MessageBubble({
 
@@ -361,8 +488,6 @@ class _MessageBubble extends StatelessWidget {
 
   });
 
-
-
   @override
 
   Widget build(BuildContext context) {
@@ -373,13 +498,23 @@ class _MessageBubble extends StatelessWidget {
 
       child: Column(
 
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
 
         children: [
 
           if (!isMe) ...[
 
-            Text(senderName, style: TextStyle(fontFamily: 'Cairo', fontSize: 11.sp, color: Theme.of(context).disabledColor)),
+            Text(senderName,
+
+                style: TextStyle(
+
+                    fontFamily: 'Cairo',
+
+                    fontSize: 11.sp,
+
+                    color: Theme.of(context).disabledColor)),
 
             SizedBox(height: 4.h),
 
@@ -387,7 +522,9 @@ class _MessageBubble extends StatelessWidget {
 
           Row(
 
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment:
+
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
 
             crossAxisAlignment: CrossAxisAlignment.end,
 
@@ -401,7 +538,9 @@ class _MessageBubble extends StatelessWidget {
 
                   backgroundColor: AppColors.blue.withOpacity(0.15),
 
-                  child: Icon(Icons.person_outline, size: 16.sp, color: AppColors.blue),
+                  child: Icon(Icons.person_outline,
+
+                      size: 16.sp, color: AppColors.blue),
 
                 ),
 
@@ -413,11 +552,17 @@ class _MessageBubble extends StatelessWidget {
 
                 child: Container(
 
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  padding: EdgeInsets.symmetric(
+
+                      horizontal: 14.w, vertical: 10.h),
 
                   decoration: BoxDecoration(
 
-                    color: isMe ? AppColors.navyBlue : Theme.of(context).cardTheme.color,
+                    color: isMe
+
+                        ? AppColors.navyBlue
+
+                        : Theme.of(context).cardTheme.color,
 
                     borderRadius: BorderRadius.only(
 
@@ -425,13 +570,29 @@ class _MessageBubble extends StatelessWidget {
 
                       topRight: Radius.circular(16.r),
 
-                      bottomLeft: isMe ? Radius.circular(16.r) : Radius.circular(4.r),
+                      bottomLeft: isMe
 
-                      bottomRight: isMe ? Radius.circular(4.r) : Radius.circular(16.r),
+                          ? Radius.circular(16.r)
+
+                          : Radius.circular(4.r),
+
+                      bottomRight: isMe
+
+                          ? Radius.circular(4.r)
+
+                          : Radius.circular(16.r),
 
                     ),
 
-                    border: isMe ? null : Border.all(color: Theme.of(context).dividerColor, width: 0.5),
+                    border: isMe
+
+                        ? null
+
+                        : Border.all(
+
+                            color: Theme.of(context).dividerColor,
+
+                            width: 0.5),
 
                   ),
 
@@ -445,7 +606,17 @@ class _MessageBubble extends StatelessWidget {
 
                       fontSize: 14.sp,
 
-                      color: isMe ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                      color: isMe
+
+                          ? Colors.white
+
+                          : Theme.of(context)
+
+                              .textTheme
+
+                              .bodyMedium
+
+                              ?.color,
 
                     ),
 
@@ -469,7 +640,9 @@ class _MessageBubble extends StatelessWidget {
 
                   backgroundColor: AppColors.navyBlue.withOpacity(0.15),
 
-                  child: Icon(Icons.person, size: 16.sp, color: AppColors.navyBlue),
+                  child: Icon(Icons.person,
+
+                      size: 16.sp, color: AppColors.navyBlue),
 
                 ),
 
@@ -489,7 +662,13 @@ class _MessageBubble extends StatelessWidget {
 
               _formatTime(time),
 
-              style: TextStyle(fontFamily: 'Cairo', fontSize: 10.sp, color: Theme.of(context).disabledColor),
+              style: TextStyle(
+
+                  fontFamily: 'Cairo',
+
+                  fontSize: 10.sp,
+
+                  color: Theme.of(context).disabledColor),
 
             ),
 
@@ -503,8 +682,6 @@ class _MessageBubble extends StatelessWidget {
 
   }
 
-
-
   String _formatTime(String iso) {
 
     try {
@@ -517,9 +694,12 @@ class _MessageBubble extends StatelessWidget {
 
       return '$h:$m';
 
-    } catch (_) { return iso; }
+    } catch (_) {
+
+      return iso;
+
+    }
 
   }
 
 }
-
