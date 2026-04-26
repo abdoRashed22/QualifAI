@@ -1,10 +1,14 @@
-// lib/features/accreditation/data/remote/accreditation_remote_ds.dart
-
 import 'dart:io';
+
 import 'package:dio/dio.dart';
+
 import 'package:http_parser/http_parser.dart';
+
 import '../../../../core/api/api_endpoints.dart';
+
 import '../../../../core/errors/failures.dart';
+
+import '../../../../core/data/accreditation_data.dart' as accred_data;
 
 class AccreditationRemoteDs {
   final Dio _dio;
@@ -13,20 +17,66 @@ class AccreditationRemoteDs {
 
   Future<List<dynamic>> getSections() async {
     try {
-      final res = await _dio.get(ApiEndpoints.sections);
-      if (res.data is List) return res.data as List;
-      return [];
+      // TODO: Replace with actual API call when backend is ready
+
+      // For now, using mock data
+
+      final accreditationTypes = accred_data.getAllAccreditationTypes();
+
+      return accreditationTypes;
     } on DioException catch (e) {
       throw dioToFailure(e);
+    } catch (e) {
+      throw const ServerFailure('خطأ في تحميل البيانات');
     }
   }
 
   Future<Map<String, dynamic>> getSectionById(int id) async {
     try {
-      final res = await _dio.get(ApiEndpoints.sectionById(id));
-      return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
+      // TODO: Replace with actual API call when backend is ready
+
+      // For now, using mock data - default to type 1 (Academic)
+
+      return getSectionByTypeAndId(1, id);
+
+      // Commented out API call - uncomment when backend is ready
+
+      // final res = await _dio.get(ApiEndpoints.sectionById(id));
+
+      // return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
     } on DioException catch (e) {
       throw dioToFailure(e);
+    } catch (e) {
+      throw const ServerFailure('خطأ في تحميل البيانات');
+    }
+  }
+
+  /// Get section by accreditation type and section ID
+
+  Future<Map<String, dynamic>> getSectionByTypeAndId(
+    int accreditationType,
+    int sectionId,
+  ) async {
+    try {
+      final section = accred_data.getSectionById(accreditationType, sectionId);
+
+      if (section == null) {
+        throw const ServerFailure('لم يتم العثور على المعيار المطلوب');
+      }
+
+      return section;
+    } catch (e) {
+      throw const ServerFailure('خطأ في تحميل بيانات المعيار');
+    }
+  }
+
+  /// Get all standards for a specific accreditation type
+  Future<List<dynamic>> getStandardsByType(int accreditationType) async {
+    try {
+      final standards = accred_data.getStandardsByType(accreditationType);
+      return standards;
+    } catch (e) {
+      throw const ServerFailure('خطأ في تحميل المعايير');
     }
   }
 
@@ -34,13 +84,13 @@ class AccreditationRemoteDs {
     int reqDocId,
     File file,
   ) async {
-    // ✅ مهم جدًا (ماينفعش يتشال)
-    if (!await file.exists()) {
-      throw const ServerFailure('الملف غير موجود، يرجى اختياره مجدداً');
-    }
-
     try {
+      if (!await file.exists()) {
+        throw const ServerFailure('الملف غير موجود، يرجى اختياره مجدداً');
+      }
+
       final fileName = file.path.split('/').last;
+
       final ext = fileName.split('.').last.toLowerCase();
 
       final contentType = switch (ext) {
@@ -59,8 +109,8 @@ class AccreditationRemoteDs {
         ),
       });
 
-      // ✅ Debug logs من Claude (مفيدة)
       print('📤 Uploading file: $fileName (${file.lengthSync()} bytes)');
+
       print('📤 Endpoint: ${ApiEndpoints.uploadDocument(reqDocId)}');
 
       final res = await _dio.post(
@@ -71,19 +121,31 @@ class AccreditationRemoteDs {
         ),
       );
 
-      // ✅ validation من كودك (مهم)
       if (res.statusCode != 200 && res.statusCode != 201) {
         throw ServerFailure('فشل رفع الملف: ${res.statusCode}');
       }
 
       return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
     } on DioException catch (e) {
-      // ✅ Debug أقوى
       print('❌ UPLOAD ERROR: ${e.response?.statusCode}');
+
       print('❌ Response: ${e.response?.data}');
+
       print('❌ Headers: ${e.requestOptions.headers}');
 
       throw dioToFailure(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getDocumentAnalysis(int reqDocId) async {
+    try {
+      final res = await _dio.get(ApiEndpoints.getDocumentAnalysis(reqDocId));
+
+      return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
+    } on DioException catch (e) {
+      throw dioToFailure(e);
+    } catch (e) {
+      throw const ServerFailure('خطأ في تحميل التحليل');
     }
   }
 

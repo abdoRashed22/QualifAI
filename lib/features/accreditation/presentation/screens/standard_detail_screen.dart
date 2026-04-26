@@ -20,26 +20,52 @@ import '../cubit/accreditation_cubit.dart';
 
 class StandardDetailScreen extends StatelessWidget {
   final int sectionId;
+  final int accreditationType;
 
-  const StandardDetailScreen({super.key, required this.sectionId});
+  const StandardDetailScreen({
+    super.key,
+    required this.sectionId,
+    required this.accreditationType,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<AccreditationCubit>()..loadSectionDetail(sectionId),
+      create: (_) => sl<AccreditationCubit>()
+          ..loadSectionDetail(sectionId, accreditationType),
       child: const _StandardDetailView(),
     );
   }
 }
 
-class _StandardDetailView extends StatelessWidget {
+class _StandardDetailView extends StatefulWidget {
   const _StandardDetailView();
 
+  @override
+  State<_StandardDetailView> createState() => _StandardDetailViewState();
+}
+
+class _StandardDetailViewState extends State<_StandardDetailView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('المعيار')),
-      body: BlocBuilder<AccreditationCubit, AccreditationState>(
+      body: BlocConsumer<AccreditationCubit, AccreditationState>(
+        listener: (ctx, state) {
+          // Refresh section detail after document upload
+          if (state is DocumentUploaded) {
+            final cubit = ctx.read<AccreditationCubit>();
+            if (ctx.mounted && mounted) {
+              final currentState = (ctx.read<AccreditationCubit>().state);
+              if (currentState is SectionDetailLoaded) {
+                final sectionId = currentState.section['sectionId'] as int;
+                final accreditationType =
+                    currentState.section['accreditationType'] as int;
+                cubit.loadSectionDetail(sectionId, accreditationType);
+              }
+            }
+          }
+        },
         builder: (ctx, state) {
           if (state is AccreditationLoading)
             return const Center(child: CircularProgressIndicator());
@@ -63,7 +89,6 @@ class _StandardDetailView extends StatelessWidget {
             return Column(
               children: [
                 // Header card
-
                 Container(
                   margin: EdgeInsets.all(16.w),
                   padding: EdgeInsets.all(16.w),
@@ -111,9 +136,7 @@ class _StandardDetailView extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 // Docs list
-
                 Expanded(
                   child: ListView.separated(
                     padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 100.h),
@@ -136,16 +159,18 @@ class _StandardDetailView extends StatelessWidget {
                                     color: AppColors.navyBlue,
                                     onTap: () => context.push(
                                       AppRoutes.fileUpload.replaceFirst(
-                                          ':docId', '${doc['id'] ?? 0}'),
+                                          ':docId',
+                                          '${doc['requiredDocumentId'] ?? 0}'),
                                     ),
                                   ),
                                 if (hasFile)
                                   _ActionBtn(
-                                    label: 'نتائج AI', // تم تصحيح النص هنا
+                                    label: 'نتائج AI',
                                     color: AppColors.success,
                                     onTap: () => context.push(
                                       AppRoutes.aiAnalysis.replaceFirst(
-                                          ':docId', '${doc['id'] ?? 0}'),
+                                          ':docId',
+                                          '${doc['requiredDocumentId'] ?? 0}'),
                                     ),
                                   ),
                                 SizedBox(height: 6.h),
@@ -155,7 +180,7 @@ class _StandardDetailView extends StatelessWidget {
                                   onTap: () => _showDeadlineDialog(
                                       context,
                                       ctx.read<AccreditationCubit>(),
-                                      doc['id'] ?? 0),
+                                      doc['requiredDocumentId'] ?? 0),
                                 ),
                               ],
                             ),
@@ -165,8 +190,7 @@ class _StandardDetailView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    doc['name'] ??
-                                        'مستند ${i + 1}', // النص الافتراضي: مستند 1، مستند 2... إلخ
+                                    doc['documentName'] ?? 'مستند ${i + 1}',
                                     style:
                                         Theme.of(context).textTheme.bodyMedium,
                                     textAlign: TextAlign.right,
@@ -301,7 +325,6 @@ class _StandardDetailView extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-
                 cubit.setDeadline(
                   docId,
                   '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',

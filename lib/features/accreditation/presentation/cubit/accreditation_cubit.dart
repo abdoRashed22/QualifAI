@@ -24,14 +24,34 @@ class AccreditationCubit extends Cubit<AccreditationState> {
         (list) => emit(SectionsLoaded(_normalizeSections(list))));
   }
 
-  Future<void> loadSectionDetail(int id) async {
+  Future<void> loadSectionsByType(int accreditationType) async {
     emit(AccreditationLoading());
 
-    final r = await _repo.getSectionById(id);
+    final r = await _repo.getStandardsByType(accreditationType);
 
-    r.fold((f) => emit(AccreditationError(f.message)),
-        (data) => emit(SectionDetailLoaded(_normalizeDetail(data))));
+    r.fold(
+      (f) => emit(AccreditationError(f.message)),
+      (list) => emit(SectionsLoaded(_normalizeSections(list))),
+    );
   }
+
+  Future<void> loadSectionDetail(int sectionId, int accreditationType) async {
+  emit(AccreditationLoading());
+  
+  final result = await _repo.getSectionByTypeAndId(
+    accreditationType,
+    sectionId,
+  );
+  
+  result.fold(
+    (failure) => emit(AccreditationError(failure.message)),
+    (section) {
+      // أضف accreditationType و sectionId للـ response
+      final enrichedSection = {...section, 'accreditationType': accreditationType, 'sectionId': sectionId};
+      emit(SectionDetailLoaded(enrichedSection));
+    },
+  );
+}
 
   Future<void> uploadDocument(int reqDocId, File file) async {
     emit(UploadingDocument());
@@ -40,6 +60,15 @@ class AccreditationCubit extends Cubit<AccreditationState> {
 
     r.fold((f) => emit(AccreditationError(f.message)),
         (data) => emit(DocumentUploaded(data)));
+  }
+
+  Future<void> getAnalysis(int reqDocId) async {
+    emit(AccreditationLoading());
+
+    final r = await _repo.getDocumentAnalysis(reqDocId);
+
+    r.fold((f) => emit(AccreditationError(f.message)),
+        (data) => emit(AnalysisLoaded(data)));
   }
 
   Future<void> setDeadline(int reqDocId, String deadline, bool oneWeek,
@@ -64,6 +93,7 @@ class AccreditationCubit extends Cubit<AccreditationState> {
         'requiredDocumentsCount':
             s['totalDocs'] ?? s['requiredDocumentsCount'] ?? 1,
         'completionPercentage': s['completionPercentage'] ?? 0,
+        'accreditationType': s['accreditationType'] ?? 0,
       };
     }).toList();
   }
