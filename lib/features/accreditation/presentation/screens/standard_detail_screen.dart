@@ -67,8 +67,9 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
           }
         },
         builder: (ctx, state) {
-          if (state is AccreditationLoading)
+          if (state is AccreditationLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           if (state is AccreditationError) {
             return Center(child: Text(state.message));
@@ -83,8 +84,11 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
 
             final required = docs.length;
 
-            final pct =
-                required > 0 ? (uploaded / required).clamp(0.0, 1.0) : 0.0;
+            final rawCompletion = (s['completionPercentage'] as num?)?.toDouble();
+            final pct = rawCompletion != null
+                ? (rawCompletion > 1 ? rawCompletion / 100 : rawCompletion)
+                    .clamp(0.0, 1.0)
+                : (required > 0 ? (uploaded / required).clamp(0.0, 1.0) : 0.0);
 
             return Column(
               children: [
@@ -146,6 +150,14 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                       final doc = docs[i] as Map<String, dynamic>? ?? {};
 
                       final hasFile = doc['hasFile'] ?? false;
+                      final deadlineText =
+                          (doc['deadline'] ?? '').toString().trim();
+                      final statusText = (doc['statusLabel'] ?? '')
+                          .toString()
+                          .trim()
+                          .isEmpty
+                          ? (hasFile ? 'مرفوع' : 'غير مرفوع')
+                          : doc['statusLabel'].toString();
 
                       return AppCard(
                         child: Row(
@@ -157,21 +169,19 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                                   _ActionBtn(
                                     label: 'رفع ملف',
                                     color: AppColors.navyBlue,
-                                    onTap: () => context.push(
-                                      AppRoutes.fileUpload.replaceFirst(
-                                          ':docId',
-                                          '${doc['requiredDocumentId'] ?? 0}'),
-                                    ),
+                                   onTap: () => context.push(
+  '${AppRoutes.fileUpload.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
+  '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+),
                                   ),
                                 if (hasFile)
                                   _ActionBtn(
                                     label: 'نتائج AI',
                                     color: AppColors.success,
                                     onTap: () => context.push(
-                                      AppRoutes.aiAnalysis.replaceFirst(
-                                          ':docId',
-                                          '${doc['requiredDocumentId'] ?? 0}'),
-                                    ),
+  '${AppRoutes.aiAnalysis.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
+  '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+),
                                   ),
                                 SizedBox(height: 6.h),
                                 _ActionBtn(
@@ -222,6 +232,30 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                                       ),
                                     ],
                                   ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    deadlineText.isEmpty
+                                        ? 'الموعد النهائي: غير محدد'
+                                        : 'الموعد النهائي: $deadlineText',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11.sp,
+                                      color: Theme.of(context).disabledColor,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    'حالة المستند: $statusText',
+                                    style: TextStyle(
+                                      fontFamily: 'Cairo',
+                                      fontSize: 11.sp,
+                                      color: hasFile
+                                          ? AppColors.success
+                                          : AppColors.warning,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
                                 ],
                               ),
                             ),
@@ -243,7 +277,9 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
 
   void _showDeadlineDialog(
       BuildContext context, AccreditationCubit cubit, int docId) {
-    DateTime selectedDate = DateTime.now().add(const Duration(days: 7));
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
+    DateTime selectedDate = firstDate.add(const Duration(days: 7));
 
     bool oneWeek = true, oneDay = true, onDue = true;
 
@@ -262,9 +298,10 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: ctx,
-                    initialDate: selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    initialDate:
+                        selectedDate.isBefore(firstDate) ? firstDate : selectedDate,
+                    firstDate: firstDate,
+                    lastDate: firstDate.add(const Duration(days: 365)),
                   );
 
                   if (picked != null) setState(() => selectedDate = picked);

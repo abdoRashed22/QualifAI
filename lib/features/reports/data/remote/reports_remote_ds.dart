@@ -1,5 +1,6 @@
 // lib/features/reports/data/remote/reports_remote_ds.dart
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/errors/failures.dart';
 
 /// NOTE: The Swagger does not have a dedicated /Reports endpoint.
@@ -12,8 +13,7 @@ class ReportsRemoteDs {
 
   Future<List<dynamic>> getReports() async {
     try {
-      // Using sections as report source â€” each section IS a report unit
-      final res = await _dio.get('/Accreditation/sections');
+      final res = await _dio.get(ApiEndpoints.sections);
       if (res.data is List) return res.data as List;
       return [];
     } on DioException catch (e) { throw dioToFailure(e); }
@@ -21,7 +21,7 @@ class ReportsRemoteDs {
 
   Future<Map<String, dynamic>> getReportDetail(int sectionId) async {
     try {
-      final res = await _dio.get('/Accreditation/sections/$sectionId');
+      final res = await _dio.get(ApiEndpoints.sectionById(sectionId));
       return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
     } on DioException catch (e) { throw dioToFailure(e); }
   }

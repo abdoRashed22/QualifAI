@@ -188,7 +188,7 @@ Text(
 
                         final doc = d as Map<String, dynamic>? ?? {};
 
-                        return doc['uploadedFile'] == null;
+                        return !(doc['hasFile'] == true);
 
                       }).take(5).map((d) {
 
@@ -230,7 +230,7 @@ Text(
 
                       }),
 
-                      if (docs.every((d) => (d as Map<String, dynamic>?)?['uploadedFile'] != null))
+                      if (docs.every((d) => (d as Map<String, dynamic>?)?['hasFile'] == true))
 
                         Row(
 
@@ -280,7 +280,7 @@ Text(
 
                         final doc = d as Map<String, dynamic>? ?? {};
 
-                        final hasFile = doc['uploadedFile'] != null;
+                        final hasFile = doc['hasFile'] == true;
 
                         return Padding(
 

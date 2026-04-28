@@ -6,11 +6,13 @@ part 'dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
   final DashboardRepository _repo;
+  int _currentType = 1;
 
   DashboardCubit(this._repo) : super(DashboardInitial());
 
-  Future<void> load() async {
-  if (isClosed) return;                    // ← guard 1
+  Future<void> load([int accreditationType = 1]) async {
+  _currentType = accreditationType;
+  if (isClosed) return;
   emit(DashboardLoading());
 
   final result = await _repo.getSections();
@@ -37,6 +39,7 @@ class DashboardCubit extends Cubit<DashboardState> {
             final name = s['sectionName'] ?? s['name'] ?? '';
             final uploaded = s['completedDocs'] ?? s['uploadedDocuments'] ?? 0;
             final total = s['totalDocs'] ?? s['requiredDocumentsCount'] ?? 1;
+            final type = s['accreditationType'] ?? 0;
 
             double pct;
             if (s['completionPercentage'] != null) {
@@ -54,12 +57,17 @@ class DashboardCubit extends Cubit<DashboardState> {
               requiredDocs:
                   total is int ? total : int.tryParse(total.toString()) ?? 1,
               completionPercent: pct.clamp(0.0, 1.0),
+              accreditationType: type is int
+                  ? type
+                  : int.tryParse(type.toString()) ?? 0,
             );
-          }).toList();
+          }).where((section) => section.accreditationType == accreditationType).toList();
         }
 
-        if (!isClosed) emit(DashboardLoaded(summaries));
+        if (!isClosed) emit(DashboardLoaded(accreditationType, summaries));
       },
     );
   }
+
+  Future<void> reloadCurrent() => load(_currentType);
 }

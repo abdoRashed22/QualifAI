@@ -181,18 +181,19 @@ GoRouter buildRouter(HiveCache cache) {
               return StandardsListScreen(accreditationType: int.parse(type));
             },
           ),
-         GoRoute(
-  path: AppRoutes.standardDetail,
-  builder: (ctx, state) {
-    final sectionId = int.parse(state.uri.queryParameters['sectionId']!);
-    final accreditationType = int.parse(state.uri.queryParameters['type']!);
-
-    return StandardDetailScreen(
-      sectionId: sectionId,
-      accreditationType: accreditationType,
-    );
-  },
-),
+          GoRoute(
+            path: AppRoutes.standardDetail,
+            builder: (ctx, state) {
+              final sectionId =
+                  int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
+              final accreditationType =
+                  int.tryParse(state.uri.queryParameters['type'] ?? '') ?? 1;
+              return StandardDetailScreen(
+                sectionId: sectionId,
+                accreditationType: accreditationType,
+              );
+            },
+          ),
           GoRoute(
             path: AppRoutes.fileUpload,
             builder: (ctx, state) {

@@ -48,7 +48,29 @@ class AdminCubit extends Cubit<AdminState> {
 
     emit(AdminActionLoading());
 
-    final r = await _repo.createEmployee(data);
+    final payload = {
+      'firstName': data['firstName']?.toString().trim(),
+      'lastName': data['lastName']?.toString().trim(),
+      'email': data['email']?.toString().trim(),
+      'password': data['password']?.toString(),
+      'roleId': int.tryParse('${data['roleId'] ?? ''}') ?? 0,
+    };
+
+    if ((payload['roleId'] as int) <= 0) {
+      final rolesResult = await _repo.getRoles();
+      rolesResult.fold((_) {}, (roles) {
+        if (roles.isNotEmpty && roles.first is Map) {
+          final firstRole = roles.first as Map;
+          payload['roleId'] =
+              int.tryParse('${firstRole['id'] ?? firstRole['roleId'] ?? 1}') ??
+                  1;
+        } else {
+          payload['roleId'] = 1;
+        }
+      });
+    }
+
+    final r = await _repo.createEmployee(payload);
 
     if (isClosed || _isDisposed) return;
 
@@ -149,7 +171,21 @@ class AdminCubit extends Cubit<AdminState> {
   Future<void> deleteRole(int id) async {
     if (isClosed || _isDisposed) return;
 
-    emit(AdminActionLoading());
+    final previous = state;
+    List<dynamic>? rollbackRoles;
+    List<dynamic>? rollbackPerms;
+    if (previous is RolesLoaded) {
+      rollbackRoles = previous.roles;
+      rollbackPerms = previous.permissions;
+      final updated = previous.roles.where((role) {
+        if (role is! Map) return true;
+        final roleId = role['id'] ?? role['roleId'];
+        return int.tryParse('$roleId') != id;
+      }).toList();
+      emit(RolesLoaded(updated, previous.permissions));
+    } else {
+      emit(AdminActionLoading());
+    }
 
     final r = await _repo.deleteRole(id);
 
@@ -158,13 +194,23 @@ class AdminCubit extends Cubit<AdminState> {
     r.fold(
       (f) {
         if (!isClosed && !_isDisposed) {
+          if (rollbackRoles != null && rollbackPerms != null) {
+            emit(RolesLoaded(rollbackRoles, rollbackPerms));
+          }
           emit(AdminError(f.message));
         }
       },
       (_) {
         if (!isClosed && !_isDisposed) {
           emit(const AdminActionSuccess('تم حذف الدور'));
-          loadRoles();
+          if (rollbackRoles != null && rollbackPerms != null) {
+            final refreshed = rollbackRoles.where((role) {
+              if (role is! Map) return true;
+              final roleId = role['id'] ?? role['roleId'];
+              return int.tryParse('$roleId') != id;
+            }).toList();
+            emit(RolesLoaded(refreshed, rollbackPerms));
+          }
         }
       },
     );
@@ -266,14 +312,24 @@ class AdminCubit extends Cubit<AdminState> {
   // ✅ أهم fix فعلي عندك
   List<Map<String, dynamic>> _mapEmployeeData(List<dynamic> data) {
     return data.whereType<Map<String, dynamic>>().map((emp) {
+      final firstName = (emp['firstName'] ??
+              emp['first_name'] ??
+              emp['name'] ??
+              emp['fullName'] ??
+              '')
+          .toString();
+      final lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
+      final email = (emp['email'] ?? emp['userEmail'] ?? '').toString();
+      final role = (emp['roleName'] ?? emp['role'] ?? emp['roleDisplayName'] ?? 'employee')
+          .toString();
       return {
         'id': emp['id'] ?? emp['employeeId'] ?? 0,
-        'firstName': emp['firstName'] ?? emp['first_name'] ?? '',
-        'lastName': emp['lastName'] ?? emp['last_name'] ?? '',
-        'email': emp['email'] ?? '',
-        'role': emp['role'] ?? emp['roleName'] ?? 'employee',
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'role': role,
         'profileImage':
-            emp['profileImage'] ?? emp['image'] ?? emp['photo'] ?? '',
+            emp['profileImage'] ?? emp['image'] ?? emp['photo'] ?? emp['avatarUrl'] ?? '',
       };
     }).toList();
   }

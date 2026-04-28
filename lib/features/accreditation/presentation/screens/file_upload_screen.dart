@@ -65,12 +65,9 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go(AppRoutes.accreditation);
-            }
+            context.push(
+              AppRoutes.aiAnalysis.replaceFirst(':docId', '${widget.documentId}'),
+            );
           }
 
           if (state is AccreditationError) {

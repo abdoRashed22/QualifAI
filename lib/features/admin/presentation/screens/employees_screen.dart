@@ -83,6 +83,9 @@ class _EmployeesView extends StatelessWidget {
                 final lastName = e['lastName'] ?? '';
                 final email = e['email'] ?? '';
                 final role = e['role'] ?? e['roleName'] ?? 'موظف';
+                final profileImage =
+                    (e['profileImage'] ?? e['image'] ?? e['photo'] ?? '')
+                        .toString();
 
                 final name = '$firstName $lastName'.trim();
 
@@ -142,20 +145,21 @@ class _EmployeesView extends StatelessWidget {
                     ),
                     SizedBox(width: 10.w),
                     CircleAvatar(
-                      backgroundColor:
-                          AppColors.blue.withOpacity(0.15),
+                      backgroundColor: AppColors.blue.withOpacity(0.15),
+                      backgroundImage:
+                          profileImage.isNotEmpty ? NetworkImage(profileImage) : null,
                       radius: 22.r,
-                      child: Text(
-                        name.isNotEmpty
-                            ? name[0].toUpperCase()
-                            : "م",
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.blue,
-                        ),
-                      ),
+                      child: profileImage.isNotEmpty
+                          ? null
+                          : Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : "م",
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.blue,
+                              ),
+                            ),
                     ),
                   ]),
                 );
@@ -175,6 +179,7 @@ class _EmployeesView extends StatelessWidget {
   }
 
   void _showAddDialog(BuildContext context) {
+    final cubit = context.read<AdminCubit>();
     final firstCtrl = TextEditingController();
     final lastCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
@@ -183,7 +188,7 @@ class _EmployeesView extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
         title: const Text('إضافة موظف جديد', textAlign: TextAlign.right),
@@ -231,15 +236,15 @@ class _EmployeesView extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('إلغاء')),
           ElevatedButton(
             onPressed: () {
               if (!formKey.currentState!.validate()) return;
 
-              Navigator.pop(context);
+              Navigator.of(dialogContext).pop();
 
-              context.read<AdminCubit>().createEmployee({
+              cubit.createEmployee({
                 'firstName': firstCtrl.text.trim(),
                 'lastName': lastCtrl.text.trim(),
                 'email': emailCtrl.text.trim(),

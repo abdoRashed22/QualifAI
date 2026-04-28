@@ -10,6 +10,7 @@ part 'profile_state.dart';
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileRepository _repo;
   bool _isDisposed = false;
+  Map<String, dynamic>? _cachedProfile;
 
   ProfileCubit(this._repo) : super(ProfileInitial());
 
@@ -31,7 +32,8 @@ class ProfileCubit extends Cubit<ProfileState> {
         },
         (d) {
           if (!isClosed && !_isDisposed) {
-            emit(ProfileLoaded(d));
+            _cachedProfile = Map<String, dynamic>.from(d);
+            emit(ProfileLoaded(_cachedProfile!));
           }
         },
       );
@@ -103,7 +105,14 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> uploadPhoto(File file) async {
     if (isClosed || _isDisposed) return;
 
-    emit(ProfileUpdating());
+    if (_cachedProfile != null && !isClosed && !_isDisposed) {
+      emit(ProfileLoaded({
+        ..._cachedProfile!,
+        'localPhotoPath': file.path,
+      }));
+    } else {
+      emit(ProfileUpdating());
+    }
 
     try {
       final r = await _repo.uploadPhoto(file);
@@ -118,7 +127,6 @@ class ProfileCubit extends Cubit<ProfileState> {
         },
         (_) {
           if (!isClosed && !_isDisposed) {
-            // زي كودك: اعمل reload
             load();
           }
         },

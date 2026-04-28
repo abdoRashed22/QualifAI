@@ -100,7 +100,7 @@ class _StandardsListView extends StatelessWidget {
 
                   return AppCard(
                     onTap: () => context.push(
-                      '${AppRoutes.standardDetail}?sectionId=${s['sectionId'] ?? 0}&type=$accreditationType',
+                      '${AppRoutes.standardDetail.replaceFirst(':sectionId', '${s['id'] ?? s['sectionId'] ?? 0}')}?type=$accreditationType',
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,

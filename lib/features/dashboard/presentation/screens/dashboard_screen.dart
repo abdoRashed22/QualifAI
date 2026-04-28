@@ -24,10 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _cubit = sl<DashboardCubit>();
-    // Only load if not already loaded (avoids reload on every tab switch)
-    if (_cubit.state is DashboardInitial) {
-      _cubit.load();
-    }
+    _cubit.load(1);
   }
 
   @override
@@ -40,8 +37,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _DashboardView extends StatelessWidget {
+class _DashboardView extends StatefulWidget {
   const _DashboardView();
+
+  @override
+  State<_DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<_DashboardView>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
+      context.read<DashboardCubit>().load(_tabController.index + 1);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +79,35 @@ class _DashboardView extends StatelessWidget {
             onPressed: () => context.push(AppRoutes.notifications),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(44.h),
+          child: TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(
+                  child: Text('الأكاديمي',
+                      style: TextStyle(
+                          fontSize: 16.sp,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.green))),
+              Tab(
+                  child: Text('البرامجي',
+                      style: TextStyle(
+                          fontSize: 16.sp,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.green))),
+              Tab(
+                  child: Text('المؤسسي',
+                      style: TextStyle(
+                          fontSize: 16.sp,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.green))),
+            ],
+          ),
+        ),
       ),
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (ctx, state) {
@@ -86,7 +136,8 @@ class _DashboardView extends StatelessWidget {
           final sections = loaded?.sections ?? [];
 
           return RefreshIndicator(
-            onRefresh: () => ctx.read<DashboardCubit>().load(),
+            onRefresh: () =>
+                ctx.read<DashboardCubit>().load(_tabController.index + 1),
             child: ListView(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               children: [
@@ -104,7 +155,7 @@ class _DashboardView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              'مرحباً، $firstName 👋',
+                              'مرحباً$firstName ',
                               style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 18.sp,
@@ -112,7 +163,7 @@ class _DashboardView extends StatelessWidget {
                                 color: Colors.white,
                               ),
                             ),
-                            SizedBox(height: 4.h),
+                            //  SizedBox(height: 4.h),
                             Text(
                               _roleLabel(role),
                               style: TextStyle(
@@ -122,19 +173,13 @@ class _DashboardView extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 8.h),
-                            Text(
-                              'آخر تحديث: اليوم',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 11.sp,
-                                color: Colors.white38,
-                              ),
-                            ),
                           ],
                         ),
                       ),
                       SizedBox(width: 16.w),
-                      Text('🤖', style: TextStyle(fontSize: 44.sp)),
+                      Image.asset('assets/images/2 51.png',
+                          width: 64.w, height: 64.h),
+                      //   Text('🤖', style: TextStyle(fontSize: 44.sp)),
                     ],
                   ),
                 ),
@@ -207,14 +252,11 @@ class _DashboardView extends StatelessWidget {
                                   ),
                                 ),
                                 leftTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 topTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 rightTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                               ),
                               gridData: FlGridData(
                                 drawVerticalLine: false,
@@ -224,17 +266,15 @@ class _DashboardView extends StatelessWidget {
                                 ),
                               ),
                               borderData: FlBorderData(show: false),
-                              barGroups:
-                                  sections.asMap().entries.map((e) {
-                                final pct =
-                                    (e.value.completionPercent * 100);
+                              barGroups: sections.asMap().entries.map((e) {
+                                final pct = (e.value.completionPercent * 100);
                                 return BarChartGroupData(
                                   x: e.key,
                                   barRods: [
                                     BarChartRodData(
                                       toY: pct,
-                                      color: _pctColor(
-                                          e.value.completionPercent),
+                                      color:
+                                          _pctColor(e.value.completionPercent),
                                       width: 20.w,
                                       borderRadius: BorderRadius.vertical(
                                           top: Radius.circular(4.r)),
@@ -373,8 +413,7 @@ class _StandardRow extends StatelessWidget {
                   color: color,
                 ),
               ),
-              Text(section.name,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(section.name, style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
           SizedBox(height: 6.h),

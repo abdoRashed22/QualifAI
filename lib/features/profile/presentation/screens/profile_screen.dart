@@ -201,7 +201,9 @@ class _ProfileViewState extends State<_ProfileView> {
 
           final isLoading = state is ProfileUpdating;
 
-          final photoUrl = state is ProfileLoaded ? state.profile['photoUrl'] as String? : null;
+          final profile = state is ProfileLoaded ? state.profile : <String, dynamic>{};
+          final photoUrl = profile['photoUrl'] as String?;
+          final localPhotoPath = profile['localPhotoPath'] as String?;
 
 
 
@@ -231,7 +233,11 @@ class _ProfileViewState extends State<_ProfileView> {
 
                           backgroundColor: AppColors.blue.withOpacity(0.15),
 
-                          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                          backgroundImage: localPhotoPath != null
+                              ? FileImage(File(localPhotoPath))
+                              : (photoUrl != null
+                                  ? NetworkImage('$photoUrl?t=${DateTime.now().millisecondsSinceEpoch}')
+                                  : null) as ImageProvider?,
 
                           child: photoUrl == null
 

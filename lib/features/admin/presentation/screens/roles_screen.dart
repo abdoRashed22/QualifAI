@@ -40,12 +40,18 @@ class RolesScreen extends StatelessWidget {
 
 
 
-class _RolesView extends StatelessWidget {
-
+class _RolesView extends StatefulWidget {
   const _RolesView();
 
   @override
+  State<_RolesView> createState() => _RolesViewState();
+}
 
+class _RolesViewState extends State<_RolesView> {
+  List<dynamic> _cachedRoles = const [];
+  List<dynamic> _cachedPermissions = const [];
+
+  @override
   Widget build(BuildContext context) {
 
     return Scaffold(
@@ -60,6 +66,10 @@ class _RolesView extends StatelessWidget {
       body: BlocConsumer<AdminCubit, AdminState>(
 
         listener: (ctx, state) {
+          if (state is RolesLoaded) {
+            _cachedRoles = state.roles;
+            _cachedPermissions = state.permissions;
+          }
 
           if (state is AdminActionSuccess) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: AppColors.success));
 
@@ -71,25 +81,31 @@ class _RolesView extends StatelessWidget {
 
           if (state is AdminLoading) return const Center(child: CircularProgressIndicator());
 
-          if (state is RolesLoaded) {
+          final rolesState = state is RolesLoaded
+              ? state
+              : RolesLoaded(_cachedRoles, _cachedPermissions);
+
+          if (rolesState.roles.isNotEmpty || state is RolesLoaded) {
 
             return ListView.separated(
 
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
 
-              itemCount: state.roles.length,
+              itemCount: rolesState.roles.length,
 
               separatorBuilder: (_, __) => SizedBox(height: 10.h),
 
               itemBuilder: (_, i) {
 
-                final r = state.roles[i] as Map<String, dynamic>? ?? {};
+                final r = rolesState.roles[i] as Map<String, dynamic>? ?? {};
 
                 return AppCard(child: Row(children: [
 
                   GestureDetector(
 
-                    onTap: () => ctx.read<AdminCubit>().deleteRole(r['id'] ?? 0),
+                    onTap: () => ctx.read<AdminCubit>().deleteRole(
+                      int.tryParse('${r['id'] ?? r['roleId'] ?? 0}') ?? 0,
+                    ),
 
                     child: Container(padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
 
@@ -107,7 +123,7 @@ class _RolesView extends StatelessWidget {
 
                     SizedBox(height: 4.h),
 
-                    Text(r['description'] ?? '', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.right, maxLines: 2),
+                    Text(r['description'] ?? r['roleDescription'] ?? '', style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.right, maxLines: 2),
 
                   ])),
 
@@ -140,12 +156,13 @@ class _RolesView extends StatelessWidget {
 
 
   void _showAddRoleDialog(BuildContext context) {
+    final cubit = context.read<AdminCubit>();
 
     final nameCtrl = TextEditingController();
 
     final descCtrl = TextEditingController();
 
-    showDialog(context: context, builder: (_) => AlertDialog(
+    showDialog(context: context, builder: (dialogContext) => AlertDialog(
 
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
 
@@ -163,9 +180,9 @@ class _RolesView extends StatelessWidget {
 
       actions: [
 
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+        TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('إلغاء')),
 
-        ElevatedButton(onPressed: () { Navigator.pop(context); context.read<AdminCubit>().createRole(nameCtrl.text, descCtrl.text); }, child: const Text("إنشاء")),
+        ElevatedButton(onPressed: () { Navigator.of(dialogContext).pop(); cubit.createRole(nameCtrl.text.trim(), descCtrl.text.trim()); }, child: const Text("إنشاء")),
 
       ],
 

@@ -31,9 +31,8 @@ abstract class ApiEndpoints {
   static String getDocumentAnalysis(int reqDocId) =>
       '/Accreditation/documents/$reqDocId/analysis';
 
-  // ⚠️ FIXED (Claude change: /set-deadline → /deadline)
   static String setDeadline(int reqDocId) =>
-      '/Accreditation/documents/$reqDocId/deadline';
+      '/Accreditation/documents/$reqDocId/set-deadline';
 
   static const String deadlines = '/Accreditation/deadlines';
 
