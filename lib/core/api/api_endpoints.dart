@@ -1,7 +1,7 @@
 // lib/core/api/api_endpoints.dart
 
 abstract class ApiEndpoints {
-  static const String baseUrl = ' ';
+  static const String baseUrl = 'https://qualefai.runasp.net/api';
 
   // ── Auth ─────────────────────────────────────────
   static const String login = '/Auth/login';
