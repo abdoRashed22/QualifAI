@@ -18,15 +18,13 @@ class DashboardRemoteDs {
       final res = await _dio.get(ApiEndpoints.sections);
       final sections = res.data;
 
-      // Use local data as fallback if API returns empty
-      if (sections == null || (sections is List && sections.isEmpty)) {
-        return {'sections': _getLocalSections()};
+      if (sections is List) {
+        return {'sections': sections};
       }
 
-      return {'sections': sections};
-    } on DioException {
-      // Fallback to local data on network error
-      return {'sections': _getLocalSections()};
+      return {'sections': []};
+    } on DioException catch (e) {
+      throw dioToFailure(e);
     }
   }
 
@@ -52,10 +50,10 @@ class DashboardRemoteDs {
   Future<int> getUnreadCount() async {
     try {
       final res = await _dio.get(ApiEndpoints.unreadCount);
-
       return res.data is int ? res.data : (res.data['count'] ?? 0);
     } on DioException catch (e) {
       throw dioToFailure(e);
     }
   }
+
 }

@@ -99,21 +99,21 @@ class AccreditationCubit extends Cubit<AccreditationState> {
 
   // Normalize API response to use consistent field names
 
-  List<dynamic> _normalizeSections(List<dynamic> raw) {
-    return raw.map((s) {
-      if (s is! Map) return s;
+List<dynamic> _normalizeSections(List<dynamic> raw) {
+  return raw.map((s) {
+    if (s is! Map) return s;
 
-      return {
-        'id': s['sectionId'] ?? s['id'] ?? 0,
-        'name': s['sectionName'] ?? s['name'] ?? '',
-        'uploadedDocuments': s['completedDocs'] ?? s['uploadedDocuments'] ?? 0,
-        'requiredDocumentsCount':
-            s['totalDocs'] ?? s['requiredDocumentsCount'] ?? 1,
-        'completionPercentage': s['completionPercentage'] ?? 0,
-        'accreditationType': s['accreditationType'] ?? _lastAccreditationType ?? 0,
-      };
-    }).toList();
-  }
+    return {
+      'id': s['sectionId'] ?? s['id'] ?? 0,
+      'name': s['sectionName'] ?? s['name'] ?? '',
+      'uploadedDocuments': s['completedDocs'] ?? s['uploadedDocuments'] ?? 0,
+      'requiredDocumentsCount': s['totalDocs'] ?? s['requiredDocumentsCount'] ?? 1,
+      'completionPercentage': s['completionPercentage'] ?? 0,
+      // ✅ الـ API مش بيبعت accreditationType، خد القيمة من الـ cubit مباشرة
+      'accreditationType': _lastAccreditationType ?? 0,
+    };
+  }).toList();
+}
 
   Map<String, dynamic> _normalizeDetail(Map<String, dynamic> s) {
     final rawDocs =

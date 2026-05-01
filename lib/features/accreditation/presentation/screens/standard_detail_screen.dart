@@ -32,7 +32,7 @@ class StandardDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<AccreditationCubit>()
-          ..loadSectionDetail(sectionId, accreditationType),
+        ..loadSectionDetail(sectionId, accreditationType),
       child: const _StandardDetailView(),
     );
   }
@@ -80,15 +80,23 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
 
             final docs = (s['requiredDocuments'] as List?) ?? [];
 
-            final uploaded = (s['uploadedDocuments'] ?? 0) as int;
+            // Count actual uploaded documents based on hasFile field
+            final actualUploaded = docs.whereType<Map>().where((doc) {
+              return (doc['hasFile'] ?? false) == true;
+            }).length;
 
             final required = docs.length;
 
-            final rawCompletion = (s['completionPercentage'] as num?)?.toDouble();
+            final rawCompletion =
+                (s['completionPercentage'] as num?)?.toDouble();
+
+            // Calculate percentage: prefer API value, else use actual count
             final pct = rawCompletion != null
                 ? (rawCompletion > 1 ? rawCompletion / 100 : rawCompletion)
                     .clamp(0.0, 1.0)
-                : (required > 0 ? (uploaded / required).clamp(0.0, 1.0) : 0.0);
+                : (required > 0
+                    ? (actualUploaded / required).clamp(0.0, 1.0)
+                    : 0.0);
 
             return Column(
               children: [
@@ -152,12 +160,10 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                       final hasFile = doc['hasFile'] ?? false;
                       final deadlineText =
                           (doc['deadline'] ?? '').toString().trim();
-                      final statusText = (doc['statusLabel'] ?? '')
-                          .toString()
-                          .trim()
-                          .isEmpty
-                          ? (hasFile ? 'مرفوع' : 'غير مرفوع')
-                          : doc['statusLabel'].toString();
+                      final statusText =
+                          (doc['statusLabel'] ?? '').toString().trim().isEmpty
+                              ? (hasFile ? 'مرفوع' : 'غير مرفوع')
+                              : doc['statusLabel'].toString();
 
                       return AppCard(
                         child: Row(
@@ -169,19 +175,19 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                                   _ActionBtn(
                                     label: 'رفع ملف',
                                     color: AppColors.navyBlue,
-                                   onTap: () => context.push(
-  '${AppRoutes.fileUpload.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
-  '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
-),
+                                    onTap: () => context.push(
+                                      '${AppRoutes.fileUpload.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
+                                      '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+                                    ),
                                   ),
                                 if (hasFile)
                                   _ActionBtn(
                                     label: 'نتائج AI',
                                     color: AppColors.success,
                                     onTap: () => context.push(
-  '${AppRoutes.aiAnalysis.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
-  '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
-),
+                                      '${AppRoutes.aiAnalysis.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
+                                      '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+                                    ),
                                   ),
                                 SizedBox(height: 6.h),
                                 _ActionBtn(
@@ -298,8 +304,9 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: ctx,
-                    initialDate:
-                        selectedDate.isBefore(firstDate) ? firstDate : selectedDate,
+                    initialDate: selectedDate.isBefore(firstDate)
+                        ? firstDate
+                        : selectedDate,
                     firstDate: firstDate,
                     lastDate: firstDate.add(const Duration(days: 365)),
                   );

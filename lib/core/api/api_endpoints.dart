@@ -1,7 +1,7 @@
 // lib/core/api/api_endpoints.dart
 
 abstract class ApiEndpoints {
-  static const String baseUrl = 'https://qualefai.runasp.net/api';
+  static const String baseUrl = ' ';
 
   // ── Auth ─────────────────────────────────────────
   static const String login = '/Auth/login';
@@ -103,6 +103,18 @@ abstract class ApiEndpoints {
   // ── Support ─────────────────────────────────────
   static const String supportSubmit = '/Support/submit';
 
+  // ── Quality ──────────────────────────────────────
+  static const String qualityColleges = '/Quality/colleges';
+
+  static String qualityCollegeById(int collegeId) =>
+      '/Quality/colleges/$collegeId';
+
+  static String qualityFiles(int collegeId, int sectionId) =>
+      '/Quality/colleges/$collegeId/sections/$sectionId/files';
+
+  static String qualityDecision(int collegeId) =>
+      '/Quality/colleges/$collegeId/decision';
+
   // =================================================
   // ✅ CLAUDE ADDITIONS (NEW MODULES ONLY)
   // =================================================
@@ -117,8 +129,16 @@ abstract class ApiEndpoints {
 
   // Reports
   static const String reports = '/Reports';
+  static const String reportsUi = '/Reports/ui';
+  static const String reportsMy = '/Reports/my';
 
   static String reportDetail(int id) => '/Reports/$id';
+
+  static String reportsByCollege(int collegeId) =>
+      '/Reports/college/$collegeId';
+
+  static String reportDownload(int collegeId) =>
+      '/Reports/college/$collegeId/download';
 
   // Notifications (alt clean endpoint version)
   static const String notificationsV2 = '/Notifications';
