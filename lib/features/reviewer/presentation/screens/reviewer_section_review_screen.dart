@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../shared/widgets/app_badge.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../presentation/cubit/reviewer_cubit.dart';
 
@@ -39,6 +41,15 @@ class _ReviewerSectionReviewScreenState
       value: _cubit,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go(
+              AppRoutes.reviewerCollege.replaceFirst(
+                ':collegeId',
+                '${widget.collegeId}',
+              ),
+            ),
+          ),
           title: const Text('مراجعة المعيار'),
         ),
         body: BlocBuilder<ReviewerCubit, ReviewerState>(
@@ -70,6 +81,12 @@ class _ReviewerSectionReviewScreenState
               final sectionName =
                   _stringValue(section['name'] ?? section['title'] ?? 'معيار');
               final sectionStatus = _sectionStatusLabel(section);
+              final progress = _doubleValue(section['progressPercentage'] ??
+                  section['completionPercentage'] ??
+                  section['progress']);
+              final aiEvaluation = _stringValue(section['aiEvaluation'] ??
+                  section['aiResult'] ??
+                  'تقييم AI غير متوفر لهذا المعيار');
               return ListView(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
                 children: [
@@ -86,6 +103,45 @@ class _ReviewerSectionReviewScreenState
                         SizedBox(height: 14.h),
                         Text('الملفات المرتبطة',
                             style: Theme.of(context).textTheme.titleMedium),
+                        if (progress > 0) ...[
+                          SizedBox(height: 14.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('نسبة الإكمال',
+                                  style: TextStyle(fontSize: 13.sp)),
+                              Text('${progress.round()}%',
+                                  style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10.r),
+                            child: LinearProgressIndicator(
+                              minHeight: 8.h,
+                              value: (progress / 100).clamp(0.0, 1.0),
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation(
+                                  _statusColor(sectionStatus)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('تقييم AI',
+                            style: Theme.of(context).textTheme.titleMedium),
+                        SizedBox(height: 10.h),
+                        Text(aiEvaluation,
+                            style: TextStyle(
+                                fontSize: 13.sp, color: Colors.grey[700])),
                       ],
                     ),
                   ),
@@ -167,6 +223,31 @@ class _ReviewerSectionReviewScreenState
                       ],
                     ),
                   ),
+                  SizedBox(height: 20.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: AppButton(
+                          label: 'تقييم الاعتماد',
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تم حفظ تقييم الاعتماد'),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: AppButton(
+                          label: 'التواصل مع الكلية',
+                          variant: AppButtonVariant.outline,
+                          onPressed: () => context.push(AppRoutes.chatList),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               );
             }
@@ -183,6 +264,13 @@ class _ReviewerSectionReviewScreenState
     return value.toString();
   }
 
+  double _doubleValue(dynamic value) {
+    if (value == null) return 0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
   String _sectionStatusLabel(dynamic section) {
     final raw = section is Map
         ? section['status'] ??
@@ -192,8 +280,9 @@ class _ReviewerSectionReviewScreenState
     final value = raw?.toString().toLowerCase() ?? '';
     if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
     if (value.contains('reject') || value.contains('رفض')) return 'مرفوض';
-    if (value.contains('revision') || value.contains('تعديل'))
+    if (value.contains('revision') || value.contains('تعديل')) {
       return 'يحتاج تعديل';
+    }
     return 'قيد المراجعة';
   }
 
@@ -204,10 +293,12 @@ class _ReviewerSectionReviewScreenState
     final value = raw?.toString().toLowerCase() ?? '';
     if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
     if (value.contains('reject') || value.contains('رفض')) return 'مرفوض';
-    if (value.contains('revision') || value.contains('تعديل'))
+    if (value.contains('revision') || value.contains('تعديل')) {
       return 'يحتاج تعديل';
-    if (value.contains('pending') || value.contains('قيد'))
+    }
+    if (value.contains('pending') || value.contains('قيد')) {
       return 'قيد المراجعة';
+    }
     return 'غير معروف';
   }
 

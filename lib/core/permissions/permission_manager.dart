@@ -158,7 +158,7 @@ class PermissionManager {
 
   // Accreditation
   bool get canViewAccreditation => true; // all roles see accreditation
-  bool get canUploadFiles => true;       // all roles can upload in their scope
+  bool get canUploadFiles => isAdmin || isEmployee; // only employees or admins upload files
   bool get canStartAnalysis  => isAdmin || isManager;
   bool get canViewAllColleges => isAdmin || isManager;
 

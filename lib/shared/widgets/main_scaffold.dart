@@ -6,208 +6,84 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/app_router.dart';
 
-import '../../core/theme/app_colors.dart';
-
 import '../../core/di/injection.dart';
 
 import '../../core/cache/hive_cache.dart';
+import '../../core/permissions/permission_manager.dart';
 
 class MainScaffold extends StatelessWidget {
-
   final Widget child;
 
   final bool isAdmin;
 
   const MainScaffold({
-
     super.key,
-
     required this.child,
-
     this.isAdmin = false,
-
   });
 
   @override
-
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       body: child,
-
-      bottomNavigationBar: isAdmin ? _AdminBottomNav(context) : _UserBottomNav(context),
-
+      bottomNavigationBar:
+          isAdmin ? _AdminBottomNav(context) : _UserBottomNav(context),
     );
-
   }
 
   Widget _UserBottomNav(BuildContext context) {
-
     final location = GoRouterState.of(context).matchedLocation;
+    final permissionManager = PermissionManager(sl<HiveCache>());
+    final navItems = permissionManager.userNavItems;
 
-    final role = sl<HiveCache>().getRole() ?? '';
-
-    final isManager = role == 'quality_manager' || role == 'system_admin';
-
-    int currentIndex = 0;
-
-    if (location.startsWith('/accreditation') ||
-
-        location.startsWith('/standards') ||
-
-        location.startsWith('/upload') ||
-
-        location.startsWith('/ai-analysis')) {
-
-      currentIndex = 1;
-
-    } else if (location.startsWith('/chat')) {
-
-      // ✅ NEW: chat tab index
-
-      currentIndex = 2;
-
-    } else if (location.startsWith('/reports')) {
-
-      currentIndex = 3;
-
-    } else if (location.startsWith('/notifications')) {
-
-      currentIndex = 4;
-
-    } else if (location.startsWith('/profile')) {
-
-      currentIndex = 5;
-
-    }
+    int currentIndex = navItems.indexWhere(
+      (item) => location.startsWith(item.route),
+    );
+    if (currentIndex < 0) currentIndex = 0;
 
     return Container(
-
       decoration: BoxDecoration(
-
         border: Border(
-
           top: BorderSide(
-
             color: Theme.of(context).dividerColor,
-
             width: 0.5,
-
           ),
-
         ),
-
       ),
-
       child: BottomNavigationBar(
-
         currentIndex: currentIndex,
-
-        // ✅ FIX: type fixed مهم عشان أكتر من 3 tabs ميطلعوش رمادي
-
         type: BottomNavigationBarType.fixed,
-
-        onTap: (i) {
-
-          switch (i) {
-
-            case 0:
-
-              context.go(AppRoutes.dashboard);
-
-              break;
-
-            case 1:
-
-              context.go(AppRoutes.accreditation);
-
-              break;
-
-            case 2:
-
-              // ✅ NEW: chat navigation
-
-              context.go(AppRoutes.chatList);
-
-              break;
-
-            case 3:
-
-              context.go(AppRoutes.reports);
-
-              break;
-
-            case 4:
-
-              context.go(AppRoutes.notifications);
-
-              break;
-
-            case 5:
-
-              context.go(AppRoutes.profile);
-
-              break;
-
-          }
-
-        },
-
-        items: const [
-
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
-
-          BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), activeIcon: Icon(Icons.assignment), label: 'الاعتماد'),
-
-          // ✅ NEW: chat tab
-
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), activeIcon: Icon(Icons.chat_bubble), label: 'المحادثات'),
-
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), activeIcon: Icon(Icons.bar_chart), label: 'التقارير'),
-
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'الإشعارات'),
-
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'حسابي'),
-
-        ],
-
+        onTap: (i) => context.go(navItems[i].route),
+        items: navItems.map((item) {
+          final icon = _navIcon(item.iconKey);
+          return BottomNavigationBarItem(
+            icon: icon,
+            activeIcon: icon,
+            label: item.label,
+          );
+        }).toList(),
       ),
-
     );
-
   }
 
   Widget _AdminBottomNav(BuildContext context) {
-
     final location = GoRouterState.of(context).matchedLocation;
 
     int currentIndex = 0;
 
     if (location.startsWith('/admin/employees')) {
-
       currentIndex = 1;
-
     } else if (location.startsWith('/admin/roles')) {
-
       currentIndex = 2;
-
     } else if (location.startsWith('/admin/colleges')) {
-
       currentIndex = 3;
-
     } else if (location.startsWith('/admin/pricing')) {
-
       currentIndex = 4;
-
     } else if (location.startsWith('/admin/activity')) {
-
       currentIndex = 5;
-
     }
 
     return BottomNavigationBar(
-
       currentIndex: currentIndex,
 
       // ✅ FIX: type fixed مهم عشان 6 tabs ميطلعوش رمادي
@@ -215,67 +91,90 @@ class MainScaffold extends StatelessWidget {
       type: BottomNavigationBarType.fixed,
 
       onTap: (i) {
-
         switch (i) {
-
           case 0:
-
             context.go(AppRoutes.adminDashboard);
 
             break;
 
           case 1:
-
             context.go(AppRoutes.employees);
 
             break;
 
           case 2:
-
             context.go(AppRoutes.roles);
 
             break;
 
           case 3:
-
             context.go(AppRoutes.colleges);
 
             break;
 
           case 4:
-
             context.go(AppRoutes.pricing);
 
             break;
 
           case 5:
-
             context.go(AppRoutes.activityLog);
 
             break;
-
         }
-
       },
 
       items: const [
-
-        BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'لوحة التحكم'),
-
-        BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'الموظفون'),
-
-        BottomNavigationBarItem(icon: Icon(Icons.security_outlined), activeIcon: Icon(Icons.security), label: 'الأدوار'),
-
-        BottomNavigationBarItem(icon: Icon(Icons.school_outlined), activeIcon: Icon(Icons.school), label: 'الكليات'),
-
-        BottomNavigationBarItem(icon: Icon(Icons.monetization_on_outlined), activeIcon: Icon(Icons.monetization_on), label: 'الأسعار'),
-
-        BottomNavigationBarItem(icon: Icon(Icons.history_outlined), activeIcon: Icon(Icons.history), label: 'سجل الأنشطة'),
-
+        BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
+            label: 'لوحة التحكم'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            activeIcon: Icon(Icons.people),
+            label: 'الموظفون'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.security_outlined),
+            activeIcon: Icon(Icons.security),
+            label: 'الأدوار'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined),
+            activeIcon: Icon(Icons.school),
+            label: 'الكليات'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.monetization_on_outlined),
+            activeIcon: Icon(Icons.monetization_on),
+            label: 'الأسعار'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.history_outlined),
+            activeIcon: Icon(Icons.history),
+            label: 'سجل الأنشطة'),
       ],
-
     );
-
   }
 
+  Icon _navIcon(String iconKey) {
+    switch (iconKey) {
+      case 'home':
+        return const Icon(Icons.home_outlined);
+      case 'accreditation':
+        return const Icon(Icons.assignment_outlined);
+      case 'deadlines':
+        return const Icon(Icons.schedule_outlined);
+      case 'reports':
+        return const Icon(Icons.bar_chart_outlined);
+      case 'employees':
+        return const Icon(Icons.people_outline);
+      case 'roles':
+        return const Icon(Icons.security_outlined);
+      case 'chat':
+        return const Icon(Icons.chat_bubble_outline);
+      case 'notifications':
+        return const Icon(Icons.notifications_outlined);
+      case 'profile':
+        return const Icon(Icons.person_outline);
+      default:
+        return const Icon(Icons.circle_outlined);
+    }
+  }
 }

@@ -1,6 +1,7 @@
 // lib/core/api/dio_client.dart
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../cache/hive_cache.dart';
 import 'api_endpoints.dart';
@@ -13,8 +14,9 @@ class DioClient {
       : _dio = Dio(
           BaseOptions(
             baseUrl: ApiEndpoints.baseUrl,
-            connectTimeout: const Duration(seconds: 60),
-            receiveTimeout: const Duration(seconds: 60),
+            connectTimeout: const Duration(seconds: 120),
+            receiveTimeout: const Duration(seconds: 120),
+            sendTimeout: const Duration(seconds: 120),
             responseType: ResponseType.bytes, // ✅ مهم لدعم UTF-8
             headers: {
               'Content-Type': 'application/json; charset=utf-8',
@@ -45,19 +47,20 @@ class DioClient {
             options.contentType = 'application/json; charset=utf-8';
           }
 
-          print('📤 [REQUEST] ${options.method} ${options.path}');
-          print('📤 [HEADERS] ${options.headers}');
-          print('📤 [BODY] ${options.data}');
+          debugPrint('📤 [REQUEST] ${options.method} ${options.path}');
+          debugPrint('📤 [HEADERS] ${options.headers}');
+          debugPrint('📤 [BODY] ${options.data}');
 
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          print(
+          debugPrint(
               '📥 [RESPONSE] ${response.statusCode} ${response.requestOptions.path}');
           return handler.next(response);
         },
         onError: (error, handler) {
-          print('❌ [ERROR] ${error.response?.statusCode} ${error.message}');
+          debugPrint(
+              '❌ [ERROR] ${error.response?.statusCode} ${error.message}');
 
           // ✅ Handle 401
           if (error.response?.statusCode == 401) {
@@ -83,7 +86,7 @@ class DioClient {
         compact: true,
         logPrint: (obj) {
           assert(() {
-            print(obj);
+            debugPrint(obj.toString());
             return true;
           }());
         },

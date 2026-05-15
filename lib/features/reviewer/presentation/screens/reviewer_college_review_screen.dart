@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_text_field.dart';
@@ -93,9 +92,23 @@ class _ReviewerCollegeReviewScreenState
               final name = _stringValue(college['name'] ??
                   college['collegeName'] ??
                   college['title']);
-              final status = _statusLabel(college);
               final type = _stringValue(
                   college['accreditationType'] ?? college['type'] ?? '');
+              final university = _stringValue(college['university']);
+              final readiness = _doubleValue(college['readinessPercentage'] ??
+                  college['readinessPct'] ??
+                  college['completionPercentage']);
+              final progressStatus = _stringValue(college['progressStatus']);
+              final accreditationStatus = _stringValue(
+                  college['accreditationStatus'] ?? college['status']);
+              final progressStatusColor = _colorFromValue(
+                  college['progressStatusColor'], Colors.orange);
+              final accreditationStatusColor = _colorFromValue(
+                  college['accreditationStatusColor'], Colors.blueGrey);
+              final lastUploadDate = _formatDate(college['lastUploadDate']);
+              final decisionDate =
+                  _formatDate(college['accreditationDecisionDate']);
+              final rejectionReason = _stringValue(college['rejectionReason']);
               final sections = state.sections;
               return ListView(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
@@ -106,21 +119,59 @@ class _ReviewerCollegeReviewScreenState
                       children: [
                         Text(name,
                             style: Theme.of(context).textTheme.titleLarge),
-                        SizedBox(height: 8.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        if (university.isNotEmpty) ...[
+                          SizedBox(height: 6.h),
+                          Text(university,
+                              style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                        SizedBox(height: 12.h),
+                        Wrap(
+                          spacing: 10.w,
+                          runSpacing: 10.h,
+                          alignment: WrapAlignment.end,
                           children: [
-                            AppBadge(
-                                label: 'الحالة: $status',
-                                color: _statusColor(status)),
                             AppBadge(
                                 label: type.isNotEmpty
                                     ? 'نوع الاعتماد: $type'
                                     : 'نوع غير محدد',
                                 color: Colors.blueGrey),
+                            if (progressStatus.isNotEmpty)
+                              AppBadge(
+                                label: progressStatus,
+                                color: progressStatusColor,
+                              ),
+                            if (accreditationStatus.isNotEmpty)
+                              AppBadge(
+                                label: accreditationStatus,
+                                color: accreditationStatusColor,
+                              ),
                           ],
                         ),
-                        SizedBox(height: 12.h),
+                        SizedBox(height: 16.h),
+                        if (readiness > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('نسبة الجاهزية',
+                                  style: TextStyle(fontSize: 14.sp)),
+                              Text('${readiness.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          LinearProgressIndicator(
+                            value: (readiness / 100).clamp(0.0, 1.0),
+                            minHeight: 8.h,
+                            color: Colors.green,
+                            backgroundColor: const Color(0x3327AE60),
+                          ),
+                          SizedBox(height: 14.h),
+                        ],
                         Row(
                           children: [
                             _metricTile('عدد المعايير', '${sections.length}'),
@@ -129,9 +180,47 @@ class _ReviewerCollegeReviewScreenState
                                 'المراجعات', '${_completedCount(sections)}'),
                           ],
                         ),
+                        if (lastUploadDate.isNotEmpty ||
+                            decisionDate.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(top: 16.h),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (lastUploadDate.isNotEmpty)
+                                  Text('آخر رفع: $lastUploadDate',
+                                      style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: Colors.grey[700])),
+                                if (decisionDate.isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 6.h),
+                                    child: Text('تاريخ القرار: $decisionDate',
+                                        style: TextStyle(
+                                            fontSize: 12.sp,
+                                            color: Colors.grey[700])),
+                                  ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
+                  if (rejectionReason.isNotEmpty) ...[
+                    SizedBox(height: 18.h),
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('سبب الرفض'),
+                          SizedBox(height: 8.h),
+                          Text(rejectionReason,
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.grey[800])),
+                        ],
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 18.h),
                   Text('المعايير المخصصة',
                       style: Theme.of(context).textTheme.titleMedium),
@@ -176,8 +265,27 @@ class _ReviewerCollegeReviewScreenState
                                       color: _statusColor(sectionStatus)),
                                   SizedBox(width: 10.w),
                                   Expanded(
-                                      child:
-                                          Text('انقر لعرض الملفات والتعليقات')),
+                                    child: Text(
+                                      'انقر لعرض الملفات والتعليقات',
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12.sp),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  AppButton(
+                                    label: 'عرض الملفات',
+                                    variant: AppButtonVariant.outline,
+                                    fullWidth: false,
+                                    height: 38.h,
+                                    onPressed: () => context.go(AppRoutes
+                                        .reviewerSection
+                                        .replaceAll(
+                                            ':collegeId', '${widget.collegeId}')
+                                        .replaceAll(
+                                            ':sectionId', '$sectionId')),
+                                  ),
                                 ],
                               ),
                             ],
@@ -185,6 +293,11 @@ class _ReviewerCollegeReviewScreenState
                         ),
                       );
                     }),
+                  SizedBox(height: 18.h),
+                  AppButton(
+                    label: 'عرض التقارير',
+                    onPressed: () => context.go(AppRoutes.reports),
+                  ),
                   SizedBox(height: 18.h),
                   AppCard(
                     child: Column(
@@ -205,8 +318,9 @@ class _ReviewerCollegeReviewScreenState
                               )
                               .toList(),
                           onChanged: (value) {
-                            if (value != null)
+                            if (value != null) {
                               setState(() => _selectedStatus = value);
+                            }
                           },
                         ),
                         SizedBox(height: 16.h),
@@ -264,16 +378,60 @@ class _ReviewerCollegeReviewScreenState
     return int.tryParse(value.toString()) ?? 0;
   }
 
-  String _statusLabel(dynamic college) {
-    final raw = college is Map
-        ? college['status'] ?? college['reviewStatus'] ?? college['statusName']
-        : null;
-    final value = raw?.toString().toLowerCase() ?? '';
-    if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
-    if (value.contains('reject') || value.contains('رفض')) return 'مرفوض';
-    if (value.contains('revision') || value.contains('تعديل'))
-      return 'يحتاج تعديل';
-    return 'قيد المراجعة';
+  double _doubleValue(dynamic value) {
+    if (value == null) return 0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
+  String _formatDate(dynamic value) {
+    if (value == null) return '';
+    try {
+      final date = DateTime.parse(value.toString()).toLocal();
+      return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return value.toString();
+    }
+  }
+
+  Color _colorFromValue(dynamic rawValue, Color fallback) {
+    final value = rawValue?.toString().trim();
+    if (value == null || value.isEmpty) return fallback;
+
+    final hex = value.replaceAll('#', '');
+    if (RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(hex)) {
+      return Color(int.parse('FF$hex', radix: 16));
+    }
+    if (RegExp(r'^[0-9A-Fa-f]{8}$').hasMatch(hex)) {
+      return Color(int.parse(hex, radix: 16));
+    }
+
+    switch (value.toLowerCase()) {
+      case 'red':
+      case 'danger':
+        return Colors.red;
+      case 'orange':
+      case 'warning':
+        return Colors.orange;
+      case 'green':
+      case 'success':
+        return Colors.green;
+      case 'blue':
+      case 'info':
+        return Colors.blue;
+      case 'grey':
+      case 'gray':
+        return Colors.grey;
+      case 'black':
+        return Colors.black;
+      case 'white':
+        return Colors.white;
+      case 'yellow':
+        return Colors.yellow;
+      default:
+        return fallback;
+    }
   }
 
   String _sectionStatusLabel(dynamic section) {
@@ -284,9 +442,12 @@ class _ReviewerCollegeReviewScreenState
         : null;
     final value = raw?.toString().toLowerCase() ?? '';
     if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
-    if (value.contains('reject') || value.contains('رفض')) return 'مرفوض';
-    if (value.contains('revision') || value.contains('تعديل'))
+    if (value.contains('reject') || value.contains('رفض')) {
+      return 'مرفوض';
+    }
+    if (value.contains('revision') || value.contains('تعديل')) {
       return 'يحتاج تعديل';
+    }
     return 'قيد المراجعة';
   }
 
@@ -302,7 +463,10 @@ class _ReviewerCollegeReviewScreenState
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(value,
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold)),
             SizedBox(height: 6.h),
             Text(label,
                 style: TextStyle(fontSize: 12.sp, color: Colors.grey[700])),

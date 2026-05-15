@@ -9,11 +9,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
-
 import '../../../../core/router/app_router.dart';
-
 import '../../../../core/theme/app_colors.dart';
-
+import '../../../../core/cache/hive_cache.dart';
+import '../../../../core/permissions/permission_manager.dart';
 import '../../../../shared/widgets/app_card.dart';
 
 import '../cubit/accreditation_cubit.dart';
@@ -79,6 +78,8 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
             final s = state.section;
 
             final docs = (s['requiredDocuments'] as List?) ?? [];
+
+            final permissionManager = PermissionManager(sl<HiveCache>());
 
             // Count actual uploaded documents based on hasFile field
             final actualUploaded = docs.whereType<Map>().where((doc) {
@@ -171,33 +172,38 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (!hasFile)
+                                if (permissionManager.canUploadFiles &&
+                                    !hasFile)
                                   _ActionBtn(
                                     label: 'رفع ملف',
                                     color: AppColors.navyBlue,
                                     onTap: () => context.push(
                                       '${AppRoutes.fileUpload.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
-                                      '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+                                      '?type=${s['accreditationType']}&sectionId=${s['id']}',
                                     ),
                                   ),
-                                if (hasFile)
+                                if (hasFile &&
+                                    permissionManager.canViewAccreditation)
                                   _ActionBtn(
                                     label: 'نتائج AI',
                                     color: AppColors.success,
                                     onTap: () => context.push(
                                       '${AppRoutes.aiAnalysis.replaceFirst(':docId', '${doc['requiredDocumentId'] ?? 0}')}'
-                                      '?type=${s['accreditationType']}&sectionId=${s['id']}', // ✅ NEW
+                                      '?type=${s['accreditationType']}&sectionId=${s['id']}',
                                     ),
                                   ),
-                                SizedBox(height: 6.h),
-                                _ActionBtn(
-                                  label: 'تحديد الموعد النهائي',
-                                  color: AppColors.warning,
-                                  onTap: () => _showDeadlineDialog(
-                                      context,
-                                      ctx.read<AccreditationCubit>(),
-                                      doc['requiredDocumentId'] ?? 0),
-                                ),
+                                if (permissionManager.canSetDeadlines)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 6.h),
+                                    child: _ActionBtn(
+                                      label: 'تحديد الموعد النهائي',
+                                      color: AppColors.warning,
+                                      onTap: () => _showDeadlineDialog(
+                                          context,
+                                          ctx.read<AccreditationCubit>(),
+                                          doc['requiredDocumentId'] ?? 0),
+                                    ),
+                                  ),
                               ],
                             ),
                             SizedBox(width: 12.w),
