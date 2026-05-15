@@ -86,11 +86,29 @@ class _ProfileViewState extends State<_ProfileView> {
   }
 
   void _populateFields(Map<String, dynamic> data) {
-    _emailCtrl.text = data['email'] ?? '';
+    _emailCtrl.text =
+        data['email'] ?? data['userEmail'] ?? data['emailAddress'] ?? '';
 
-    _firstCtrl.text = data['firstName'] ?? '';
+    _firstCtrl.text = data['firstName'] ??
+        data['first_name'] ??
+        data['name'] ??
+        data['fullName'] ??
+        '';
 
-    _lastCtrl.text = data['lastName'] ?? '';
+    _lastCtrl.text = data['lastName'] ?? data['last_name'] ?? '';
+
+    if (_firstCtrl.text.isEmpty && _lastCtrl.text.isEmpty) {
+      final fullName = data['fullName'] ?? data['name'] ?? '';
+      if (fullName is String && fullName.trim().isNotEmpty) {
+        final parts = fullName.trim().split(' ');
+        if (parts.isNotEmpty) {
+          _firstCtrl.text = parts.first;
+          if (parts.length > 1) {
+            _lastCtrl.text = parts.sublist(1).join(' ');
+          }
+        }
+      }
+    }
   }
 
   Future<void> _pickImage(ProfileCubit cubit) async {
