@@ -48,6 +48,17 @@ class _ReviewerCollegeReviewScreenState
       value: _cubit,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.reviewerDashboard);
+              }
+            },
+          ),
           title: const Text('مراجعة الكلية'),
         ),
         body: BlocConsumer<ReviewerCubit, ReviewerState>(
@@ -243,7 +254,13 @@ class _ReviewerCollegeReviewScreenState
                       final sectionId =
                           _intValue(section['id'] ?? section['sectionId']);
                       final sectionName = _stringValue(
-                          section['name'] ?? section['title'] ?? 'معيار');
+                        section['name'] ??
+                            section['sectionName'] ??
+                            section['standardName'] ??
+                            section['title'] ??
+                            section['sectionTitle'] ??
+                            'معيار',
+                      );
                       final sectionStatus = _sectionStatusLabel(section);
                       return Padding(
                         padding: EdgeInsets.only(bottom: 12.h),

@@ -216,7 +216,7 @@ class AdminCubit extends Cubit<AdminState> {
     );
   }
 
-  Future<void> loadColleges() async {
+  Future<void> loadColleges({String? successMessage}) async {
     if (isClosed || _isDisposed) return;
 
     emit(AdminLoading());
@@ -233,7 +233,39 @@ class AdminCubit extends Cubit<AdminState> {
       },
       (list) {
         if (!isClosed && !_isDisposed) {
-          emit(CollegesLoaded(list));
+          if (successMessage != null && successMessage.isNotEmpty) {
+            emit(CollegesLoadedSuccess(list, successMessage));
+          } else {
+            emit(CollegesLoaded(list));
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> createCollege(Map<String, dynamic> data) async {
+    if (isClosed || _isDisposed) return;
+
+    emit(AdminActionLoading());
+
+    final payload = {
+      'name': data['name']?.toString().trim(),
+      'university': data['university']?.toString().trim(),
+    };
+
+    final r = await _repo.createCollege(payload);
+
+    if (isClosed || _isDisposed) return;
+
+    r.fold(
+      (f) {
+        if (!isClosed && !_isDisposed) {
+          emit(AdminError(f.message));
+        }
+      },
+      (_) {
+        if (!isClosed && !_isDisposed) {
+          loadColleges(successMessage: 'تم إضافة الكلية');
         }
       },
     );
@@ -256,8 +288,7 @@ class AdminCubit extends Cubit<AdminState> {
       },
       (_) {
         if (!isClosed && !_isDisposed) {
-          emit(const AdminActionSuccess('تم حذف الكلية'));
-          loadColleges();
+          loadColleges(successMessage: 'تم حذف الكلية');
         }
       },
     );
@@ -320,7 +351,10 @@ class AdminCubit extends Cubit<AdminState> {
           .toString();
       final lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
       final email = (emp['email'] ?? emp['userEmail'] ?? '').toString();
-      final role = (emp['roleName'] ?? emp['role'] ?? emp['roleDisplayName'] ?? 'employee')
+      final role = (emp['roleName'] ??
+              emp['role'] ??
+              emp['roleDisplayName'] ??
+              'employee')
           .toString();
       return {
         'id': emp['id'] ?? emp['employeeId'] ?? 0,
@@ -328,8 +362,11 @@ class AdminCubit extends Cubit<AdminState> {
         'lastName': lastName,
         'email': email,
         'role': role,
-        'profileImage':
-            emp['profileImage'] ?? emp['image'] ?? emp['photo'] ?? emp['avatarUrl'] ?? '',
+        'profileImage': emp['profileImage'] ??
+            emp['image'] ??
+            emp['photo'] ??
+            emp['avatarUrl'] ??
+            '',
       };
     }).toList();
   }

@@ -54,6 +54,16 @@ class CollegesLoaded extends AdminState {
   List<Object?> get props => [colleges];
 }
 
+class CollegesLoadedSuccess extends CollegesLoaded {
+  final String message;
+
+  const CollegesLoadedSuccess(List<dynamic> colleges, this.message)
+      : super(colleges);
+
+  @override
+  List<Object?> get props => [colleges, message];
+}
+
 class PlansLoaded extends AdminState {
   final List<dynamic> plans;
 

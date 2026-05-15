@@ -80,7 +80,13 @@ class _ReviewerDashboardView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('مرحباً بك في لوحة مراجعة الاعتماد'),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'مرحباً بك في لوحة مراجعة الاعتماد',
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
                         SizedBox(height: 8.h),
                         Text(
                           'هنا تجد الكليات المخصصة لك والملاحظات الحديثة',
@@ -148,6 +154,8 @@ class _ReviewerDashboardView extends StatelessWidget {
                       final type = _stringValue(college['accreditationType'] ??
                           college['type'] ??
                           '');
+                      final lastUploadDate =
+                          _formatDate(college['lastUploadDate']);
                       return Padding(
                         padding: EdgeInsets.only(bottom: 12.h),
                         child: AppCard(
@@ -157,12 +165,33 @@ class _ReviewerDashboardView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  _buildCollegeImage(
+                                      college['imagePath'] ?? college['logo']),
+                                  SizedBox(width: 10.w),
                                   Expanded(
-                                    child: Text(name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(name,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium),
+                                        if (lastUploadDate.isNotEmpty)
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 4.h),
+                                            child: Text(
+                                              'آخر رفع: $lastUploadDate',
+                                              style: TextStyle(
+                                                fontSize: 12.sp,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                   AppBadge(label: status, color: badgeColor),
                                 ],
@@ -193,6 +222,8 @@ class _ReviewerDashboardView extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium),
                     SizedBox(height: 12.h),
                     ...state.recentActivity.map((item) {
+                      final id = _intValue(
+                          item['id'] ?? item['collegeId'] ?? item['sectionId']);
                       final title = _stringValue(
                           item['name'] ?? item['collegeName'] ?? item['title']);
                       final subtitle =
@@ -205,6 +236,10 @@ class _ReviewerDashboardView extends StatelessWidget {
                             title: Text(title),
                             subtitle: Text(subtitle),
                             trailing: const Icon(Icons.chevron_left),
+                            onTap: id > 0
+                                ? () => context.go(AppRoutes.reviewerCollege
+                                    .replaceAll(':collegeId', '$id'))
+                                : null,
                           ),
                         ),
                       );
@@ -232,6 +267,16 @@ class _ReviewerDashboardView extends StatelessWidget {
     return int.tryParse(value.toString()) ?? 0;
   }
 
+  String _formatDate(dynamic value) {
+    if (value == null) return '';
+    try {
+      final date = DateTime.parse(value.toString()).toLocal();
+      return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return value.toString();
+    }
+  }
+
   String _statusLabel(dynamic college) {
     final raw = college is Map
         ? college['status'] ?? college['reviewStatus'] ?? college['statusName']
@@ -249,6 +294,51 @@ class _ReviewerDashboardView extends StatelessWidget {
     if (status == 'مرفوض') return Colors.red;
     if (status == 'يحتاج تعديل') return Colors.orange;
     return Colors.blue;
+  }
+
+  Widget _buildCollegeImage(dynamic imagePath) {
+    final url = _resolveImagePath(imagePath);
+    return Container(
+      width: 58.w,
+      height: 58.w,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.r),
+        child: url.isEmpty
+            ? Center(
+                child: Icon(
+                  Icons.account_balance,
+                  size: 28.sp,
+                  color: Colors.grey[700],
+                ),
+              )
+            : Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Icon(
+                    Icons.account_balance,
+                    size: 28.sp,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  String _resolveImagePath(dynamic imagePath) {
+    if (imagePath == null) return '';
+    final path = imagePath.toString().trim();
+    if (path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/')) {
+      return 'https://qualifai.runasp.net$path';
+    }
+    return path;
   }
 }
 
