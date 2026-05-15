@@ -11,6 +11,9 @@ class HiveCache {
   static const String _roleKey = 'user_role';
   static const String _themeKey = 'is_dark_mode';
   static const String _langKey = 'language_code';
+  static const String _roleNameKey = 'user_role_name';
+  static const String _actionKey = 'user_action';
+  static const String _employeeIdKey = 'employee_id';
 
   late final Box _auth;
   late final Box _settings;
@@ -40,6 +43,24 @@ class HiveCache {
   Future<void> saveRole(String role) async {
     await _auth.put(_roleKey, role);
   }
+
+  Future<void> saveRoleName(String roleName) async {
+    await _auth.put(_roleNameKey, roleName);
+  }
+
+  String? getRoleName() => _auth.get(_roleNameKey);
+
+  Future<void> saveAction(String action) async {
+    await _auth.put(_actionKey, action);
+  }
+
+  String? getAction() => _auth.get(_actionKey);
+
+  Future<void> saveEmployeeId(int id) async {
+    await _auth.put(_employeeIdKey, id);
+  }
+
+  int? getEmployeeId() => _auth.get(_employeeIdKey);
 
   String? getRole() => _auth.get(_roleKey);
 

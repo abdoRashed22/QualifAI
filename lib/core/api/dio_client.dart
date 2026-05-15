@@ -13,8 +13,8 @@ class DioClient {
       : _dio = Dio(
           BaseOptions(
             baseUrl: ApiEndpoints.baseUrl,
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
             responseType: ResponseType.bytes, // ✅ مهم لدعم UTF-8
             headers: {
               'Content-Type': 'application/json; charset=utf-8',

@@ -4,10 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../features/auth/presentation/cubit/auth_cubit.dart';
-
 import '../../features/auth/presentation/screens/splash_screen.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -48,15 +44,13 @@ import '../../features/admin/presentation/screens/roles_screen.dart';
 
 import '../../features/admin/presentation/screens/colleges_screen.dart';
 
+import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.dart';
+import '../../features/reviewer/presentation/screens/reviewer_college_review_screen.dart';
+import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
+
 import '../../shared/widgets/main_scaffold.dart';
 
 import '../cache/hive_cache.dart';
-
-import '../di/injection.dart';
-
-// ✅ NEW: Placeholder screens عشان الـ app تـcompile — استبدلهم بملفات حقيقية لما تعملهم
-
-
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -66,6 +60,13 @@ abstract class AppRoutes {
   static const forgotPassword = '/forgot-password';
 
   static const dashboard = '/dashboard';
+
+  static const reviewerDashboard = '/reviewer';
+
+  static const reviewerCollege = '/reviewer/college/:collegeId';
+
+  static const reviewerSection =
+      '/reviewer/college/:collegeId/section/:sectionId';
 
   static const accreditation = '/accreditation';
 
@@ -125,9 +126,7 @@ GoRouter buildRouter(HiveCache cache) {
 
         final isAdmin = role == 'admin';
 
-        final isEmployee = role == 'employee';
-
-        final isManager = role == 'manager';
+        final isReviewer = role == 'reviewer' || role == 'employee';
 
         // 🔐 حماية Routes
 
@@ -139,6 +138,12 @@ GoRouter buildRouter(HiveCache cache) {
 
         if (path == AppRoutes.dashboard) {
           if (isAdmin) return AppRoutes.adminDashboard;
+          if (isReviewer) return AppRoutes.reviewerDashboard;
+        }
+
+        if (path == AppRoutes.reviewerDashboard ||
+            path.startsWith('/reviewer/college')) {
+          if (!isReviewer) return AppRoutes.dashboard;
         }
       }
 
@@ -168,6 +173,31 @@ GoRouter buildRouter(HiveCache cache) {
           GoRoute(
             path: AppRoutes.dashboard,
             builder: (ctx, _) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.reviewerDashboard,
+            builder: (ctx, _) => const ReviewerDashboardScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.reviewerCollege,
+            builder: (ctx, state) {
+              final collegeId =
+                  int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
+              return ReviewerCollegeReviewScreen(collegeId: collegeId);
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.reviewerSection,
+            builder: (ctx, state) {
+              final collegeId =
+                  int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
+              final sectionId =
+                  int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
+              return ReviewerSectionReviewScreen(
+                collegeId: collegeId,
+                sectionId: sectionId,
+              );
+            },
           ),
           GoRoute(
             path: AppRoutes.accreditation,

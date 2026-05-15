@@ -52,6 +52,10 @@ import '../../features/dashboard/data/remote/dashboard_remote_ds.dart';
 import '../../features/dashboard/repository/dashboard_repository_impl.dart';
 import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
+import '../../features/reviewer/data/remote/reviewer_remote_ds.dart';
+import '../../features/reviewer/repository/reviewer_repository_impl.dart';
+import '../../features/reviewer/domain/repositories/reviewer_repository.dart';
+import '../../features/reviewer/presentation/cubit/reviewer_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -61,20 +65,8 @@ Future<void> setupDI() async {
   await cache.init();
   sl.registerSingleton<HiveCache>(cache);
 
-  // Setup Dio with proper configuration
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: 'https://qualefai.runasp.net/api',
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
-      responseType: ResponseType.json,
-      validateStatus: (status) => status != null && status < 500,
-    ),
-  );
-
-  // Register Dio with DioClient (which adds interceptors)
-  final dioClient = DioClient( sl<HiveCache>());
+  // Register DioClient with interceptors and cache support
+  final dioClient = DioClient(sl<HiveCache>());
   sl.registerSingleton<DioClient>(dioClient);
   sl.registerSingleton<Dio>(dioClient.dio);
 
@@ -110,6 +102,17 @@ Future<void> setupDI() async {
   );
   sl.registerFactory<AccreditationCubit>(
     () => AccreditationCubit(sl<AccreditationRepository>()),
+  );
+
+  // ── Reviewer ───────────────────────────────────────
+  sl.registerLazySingleton<ReviewerRemoteDs>(
+    () => ReviewerRemoteDs(sl<Dio>()),
+  );
+  sl.registerLazySingleton<ReviewerRepository>(
+    () => ReviewerRepositoryImpl(sl<ReviewerRemoteDs>()),
+  );
+  sl.registerFactory<ReviewerCubit>(
+    () => ReviewerCubit(sl<ReviewerRepository>()),
   );
 
   // ── Notifications ─────────────────────────────────

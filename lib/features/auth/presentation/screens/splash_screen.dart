@@ -16,24 +16,15 @@ import '../../../../core/theme/app_colors.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 
-
-
 class SplashScreen extends StatefulWidget {
-
   const SplashScreen({super.key});
 
   @override
-
   State<SplashScreen> createState() => _SplashScreenState();
-
 }
 
-
-
 class _SplashScreenState extends State<SplashScreen>
-
     with SingleTickerProviderStateMixin {
-
   late AnimationController _ctrl;
 
   late Animation<double> _fade;
@@ -42,34 +33,25 @@ class _SplashScreenState extends State<SplashScreen>
 
   bool _navigated = false; // prevent double navigation
 
-
-
   @override
-
   void initState() {
-
     super.initState();
 
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
 
-    _fade = Tween<double>(begin: 0, end: 1).animate(
+    _fade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.6)));
 
-      CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.6)));
-
-    _scale = Tween<double>(begin: 0.8, end: 1).animate(
-
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
+    _scale = Tween<double>(begin: 0.8, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
 
     _ctrl.forward();
 
     _navigate();
-
   }
 
-
-
   Future<void> _navigate() async {
-
     await Future.delayed(const Duration(milliseconds: 2200));
 
     if (!mounted || _navigated) return;
@@ -79,137 +61,101 @@ class _SplashScreenState extends State<SplashScreen>
     final cache = sl<HiveCache>();
 
     if (cache.isLoggedIn) {
-
       final role = cache.getRole() ?? '';
 
       if (role == 'system_admin') {
-
         context.go(AppRoutes.adminDashboard);
-
+      } else if (role == 'reviewer' || role == 'employee') {
+        context.go(AppRoutes.reviewerDashboard);
       } else {
-
         context.go(AppRoutes.dashboard);
-
       }
-
     } else {
-
       context.go(AppRoutes.login);
-
     }
-
   }
 
-
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
-
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-
-
-  @override
-
   Widget build(BuildContext context) {
-
     return Scaffold(
-
       backgroundColor: AppColors.navyBlue,
-
       body: Center(
-
         child: FadeTransition(
-
           opacity: _fade,
-
           child: ScaleTransition(
-
             scale: _scale,
-
             child: Column(
-
               mainAxisSize: MainAxisSize.min,
-
               children: [
-
                 Container(
-
-                  width: 110.w, height: 110.w,
-
+                  width: 110.w,
+                  height: 110.w,
                   decoration: BoxDecoration(
-
-                    color: Colors.white, shape: BoxShape.circle,
-
-                    boxShadow: [BoxShadow(color: AppColors.cyan.withOpacity(0.3), blurRadius: 30, spreadRadius: 5)],
-
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppColors.cyan.withOpacity(0.3),
+                          blurRadius: 30,
+                          spreadRadius: 5)
+                    ],
                   ),
-
                   child: Center(
-
                     child: Stack(alignment: Alignment.center, children: [
-
-                      Text('Q', style: GoogleFonts.cairo(fontSize: 52.sp, fontWeight: FontWeight.w700, color: AppColors.navyBlue, height: 1)),
-
-                      Positioned(top: 18.h, right: 18.w,
-
-                        child: Container(width: 14.w, height: 14.w,
-
-                          decoration: const BoxDecoration(color: AppColors.cyan, shape: BoxShape.circle))),
-
+                      Text('Q',
+                          style: GoogleFonts.cairo(
+                              fontSize: 52.sp,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.navyBlue,
+                              height: 1)),
+                      Positioned(
+                          top: 18.h,
+                          right: 18.w,
+                          child: Container(
+                              width: 14.w,
+                              height: 14.w,
+                              decoration: const BoxDecoration(
+                                  color: AppColors.cyan,
+                                  shape: BoxShape.circle))),
                     ]),
-
                   ),
-
                 ),
-
                 SizedBox(height: 28.h),
-
-                Text('QualifAI', style: GoogleFonts.cairo(fontSize: 32.sp, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1)),
-
+                Text('QualifAI',
+                    style: GoogleFonts.cairo(
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 1)),
                 SizedBox(height: 8.h),
-
                 Text(
-  'نظام الجودة والاعتماد الأكاديمي', 
-  style: GoogleFonts.cairo(
-    fontSize: 14.sp, 
-    color: Colors.white60,
-  ),
-),
-
-
-                SizedBox(height: 60.h),
-
-                SizedBox(
-
-                  width: 180.w,
-
-                  child: LinearProgressIndicator(
-
-                    backgroundColor: Colors.white12,
-
-                    valueColor: const AlwaysStoppedAnimation(AppColors.cyan),
-
-                    borderRadius: BorderRadius.circular(4.r),
-
-                    minHeight: 3.h,
-
+                  'نظام الجودة والاعتماد الأكاديمي',
+                  style: GoogleFonts.cairo(
+                    fontSize: 14.sp,
+                    color: Colors.white60,
                   ),
-
                 ),
-
+                SizedBox(height: 60.h),
+                SizedBox(
+                  width: 180.w,
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.white12,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.cyan),
+                    borderRadius: BorderRadius.circular(4.r),
+                    minHeight: 3.h,
+                  ),
+                ),
               ],
-
             ),
-
           ),
-
         ),
-
       ),
-
     );
-
   }
-
 }
-

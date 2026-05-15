@@ -542,6 +542,7 @@ class _ProfileViewState extends State<_ProfileView> {
         return 'مدير الجودة';
 
       case 'quality_employee':
+      case 'employee':
         return 'موظف الجودة';
 
       case 'reviewer':
@@ -561,7 +562,8 @@ class _ProfileViewState extends State<_ProfileView> {
         return AppColors.managerColor;
 
       case 'quality_employee':
-        return AppColors.employeeColor;
+      case 'employee':
+        return AppColors.reviewerColor;
 
       case 'reviewer':
         return AppColors.reviewerColor;
