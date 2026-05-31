@@ -9,7 +9,7 @@ abstract class ReviewerRepository {
     int collegeId,
   );
 
-  Future<Either<Failure, List<dynamic>>> getSectionFiles(
+  Future<Either<Failure, Map<String, dynamic>>> getSectionFiles(
     int collegeId,
     int sectionId,
   );

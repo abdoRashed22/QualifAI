@@ -1,5 +1,7 @@
 // lib/features/admin/data/remote/admin_remote_ds.dart
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../../core/api/api_endpoints.dart';
@@ -96,15 +98,49 @@ class AdminRemoteDs {
   Future<List<dynamic>> getColleges() async {
     try {
       final r = await _dio.get(ApiEndpoints.colleges);
-      return r.data is List ? r.data : [];
+
+      return _extractList(r.data);
     } on DioException catch (e) {
       throw dioToFailure(e);
     }
   }
 
+  List<dynamic> _extractList(dynamic data) {
+    if (data is List) return data;
+    if (data is Map) {
+      final payload = Map<String, dynamic>.from(data);
+
+      if (payload['data'] is List) return payload['data'] as List<dynamic>;
+      if (payload['result'] is List) return payload['result'] as List<dynamic>;
+      if (payload['colleges'] is List)
+        return payload['colleges'] as List<dynamic>;
+
+      for (final value in payload.values) {
+        final extracted = _extractList(value);
+        if (extracted.isNotEmpty) return extracted;
+      }
+    }
+    return [];
+  }
+
   Future<void> createCollege(Map<String, dynamic> data) async {
     try {
-      await _dio.post(ApiEndpoints.colleges, data: data);
+      final payload = Map<String, dynamic>.from(data);
+
+      if (payload['Image'] is File) {
+        payload['Image'] = await MultipartFile.fromFile(
+          (payload['Image'] as File).path,
+          filename: (payload['Image'] as File)
+              .path
+              .split(Platform.pathSeparator)
+              .last,
+        );
+      }
+
+      await _dio.post(
+        ApiEndpoints.colleges,
+        data: FormData.fromMap(payload),
+      );
     } on DioException catch (e) {
       throw dioToFailure(e);
     }

@@ -34,7 +34,7 @@ class ReviewerRepositoryImpl implements ReviewerRepository {
   }
 
   @override
-  Future<Either<Failure, List<dynamic>>> getSectionFiles(
+  Future<Either<Failure, Map<String, dynamic>>> getSectionFiles(
     int collegeId,
     int sectionId,
   ) async {

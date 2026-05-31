@@ -102,13 +102,19 @@ class _CollegesView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              c['collegeName'] ?? c['name'] ?? 'كليه',
+                              c['CollegeName'] ??
+                                  c['collegeName'] ??
+                                  c['name'] ??
+                                  'كليه',
                               style: Theme.of(context).textTheme.titleSmall,
                               textAlign: TextAlign.right,
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              c['universityName'] ?? c['university'] ?? '',
+                              c['UniversityName'] ??
+                                  c['universityName'] ??
+                                  c['university'] ??
+                                  '',
                               style: Theme.of(context).textTheme.bodySmall,
                               textAlign: TextAlign.right,
                             ),
@@ -135,31 +141,89 @@ class _CollegesView extends StatelessWidget {
   void _showAddCollegeDialog(BuildContext context) {
     final nameController = TextEditingController();
     final universityController = TextEditingController();
+    final managerEmailController = TextEditingController();
+    final managerPasswordController = TextEditingController();
+    var institutionType = 2;
+    var accreditationType = 1;
+    final subscriptionDate = DateTime.now();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('إضافة كلية جديدة'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            TextField(
-              controller: nameController,
-              textAlign: TextAlign.right,
-              decoration: const InputDecoration(
-                labelText: 'اسم الكلية',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              TextField(
+                controller: nameController,
+                textAlign: TextAlign.right,
+                decoration: const InputDecoration(
+                  labelText: 'اسم الكلية',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: universityController,
-              textAlign: TextAlign.right,
-              decoration: const InputDecoration(
-                labelText: 'اسم الجامعة',
+              const SizedBox(height: 12),
+              TextField(
+                controller: universityController,
+                textAlign: TextAlign.right,
+                decoration: const InputDecoration(
+                  labelText: 'اسم الجامعة',
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: institutionType,
+                decoration: const InputDecoration(
+                  labelText: 'نوع المؤسسة',
+                ),
+                items: const [
+                  DropdownMenuItem(value: 1, child: Text('حكومية')),
+                  DropdownMenuItem(value: 2, child: Text('جامعة أهلية')),
+                  DropdownMenuItem(value: 3, child: Text('جامعة خاصة')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    institutionType = value;
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: accreditationType,
+                decoration: const InputDecoration(
+                  labelText: 'نوع الاعتماد',
+                ),
+                items: const [
+                  DropdownMenuItem(value: 1, child: Text('أكاديمي')),
+                  DropdownMenuItem(value: 2, child: Text('برامجي')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    accreditationType = value;
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: managerEmailController,
+                textAlign: TextAlign.right,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'البريد الإلكتروني للمدير',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: managerPasswordController,
+                textAlign: TextAlign.right,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'كلمة مرور المدير',
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -170,10 +234,20 @@ class _CollegesView extends StatelessWidget {
             onPressed: () {
               final name = nameController.text.trim();
               final university = universityController.text.trim();
-              if (name.isNotEmpty && university.isNotEmpty) {
+              final managerEmail = managerEmailController.text.trim();
+              final managerPassword = managerPasswordController.text;
+              if (name.isNotEmpty &&
+                  university.isNotEmpty &&
+                  managerEmail.isNotEmpty &&
+                  managerPassword.isNotEmpty) {
                 context.read<AdminCubit>().createCollege({
-                  'name': name,
-                  'university': university,
+                  'UniversityName': university,
+                  'CollegeName': name,
+                  'InstitutionType': institutionType,
+                  'AccreditationType': accreditationType,
+                  'SubscriptionStartDate': subscriptionDate.toIso8601String(),
+                  'ManagerEmail': managerEmail,
+                  'ManagerPassword': managerPassword,
                 });
                 Navigator.of(ctx).pop();
               }

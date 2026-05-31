@@ -49,7 +49,7 @@ class ReviewerCubit extends Cubit<ReviewerState> {
       (failure) => emit(ReviewerError(failure.message)),
       (college) {
         final sections =
-            _normalizeList(college['sections'] ?? college['standards'] ?? []);
+            (college['sections'] ?? college['standards'] ?? []) as List;
         emit(ReviewerCollegeLoaded(college: college, sections: sections));
       },
     );
@@ -60,16 +60,22 @@ class ReviewerCubit extends Cubit<ReviewerState> {
     final result = await _repository.getSectionFiles(collegeId, sectionId);
     result.fold(
       (failure) => emit(ReviewerError(failure.message)),
-      (sectionList) {
-        final normalizedList = _normalizeList(sectionList);
-        final section = normalizedList.isNotEmpty
-            ? _normalizeMap(normalizedList.first)
-            : <String, dynamic>{};
+      (sectionData) {
+        // Extract documents array from response
+        final documents = (sectionData['documents'] as List?) ?? [];
+        final section = {
+          'name': sectionData['sectionName'] ?? sectionData['name'],
+          'sectionName': sectionData['sectionName'] ?? sectionData['name'],
+          'sectionId': sectionData['sectionId'],
+          'uploadedDocuments': sectionData['uploadedDocuments'] ?? 0,
+          'totalDocuments': sectionData['totalDocuments'] ?? documents.length,
+          ...sectionData,
+        };
         emit(ReviewerSectionLoaded(
           collegeId: collegeId,
           sectionId: sectionId,
           section: section,
-          files: normalizedList,
+          files: documents,
         ));
       },
     );
@@ -98,19 +104,5 @@ class ReviewerCubit extends Cubit<ReviewerState> {
     if (value.contains('revision') || value.contains('تعديل'))
       return 'needs revision';
     return 'pending';
-  }
-
-  Map<String, dynamic> _normalizeMap(dynamic data) {
-    if (data is Map) {
-      return Map<String, dynamic>.from(data);
-    }
-    return <String, dynamic>{};
-  }
-
-  List<dynamic> _normalizeList(dynamic data) {
-    if (data is List) {
-      return data;
-    }
-    return <dynamic>[];
   }
 }

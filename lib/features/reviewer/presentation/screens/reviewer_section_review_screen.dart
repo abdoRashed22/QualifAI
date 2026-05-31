@@ -2,6 +2,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -106,9 +107,21 @@ class _ReviewerSectionReviewScreenState
             'معيار',
       );
       final sectionStatus = _sectionStatusLabel(section);
-      final progress = _doubleValue(section['progressPercentage'] ??
+      // Calculate progress from pre-calculated percentage or compute from uploadedDocuments/totalDocuments
+      double progress = _doubleValue(section['progressPercentage'] ??
           section['completionPercentage'] ??
           section['progress']);
+
+      // If no pre-calculated percentage, compute from uploaded/total documents
+      if (progress == 0 &&
+          section['uploadedDocuments'] != null &&
+          section['totalDocuments'] != null) {
+        final uploaded = _intValue(section['uploadedDocuments']);
+        final total = _intValue(section['totalDocuments']);
+        if (total > 0) {
+          progress = (uploaded / total) * 100.0;
+        }
+      }
       final aiEvaluation = _stringValue(section['aiEvaluation'] ??
           section['aiResult'] ??
           'تقييم AI غير متوفر لهذا المعيار');
@@ -124,8 +137,7 @@ class _ReviewerSectionReviewScreenState
                     style: Theme.of(context).textTheme.titleLarge),
                 SizedBox(height: 10.h),
                 AppBadge(
-                    label: sectionStatus,
-                    color: _statusColor(sectionStatus)),
+                    label: sectionStatus, color: _statusColor(sectionStatus)),
                 SizedBox(height: 14.h),
                 Text('الملفات المرتبطة',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -134,12 +146,10 @@ class _ReviewerSectionReviewScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('نسبة الإكمال',
-                          style: TextStyle(fontSize: 13.sp)),
+                      Text('نسبة الإكمال', style: TextStyle(fontSize: 13.sp)),
                       Text('${progress.round()}%',
                           style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.bold)),
+                              fontSize: 13.sp, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   SizedBox(height: 8.h),
@@ -149,8 +159,8 @@ class _ReviewerSectionReviewScreenState
                       minHeight: 8.h,
                       value: (progress / 100).clamp(0.0, 1.0),
                       backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation(
-                          _statusColor(sectionStatus)),
+                      valueColor:
+                          AlwaysStoppedAnimation(_statusColor(sectionStatus)),
                     ),
                   ),
                 ],
@@ -191,30 +201,79 @@ class _ReviewerSectionReviewScreenState
                   file['documentName'] ??
                   'ملف');
               final status = _fileStatusLabel(file);
+              final filePath = _stringValue(file['filePath'] ?? '');
+              final hasFile = (file['submissionId'] != null &&
+                  filePath.isNotEmpty &&
+                  (file['originalName'] != null));
+
               return Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: AppCard(
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(title,
-                                style: Theme.of(context).textTheme.titleMedium),
-                            SizedBox(height: 6.h),
-                            Text(
-                                _stringValue(file['description'] ??
-                                    file['notes'] ??
-                                    ''),
-                                style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12.sp)),
-                          ],
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium),
+                                SizedBox(height: 6.h),
+                                Text(
+                                    _stringValue(file['description'] ??
+                                        file['notes'] ??
+                                        ''),
+                                    style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12.sp)),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          AppBadge(
+                              label: status,
+                              color: _statusColor(status)),
+                        ],
                       ),
-                      SizedBox(width: 12.w),
-                      AppBadge(label: status, color: _statusColor(status)),
+                      if (hasFile) ...[
+                        SizedBox(height: 12.h),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final fileUrl =
+                                  'https://qualefai.runasp.net${filePath}';
+                              if (await canLaunchUrl(Uri.parse(fileUrl))) {
+                                await launchUrl(Uri.parse(fileUrl),
+                                    mode: LaunchMode.externalApplication);
+                              } else {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content: Text('لا يمكن فتح الملف'),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.download),
+                            label: const Text('انقر لفتح الملف'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8.h, horizontal: 12.w),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -288,9 +347,18 @@ class _ReviewerSectionReviewScreenState
     return double.tryParse(value.toString()) ?? 0;
   }
 
+  int _intValue(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
   String _sectionStatusLabel(dynamic section) {
     final raw = section is Map
-        ? section['status'] ?? section['sectionStatus'] ?? section['reviewStatus']
+        ? section['status'] ??
+            section['sectionStatus'] ??
+            section['reviewStatus']
         : null;
     final value = raw?.toString().toLowerCase() ?? '';
     if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
@@ -303,9 +371,17 @@ class _ReviewerSectionReviewScreenState
 
   String _fileStatusLabel(dynamic file) {
     final raw = file is Map
-        ? file['status'] ?? file['fileStatus'] ?? file['statusLabel']
+        ? file['submissionStatus'] ??
+            file['status'] ??
+            file['fileStatus'] ??
+            file['statusLabel']
         : null;
     final value = raw?.toString().toLowerCase() ?? '';
+    if (value.contains('مكتمل') || value.contains('complete')) return 'مكتمل';
+    if (value.contains('لم يُرفع') || value.contains('not upload'))
+      return 'لم يُرفع';
+    if (value.contains('بدون موعد') || value.contains('no deadline'))
+      return 'بدون موعد';
     if (value.contains('approve') || value.contains('موافق')) return 'معتمد';
     if (value.contains('reject') || value.contains('رفض')) return 'مرفوض';
     if (value.contains('revision') || value.contains('تعديل')) {
@@ -318,10 +394,12 @@ class _ReviewerSectionReviewScreenState
   }
 
   Color _statusColor(String status) {
-    if (status == 'معتمد') return Colors.green;
+    if (status == 'معتمد' || status == 'مكتمل') return Colors.green;
     if (status == 'مرفوض') return Colors.red;
     if (status == 'يحتاج تعديل') return Colors.orange;
     if (status == 'قيد المراجعة') return Colors.blue;
+    if (status == 'لم يُرفع') return Colors.grey;
+    if (status == 'بدون موعد') return Colors.amber;
     return Colors.grey;
   }
 }

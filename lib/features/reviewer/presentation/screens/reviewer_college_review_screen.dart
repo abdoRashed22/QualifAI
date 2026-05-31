@@ -27,7 +27,7 @@ class _ReviewerCollegeReviewScreenState
     extends State<ReviewerCollegeReviewScreen> {
   late final ReviewerCubit _cubit;
   final TextEditingController _notesController = TextEditingController();
-  String _selectedStatus = 'pending';
+  String _selectedStatus = 'approved';
 
   @override
   void initState() {
@@ -67,7 +67,12 @@ class _ReviewerCollegeReviewScreenState
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
               );
-              context.pop();
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.reviewerDashboard);
+              }
             }
             if (state is ReviewerError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -380,8 +385,6 @@ class _ReviewerCollegeReviewScreenState
   Map<String, String> get _statusOptions => {
         'approved': 'موافق',
         'rejected': 'مرفوض',
-        'pending': 'قيد المراجعة',
-        'needs revision': 'يحتاج تعديل',
       };
 
   String _stringValue(dynamic value) {

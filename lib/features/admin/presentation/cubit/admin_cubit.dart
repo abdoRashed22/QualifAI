@@ -249,8 +249,14 @@ class AdminCubit extends Cubit<AdminState> {
     emit(AdminActionLoading());
 
     final payload = {
-      'name': data['name']?.toString().trim(),
-      'university': data['university']?.toString().trim(),
+      'UniversityName': data['UniversityName']?.toString().trim() ?? '',
+      'CollegeName': data['CollegeName']?.toString().trim() ?? '',
+      'InstitutionType': data['InstitutionType'],
+      'AccreditationType': data['AccreditationType'],
+      'SubscriptionStartDate': data['SubscriptionStartDate']?.toString() ?? '',
+      'ManagerEmail': data['ManagerEmail']?.toString().trim() ?? '',
+      'ManagerPassword': data['ManagerPassword']?.toString() ?? '',
+      if (data.containsKey('Image')) 'Image': data['Image'],
     };
 
     final r = await _repo.createCollege(payload);

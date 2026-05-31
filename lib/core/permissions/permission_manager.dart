@@ -35,15 +35,15 @@ import '../router/app_router.dart';
 // ── Enums ────────────────────────────────────────────────────────────────────
 
 enum UserRole {
-  systemAdmin,    // مدير النظام
+  systemAdmin, // مدير النظام
   qualityManager, // مدير الجوده
-  qualityEmployee,// موظف الجوده
+  qualityEmployee, // موظف الجوده
   unknown,
 }
 
 enum PermissionScope {
-  fullSystem,    // الوصول لجميع النظام
-  college,       // الخاص بالكليه
+  fullSystem, // الوصول لجميع النظام
+  college, // الخاص بالكليه
   accreditation, // الخاص بالاعتماد
   unknown,
 }
@@ -54,7 +54,8 @@ class NavItem {
   final String label;
   final String route;
   final String iconKey; // used by MainScaffold to pick icon
-  const NavItem({required this.label, required this.route, required this.iconKey});
+  const NavItem(
+      {required this.label, required this.route, required this.iconKey});
 }
 
 // ── Main class ────────────────────────────────────────────────────────────────
@@ -134,17 +135,18 @@ class PermissionManager {
 
     // Default by role if action is empty / unrecognised
     if (userRole == UserRole.qualityManager) return PermissionScope.college;
-    if (userRole == UserRole.qualityEmployee) return PermissionScope.accreditation;
+    if (userRole == UserRole.qualityEmployee)
+      return PermissionScope.accreditation;
 
     return PermissionScope.unknown;
   }
 
   // ── Convenience booleans ───────────────────────────────────────────────────
 
-  bool get isAdmin       => userRole == UserRole.systemAdmin;
-  bool get isManager     => userRole == UserRole.qualityManager;
-  bool get isEmployee    => userRole == UserRole.qualityEmployee;
-  bool get isReviewer    => roleKey == 'reviewer' || roleKey == 'employee';
+  bool get isAdmin => userRole == UserRole.systemAdmin;
+  bool get isManager => userRole == UserRole.qualityManager;
+  bool get isEmployee => userRole == UserRole.qualityEmployee;
+  bool get isReviewer => roleKey == 'reviewer' || roleKey == 'employee';
   bool get hasFullAccess => scope == PermissionScope.fullSystem;
   bool get hasCollegeAccess =>
       scope == PermissionScope.fullSystem || scope == PermissionScope.college;
@@ -153,34 +155,39 @@ class PermissionManager {
 
   // Dashboard
   bool get canViewDashboard => true;
+
   /// Admin/Manager see global stats; Employee sees only own progress
   bool get showsGlobalProgress => isAdmin || hasCollegeAccess;
 
   // Accreditation
   bool get canViewAccreditation => true; // all roles see accreditation
-  bool get canUploadFiles => isAdmin || isEmployee; // only employees or admins upload files
-  bool get canStartAnalysis  => isAdmin || isManager;
+  // Allow admins, employees and managers to upload files (manager should be
+  // able to add accreditation documents for their college).
+  bool get canUploadFiles => isAdmin || isEmployee || isManager;
+  bool get canStartAnalysis => isAdmin || isManager;
   bool get canViewAllColleges => isAdmin || isManager;
 
   // Reports
   bool get canViewReports => isAdmin || hasCollegeAccess;
+
   /// Managers/Admins can send notes back to quality employee
   bool get canSendReportNotes => isAdmin || isManager;
   bool get canViewPreviousReports => isAdmin || isManager;
+
   /// Quality manager can approve/reject accreditation
   bool get canAccreditCollege => isAdmin || isManager;
 
   // Employees & Roles (admin-level management)
   bool get canManageEmployees => isAdmin;
-  bool get canManageRoles     => isAdmin;
-  bool get canViewEmployees   => isAdmin || isManager; // manager: read-only
+  bool get canManageRoles => isAdmin;
+  bool get canViewEmployees => isAdmin || isManager; // manager: read-only
 
   // Colleges management (admin creates/suspends)
-  bool get canManageColleges  => isAdmin;
+  bool get canManageColleges => isAdmin;
 
   // Subscriptions / Pricing
   bool get canManageSubscriptions => isAdmin;
-  bool get canViewPricing         => isAdmin;
+  bool get canViewPricing => isAdmin;
 
   // Notifications
   bool get canViewNotifications => true;
@@ -192,7 +199,7 @@ class PermissionManager {
 
   // Deadlines
   bool get canViewDeadlines => true;
-  bool get canSetDeadlines  => isAdmin || isManager;
+  bool get canSetDeadlines => isAdmin || isManager;
 
   // Profile
   bool get canViewProfile => true;
@@ -210,7 +217,8 @@ class PermissionManager {
         path.startsWith('/admin/activity')) return isAdmin;
 
     // Employees & Roles → admin + manager (read-only)
-    if (path.startsWith('/admin/employees') || path.startsWith('/admin/roles')) {
+    if (path.startsWith('/admin/employees') ||
+        path.startsWith('/admin/roles')) {
       return isAdmin || isManager;
     }
 
@@ -218,8 +226,8 @@ class PermissionManager {
     if (path.startsWith(AppRoutes.reports)) return canViewReports;
 
     // Chat
-    if (path.startsWith(AppRoutes.chatList) ||
-        path.startsWith('/chat')) return canViewChat;
+    if (path.startsWith(AppRoutes.chatList) || path.startsWith('/chat'))
+      return canViewChat;
 
     // Deadlines
     if (path == AppRoutes.deadlines) return canViewDeadlines;
@@ -327,13 +335,27 @@ class PermissionManager {
   // Admin sees: Dashboard, Employees, Roles, Colleges, Pricing, Notifications, Activity
 
   static const List<NavItem> adminNavItems = [
-    NavItem(label: 'الرئيسية',         route: AppRoutes.adminDashboard, iconKey: 'dashboard'),
-    NavItem(label: 'الموظفون',          route: AppRoutes.employees,      iconKey: 'employees'),
-    NavItem(label: 'ادوار',            route: AppRoutes.roles,          iconKey: 'roles'),
-    NavItem(label: 'ادارة الكليات',    route: AppRoutes.colleges,        iconKey: 'colleges'),
-    NavItem(label: 'ادارة الاشتراكات', route: AppRoutes.pricing,         iconKey: 'subscriptions'),
-    NavItem(label: 'الاشعارات',        route: AppRoutes.notifications,   iconKey: 'notifications'),
-    NavItem(label: 'سجل الانشطة',      route: AppRoutes.activityLog,     iconKey: 'activity'),
+    NavItem(
+        label: 'الرئيسية',
+        route: AppRoutes.adminDashboard,
+        iconKey: 'dashboard'),
+    NavItem(
+        label: 'الموظفون', route: AppRoutes.employees, iconKey: 'employees'),
+    NavItem(label: 'ادوار', route: AppRoutes.roles, iconKey: 'roles'),
+    NavItem(
+        label: 'ادارة الكليات', route: AppRoutes.colleges, iconKey: 'colleges'),
+    NavItem(
+        label: 'ادارة الاشتراكات',
+        route: AppRoutes.pricing,
+        iconKey: 'subscriptions'),
+    NavItem(
+        label: 'الاشعارات',
+        route: AppRoutes.notifications,
+        iconKey: 'notifications'),
+    NavItem(
+        label: 'سجل الانشطة',
+        route: AppRoutes.activityLog,
+        iconKey: 'activity'),
   ];
 
   // ── Progress scope helper ─────────────────────────────────────────────────

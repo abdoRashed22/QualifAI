@@ -32,17 +32,17 @@ class ReviewerRemoteDs {
     }
   }
 
-  Future<List<dynamic>> getSectionFiles(
+  Future<Map<String, dynamic>> getSectionFiles(
     int collegeId,
     int sectionId,
   ) async {
     try {
       final res =
           await _dio.get(ApiEndpoints.qualityFiles(collegeId, sectionId));
-      if (res.data is List) {
-        return res.data as List<dynamic>;
+      if (res.data is Map) {
+        return Map<String, dynamic>.from(res.data as Map);
       }
-      return <dynamic>[];
+      return <String, dynamic>{};
     } on DioException catch (e) {
       throw dioToFailure(e);
     }
@@ -54,12 +54,22 @@ class ReviewerRemoteDs {
     String notes,
   ) async {
     try {
+      final decision = _normalizeDecisionValue(status);
       await _dio.post(ApiEndpoints.qualityDecision(collegeId), data: {
-        'status': status,
+        'Decision': decision,
+        'Notes': notes,
+        'status': decision,
         'notes': notes,
       });
     } on DioException catch (e) {
       throw dioToFailure(e);
     }
+  }
+
+  String _normalizeDecisionValue(String status) {
+    final normalized = status.trim().toLowerCase();
+    if (normalized == 'approved' || normalized == 'موافق') return 'Approved';
+    if (normalized == 'rejected' || normalized == 'مرفوض') return 'Rejected';
+    return status[0].toUpperCase() + status.substring(1);
   }
 }

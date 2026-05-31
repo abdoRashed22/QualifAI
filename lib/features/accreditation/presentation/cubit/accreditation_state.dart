@@ -55,6 +55,24 @@ class AnalysisLoaded extends AccreditationState {
   List<Object?> get props => [analysis];
 }
 
+class SectionNotFound extends AccreditationState {
+  final int sectionId;
+
+  const SectionNotFound(this.sectionId);
+
+  @override
+  List<Object?> get props => [sectionId];
+}
+
+class AnalysisNotFound extends AccreditationState {
+  final int reqDocId;
+
+  const AnalysisNotFound(this.reqDocId);
+
+  @override
+  List<Object?> get props => [reqDocId];
+}
+
 class AccreditationError extends AccreditationState {
   final String message;
 
