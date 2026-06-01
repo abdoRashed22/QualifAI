@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../core/di/injection.dart';
 
 class FileViewerScreen extends StatefulWidget {
   final String fileUrl;
@@ -21,7 +24,7 @@ class FileViewerScreen extends StatefulWidget {
 }
 
 class _FileViewerScreenState extends State<FileViewerScreen> {
-  late PdfController _pdfController;
+  PdfController? _pdfController;
   int _currentPage = 1;
   int _totalPages = 0;
   bool _isLoading = true;
@@ -34,15 +37,30 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
   }
 
   /// Fetch PDF bytes via Dio (already in your project — no new dependency needed)
+  bool get _isPdf =>
+      widget.fileUrl.split('?').first.toLowerCase().endsWith('.pdf');
+
   Future<Uint8List> _fetchBytes(String url) async {
-    final response = await Dio().get<List<int>>(
+    final response = await sl<Dio>().get<List<int>>(
       url,
       options: Options(responseType: ResponseType.bytes),
     );
-    return Uint8List.fromList(response.data!);
+
+    return Uint8List.fromList(response.data ?? []);
   }
 
   Future<void> _initPdf() async {
+    if (!_isPdf) {
+      if (mounted) {
+        setState(() {
+          _error =
+              'تنسيق الملف غير مدعوم للعرض داخل التطبيق. الرجاء تحميل الملف أو فتحه خارجياً.';
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     try {
       _pdfController = PdfController(
         // openData accepts FutureOr<Uint8List> — Future<Uint8List> from Dio works perfectly
@@ -50,15 +68,15 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
       );
 
       // pageListenable is the correct way to observe page changes in pdfx
-      _pdfController.pageListenable.addListener(() {
+      _pdfController!.pageListenable.addListener(() {
         if (mounted) {
           setState(() {
-            _currentPage = _pdfController.pageListenable.value;
+            _currentPage = _pdfController!.pageListenable.value;
           });
         }
       });
 
-      final doc = await _pdfController.document;
+      final doc = await _pdfController!.document;
       if (mounted) {
         setState(() {
           _totalPages = doc.pagesCount;
@@ -77,7 +95,7 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
 
   @override
   void dispose() {
-    _pdfController.dispose();
+    _pdfController?.dispose();
     super.dispose();
   }
 
@@ -121,6 +139,33 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                           ),
                         ),
                       ),
+                      if (!_isPdf) ...[
+                        SizedBox(height: 20.h),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            try {
+                              final uri = Uri.parse(widget.fileUrl);
+                              await launchUrl(uri,
+                                  mode: LaunchMode.externalApplication);
+                            } catch (_) {
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'لا يمكن فتح الملف خارجياً. حاول تحميله من شاشة الملف.'),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('فتح الملف خارجياً'),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.orange,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 )
@@ -128,13 +173,13 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                   children: [
                     Expanded(
                       child: PdfView(
-                        controller: _pdfController,
+                        controller: _pdfController!,
                         builders: PdfViewBuilders<DefaultBuilderOptions>(
                           options: const DefaultBuilderOptions(),
-                          documentLoaderBuilder: (_) => const Center(
-                              child: CircularProgressIndicator()),
-                          pageLoaderBuilder: (_) => const Center(
-                              child: CircularProgressIndicator()),
+                          documentLoaderBuilder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                          pageLoaderBuilder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
                           // _pageBuilder now correctly returns PhotoViewGalleryPageOptions
                           pageBuilder: _pageBuilder,
                         ),
@@ -145,8 +190,8 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                           vertical: 12.h, horizontal: 16.w),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
-                        border: Border(
-                            top: BorderSide(color: Colors.grey[300]!)),
+                        border:
+                            Border(top: BorderSide(color: Colors.grey[300]!)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -162,9 +207,9 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                             children: [
                               IconButton(
                                 onPressed: _currentPage > 1
-                                    ? () => _pdfController.previousPage(
-                                          duration: const Duration(
-                                              milliseconds: 250),
+                                    ? () => _pdfController!.previousPage(
+                                          duration:
+                                              const Duration(milliseconds: 250),
                                           curve: Curves.easeOut,
                                         )
                                     : null,
@@ -173,9 +218,9 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                               ),
                               IconButton(
                                 onPressed: _currentPage < _totalPages
-                                    ? () => _pdfController.nextPage(
-                                          duration: const Duration(
-                                              milliseconds: 250),
+                                    ? () => _pdfController!.nextPage(
+                                          duration:
+                                              const Duration(milliseconds: 250),
                                           curve: Curves.easeIn,
                                         )
                                     : null,

@@ -113,7 +113,9 @@ class PermissionManager {
 
   PermissionScope get scope {
     // Admin always full
-    if (userRole == UserRole.systemAdmin) return PermissionScope.fullSystem;
+    if (userRole == UserRole.systemAdmin) {
+      return PermissionScope.fullSystem;
+    }
 
     final a = actionRaw.toLowerCase();
 
@@ -122,11 +124,6 @@ class PermissionManager {
         a.contains('system')) {
       return PermissionScope.fullSystem;
     }
-    if (a.contains('الخاص بالكليه') ||
-        a.contains('college') ||
-        a.contains('كليه')) {
-      return PermissionScope.college;
-    }
     if (a.contains('الخاص بالاعتماد') ||
         a.contains('accreditation') ||
         a.contains('اعتماد')) {
@@ -134,7 +131,9 @@ class PermissionManager {
     }
 
     // Default by role if action is empty / unrecognised
-    if (userRole == UserRole.qualityManager) return PermissionScope.college;
+    if (userRole == UserRole.qualityManager) {
+      return PermissionScope.college;
+    }
     if (userRole == UserRole.qualityEmployee)
       return PermissionScope.accreditation;
 
@@ -147,6 +146,7 @@ class PermissionManager {
   bool get isManager => userRole == UserRole.qualityManager;
   bool get isEmployee => userRole == UserRole.qualityEmployee;
   bool get isReviewer => roleKey == 'reviewer' || roleKey == 'employee';
+  bool get isReviewOnly => isReviewer && !isEmployee;
   bool get hasFullAccess => scope == PermissionScope.fullSystem;
   bool get hasCollegeAccess =>
       scope == PermissionScope.fullSystem || scope == PermissionScope.college;
@@ -160,7 +160,7 @@ class PermissionManager {
   bool get showsGlobalProgress => isAdmin || hasCollegeAccess;
 
   // Accreditation
-  bool get canViewAccreditation => true; // all roles see accreditation
+  bool get canViewAccreditation => isAdmin || isManager || isEmployee;
   // Allow admins, employees and managers to upload files (manager should be
   // able to add accreditation documents for their college).
   bool get canUploadFiles => isAdmin || isEmployee || isManager;
@@ -214,23 +214,33 @@ class PermissionManager {
     if (path == AppRoutes.adminDashboard ||
         path.startsWith('/admin/colleges') ||
         path.startsWith('/admin/pricing') ||
-        path.startsWith('/admin/activity')) return isAdmin;
+        path.startsWith('/admin/roles') ||
+        path == AppRoutes.activityLog) {
+      return isAdmin;
+    }
 
     // Employees & Roles → admin + manager (read-only)
-    if (path.startsWith('/admin/employees') ||
-        path.startsWith('/admin/roles')) {
+    if (path == AppRoutes.deadlines) {
+      return canViewDeadlines;
+    }
+    if (path.startsWith('/admin/roles')) {
       return isAdmin || isManager;
     }
 
     // Reports
-    if (path.startsWith(AppRoutes.reports)) return canViewReports;
+    if (path.startsWith(AppRoutes.reports)) {
+      return canViewReports;
+    }
 
     // Chat
-    if (path.startsWith(AppRoutes.chatList) || path.startsWith('/chat'))
+    if (path.startsWith(AppRoutes.chatList) || path.startsWith('/chat')) {
       return canViewChat;
+    }
 
     // Deadlines
-    if (path == AppRoutes.deadlines) return canViewDeadlines;
+    if (path == AppRoutes.deadlines) {
+      return canViewDeadlines;
+    }
 
     // Accreditation + upload + AI
     if (path == AppRoutes.accreditation ||
@@ -266,8 +276,8 @@ class PermissionManager {
       iconKey: 'home',
     ));
 
-    // 2. Accreditation – admin and manager only. Review-only employees do not see this tab.
-    if (!isEmployee) {
+    // 2. Accreditation – admin, manager, and quality employee only.
+    if (canViewAccreditation) {
       items.add(const NavItem(
         label: 'الاعتماد',
         route: AppRoutes.accreditation,

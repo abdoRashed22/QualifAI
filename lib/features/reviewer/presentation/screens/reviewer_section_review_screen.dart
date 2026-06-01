@@ -244,39 +244,30 @@ class _ReviewerSectionReviewScreenState
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   final fileUrl =
-                                      'https://qualefai.runasp.net${filePath}';
-                                  print('🔗 محاولة فتح الملف: $fileUrl');
+                                      'https://qualefai.runasp.net$filePath';
+                                  final messenger =
+                                      ScaffoldMessenger.of(context);
                                   try {
                                     final uri = Uri.parse(fileUrl);
-                                    if (await launchUrl(uri,
-                                        mode: LaunchMode.externalApplication)) {
-                                      print('✅ تم فتح الملف بنجاح');
-                                    } else {
-                                      print('❌ فشل في فتح الملف');
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: const Text(
-                                                'لا يمكن فتح الملف. تحقق من الرابط'),
-                                            duration:
-                                                const Duration(seconds: 3),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  } catch (e) {
-                                    print('⚠️ خطأ: $e');
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
+                                    final opened = await launchUrl(uri,
+                                        mode: LaunchMode.externalApplication);
+                                    if (!opened && mounted) {
+                                      messenger.showSnackBar(
+                                        const SnackBar(
                                           content: Text(
-                                              'خطأ في فتح الملف: ${e.toString()}'),
-                                          duration: const Duration(seconds: 3),
+                                              'لا يمكن فتح الملف. تحقق من الرابط'),
+                                          duration: Duration(seconds: 3),
                                         ),
                                       );
                                     }
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text('خطأ في فتح الملف: $e'),
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
                                   }
                                 },
                                 icon: const Icon(Icons.download),
@@ -294,26 +285,65 @@ class _ReviewerSectionReviewScreenState
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  final fileUrl =
-                                      'https://qualefai.runasp.net${filePath}';
-                                  context.push(
-                                    '${AppRoutes.fileViewer}?url=${Uri.encodeComponent(fileUrl)}&name=${Uri.encodeComponent(title)}',
-                                  );
-                                },
-                                icon: const Icon(Icons.visibility),
-                                label: const Text('عرض'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  foregroundColor: Colors.white,
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 8.h, horizontal: 12.w),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.r),
+                              child: Builder(builder: (innerContext) {
+                                final fileUrl =
+                                    'https://qualefai.runasp.net$filePath';
+                                final isPdf = fileUrl
+                                    .split('?')
+                                    .first
+                                    .toLowerCase()
+                                    .endsWith('.pdf');
+
+                                return ElevatedButton.icon(
+                                  onPressed: () async {
+                                    if (isPdf) {
+                                      context.push(
+                                        '${AppRoutes.fileViewer}?url=${Uri.encodeComponent(fileUrl)}&name=${Uri.encodeComponent(title)}',
+                                      );
+                                      return;
+                                    }
+
+                                    final messenger =
+                                        ScaffoldMessenger.of(context);
+                                    try {
+                                      final uri = Uri.parse(fileUrl);
+                                      final opened = await launchUrl(uri,
+                                          mode: LaunchMode.externalApplication);
+                                      if (!opened && mounted) {
+                                        messenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'لا يمكن فتح الملف خارجيًا'),
+                                            duration: Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('خطأ في فتح الملف: $e'),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  icon: Icon(isPdf
+                                      ? Icons.visibility
+                                      : Icons.open_in_new),
+                                  label: Text(isPdf ? 'عرض' : 'فتح'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        isPdf ? Colors.green : Colors.orange,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 8.h, horizontal: 12.w),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              }),
                             ),
                           ],
                         ),

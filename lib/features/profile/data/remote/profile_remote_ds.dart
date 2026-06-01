@@ -16,27 +16,46 @@ class ProfileRemoteDs {
   Future<Map<String, dynamic>> getProfile() async {
     try {
       final res = await _dio.get(ApiEndpoints.profile);
-
-      if (res.data is! Map) return {};
-
-      final payload = Map<String, dynamic>.from(res.data as Map);
-
-      if (payload['data'] is Map) {
-        return Map<String, dynamic>.from(payload['data'] as Map);
-      }
-
-      if (payload['result'] is Map) {
-        return Map<String, dynamic>.from(payload['result'] as Map);
-      }
-
-      if (payload['profile'] is Map) {
-        return Map<String, dynamic>.from(payload['profile'] as Map);
-      }
-
-      return payload;
+      return _extractProfile(res.data);
     } on DioException catch (e) {
       throw dioToFailure(e);
     }
+  }
+
+  Map<String, dynamic> _extractProfile(dynamic data) {
+    if (data is List && data.isNotEmpty) {
+      return _extractProfile(data.first);
+    }
+
+    if (data is Map) {
+      final payload = Map<String, dynamic>.from(data);
+
+      if (_looksLikeProfile(payload)) {
+        return payload;
+      }
+
+      for (final key in ['data', 'result', 'profile', 'user', 'userData']) {
+        if (payload[key] is Map) {
+          final extracted = _extractProfile(payload[key]);
+          if (extracted.isNotEmpty) return extracted;
+        }
+      }
+
+      for (final value in payload.values) {
+        final extracted = _extractProfile(value);
+        if (extracted.isNotEmpty) return extracted;
+      }
+    }
+
+    return {};
+  }
+
+  bool _looksLikeProfile(Map<String, dynamic> payload) {
+    return payload.containsKey('email') ||
+        payload.containsKey('userEmail') ||
+        payload.containsKey('firstName') ||
+        payload.containsKey('fullName') ||
+        payload.containsKey('profileImage');
   }
 
   Future<void> updateProfile(
