@@ -266,12 +266,14 @@ class PermissionManager {
       iconKey: 'home',
     ));
 
-    // 2. Accreditation – all roles
-    items.add(const NavItem(
-      label: 'الاعتماد',
-      route: AppRoutes.accreditation,
-      iconKey: 'accreditation',
-    ));
+    // 2. Accreditation – admin and manager only. Review-only employees do not see this tab.
+    if (!isEmployee) {
+      items.add(const NavItem(
+        label: 'الاعتماد',
+        route: AppRoutes.accreditation,
+        iconKey: 'accreditation',
+      ));
+    }
 
     // 3. Deadlines – all roles (manager can set, employee views)
     items.add(const NavItem(

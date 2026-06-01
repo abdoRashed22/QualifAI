@@ -48,6 +48,8 @@ import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.d
 import '../../features/reviewer/presentation/screens/reviewer_college_review_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
 
+import '../../shared/screens/file_viewer_screen.dart';
+
 import '../../shared/widgets/main_scaffold.dart';
 
 import '../cache/hive_cache.dart';
@@ -67,6 +69,8 @@ abstract class AppRoutes {
 
   static const reviewerSection =
       '/reviewer/college/:collegeId/section/:sectionId';
+
+  static const fileViewer = '/file-viewer';
 
   static const accreditation = '/accreditation';
 
@@ -196,6 +200,17 @@ GoRouter buildRouter(HiveCache cache) {
               return ReviewerSectionReviewScreen(
                 collegeId: collegeId,
                 sectionId: sectionId,
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.fileViewer,
+            builder: (ctx, state) {
+              final fileUrl = state.uri.queryParameters['url'] ?? '';
+              final fileName = state.uri.queryParameters['name'] ?? 'ملف';
+              return FileViewerScreen(
+                fileUrl: fileUrl,
+                fileName: fileName,
               );
             },
           ),

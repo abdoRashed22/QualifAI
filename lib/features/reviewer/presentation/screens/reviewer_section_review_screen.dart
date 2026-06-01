@@ -238,57 +238,84 @@ class _ReviewerSectionReviewScreenState
                       ),
                       if (hasFile) ...[
                         SizedBox(height: 12.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final fileUrl =
-                                  'https://qualefai.runasp.net${filePath}';
-                              print('🔗 محاولة فتح الملف: $fileUrl');
-                              try {
-                                final uri = Uri.parse(fileUrl);
-                                // Always try to launch, don't rely on canLaunchUrl
-                                // as it may not work for all URLs
-                                if (await launchUrl(uri,
-                                    mode: LaunchMode.externalApplication)) {
-                                  print('✅ تم فتح الملف بنجاح');
-                                } else {
-                                  print('❌ فشل في فتح الملف');
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: const Text(
-                                            'لا يمكن فتح الملف. تحقق من الرابط'),
-                                        duration: const Duration(seconds: 3),
-                                      ),
-                                    );
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final fileUrl =
+                                      'https://qualefai.runasp.net${filePath}';
+                                  print('🔗 محاولة فتح الملف: $fileUrl');
+                                  try {
+                                    final uri = Uri.parse(fileUrl);
+                                    if (await launchUrl(uri,
+                                        mode: LaunchMode.externalApplication)) {
+                                      print('✅ تم فتح الملف بنجاح');
+                                    } else {
+                                      print('❌ فشل في فتح الملف');
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                                'لا يمكن فتح الملف. تحقق من الرابط'),
+                                            duration:
+                                                const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  } catch (e) {
+                                    print('⚠️ خطأ: $e');
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'خطأ في فتح الملف: ${e.toString()}'),
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    }
                                   }
-                                }
-                              } catch (e) {
-                                print('⚠️ خطأ: $e');
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'خطأ في فتح الملف: ${e.toString()}'),
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.download),
-                            label: const Text('انقر لفتح الملف'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 8.h, horizontal: 12.w),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
+                                },
+                                icon: const Icon(Icons.download),
+                                label: const Text('تحميل'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8.h, horizontal: 12.w),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  final fileUrl =
+                                      'https://qualefai.runasp.net${filePath}';
+                                  context.push(
+                                    '${AppRoutes.fileViewer}?url=${Uri.encodeComponent(fileUrl)}&name=${Uri.encodeComponent(title)}',
+                                  );
+                                },
+                                icon: const Icon(Icons.visibility),
+                                label: const Text('عرض'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 8.h, horizontal: 12.w),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],
