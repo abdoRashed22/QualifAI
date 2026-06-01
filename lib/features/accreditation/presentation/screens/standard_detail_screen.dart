@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -166,6 +167,28 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                               ? (hasFile ? 'مرفوع' : 'غير مرفوع')
                               : doc['statusLabel'].toString();
 
+                      final filePath = doc['filePath']?.toString() ??
+                          doc['FilePath']?.toString() ??
+                          doc['fileUrl']?.toString() ??
+                          doc['FileUrl']?.toString() ??
+                          doc['path']?.toString() ??
+                          doc['url']?.toString() ??
+                          '';
+
+                      final reqDocId =
+                          doc['requiredDocumentId'] ?? doc['id'] ?? 0;
+
+                      String fullFileUrl = '';
+                      if (filePath.isNotEmpty) {
+                        fullFileUrl = filePath.startsWith('http')
+                            ? filePath
+                            : 'https://qualefai.runasp.net${filePath.startsWith('/') ? '' : '/'}$filePath';
+                      } else if (hasFile && reqDocId != 0) {
+                        // رابط احتياطي للتحميل في حال لم يرسل الـ API المسار المباشر
+                        fullFileUrl =
+                            'https://qualefai.runasp.net/api/Accreditation/documents/$reqDocId/download';
+                      }
+
                       return AppCard(
                         child: Row(
                           children: [
@@ -202,6 +225,76 @@ class _StandardDetailViewState extends State<_StandardDetailView> {
                                           context,
                                           ctx.read<AccreditationCubit>(),
                                           doc['requiredDocumentId'] ?? 0),
+                                    ),
+                                  ),
+                                if (hasFile)
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 10.h),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.download_rounded,
+                                              color: AppColors.navyBlue,
+                                              size: 22.sp),
+                                          onPressed: () async {
+                                            if (fullFileUrl.isEmpty) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'رابط الملف غير متوفر')),
+                                              );
+                                              return;
+                                            }
+                                            try {
+                                              final uri =
+                                                  Uri.parse(fullFileUrl);
+                                              await launchUrl(uri,
+                                                  mode: LaunchMode
+                                                      .externalApplication);
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text(
+                                                          'عذراً، لا يمكن تحميل الملف خارجياً')),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          tooltip: 'تحميل',
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                        SizedBox(width: 16.w),
+                                        IconButton(
+                                          icon: Icon(Icons.visibility_rounded,
+                                              color: AppColors.success,
+                                              size: 22.sp),
+                                          onPressed: () {
+                                            if (fullFileUrl.isEmpty) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'رابط الملف غير متوفر')),
+                                              );
+                                              return;
+                                            }
+                                            final fileName = doc['documentName']
+                                                    ?.toString() ??
+                                                'الملف المرفوع';
+                                            context.push(
+                                              '${AppRoutes.fileViewer}?url=${Uri.encodeComponent(fullFileUrl)}&name=${Uri.encodeComponent(fileName)}',
+                                            );
+                                          },
+                                          tooltip: 'عرض الملف',
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                        ),
+                                      ],
                                     ),
                                   ),
                               ],

@@ -37,8 +37,13 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
   }
 
   /// Fetch PDF bytes via Dio (already in your project — no new dependency needed)
-  bool get _isPdf =>
-      widget.fileUrl.split('?').first.toLowerCase().endsWith('.pdf');
+  bool get _isPdf {
+    final url = widget.fileUrl.split('?').first.toLowerCase();
+    final name = widget.fileName.toLowerCase();
+    return url.endsWith('.pdf') ||
+        name.endsWith('.pdf') ||
+        url.contains('download');
+  }
 
   Future<Uint8List> _fetchBytes(String url) async {
     final response = await sl<Dio>().get<List<int>>(
@@ -62,12 +67,11 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
     }
 
     try {
+      final bytes = await _fetchBytes(widget.fileUrl);
       _pdfController = PdfController(
-        // openData accepts FutureOr<Uint8List> — Future<Uint8List> from Dio works perfectly
-        document: PdfDocument.openData(_fetchBytes(widget.fileUrl)),
+        document: PdfDocument.openData(bytes),
       );
 
-      // pageListenable is the correct way to observe page changes in pdfx
       _pdfController!.pageListenable.addListener(() {
         if (mounted) {
           setState(() {
@@ -83,10 +87,24 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
           _isLoading = false;
         });
       }
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() {
+          if (e.response?.statusCode == 404) {
+            _error =
+                'الملف غير موجود على الخادم (خطأ 404).\nيرجى التأكد من أن الـ API يرسل مسار الملف (filePath) بشكل صحيح.';
+          } else {
+            _error =
+                'فشل الاتصال بالخادم أثناء تحميل الملف (خطأ ${e.response?.statusCode ?? 'غير معروف'}).';
+          }
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error =
+              'تعذر قراءة الملف كـ PDF. قد يكون الملف بتنسيق آخر (مثل Word) أو تالفاً.';
           _isLoading = false;
         });
       }
@@ -139,33 +157,31 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                           ),
                         ),
                       ),
-                      if (!_isPdf) ...[
-                        SizedBox(height: 20.h),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final messenger = ScaffoldMessenger.of(context);
-                            try {
-                              final uri = Uri.parse(widget.fileUrl);
-                              await launchUrl(uri,
-                                  mode: LaunchMode.externalApplication);
-                            } catch (_) {
-                              if (!mounted) return;
-                              messenger.showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'لا يمكن فتح الملف خارجياً. حاول تحميله من شاشة الملف.'),
-                                ),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.open_in_new),
-                          label: const Text('فتح الملف خارجياً'),
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.orange,
-                          ),
+                      SizedBox(height: 20.h),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            final uri = Uri.parse(widget.fileUrl);
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          } catch (_) {
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'لا يمكن فتح الملف خارجياً. حاول تحميله من شاشة الملف.'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new),
+                        label: const Text('فتح الملف خارجياً'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.orange,
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 )
