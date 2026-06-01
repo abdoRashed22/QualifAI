@@ -44,6 +44,8 @@ import '../../features/admin/presentation/screens/roles_screen.dart';
 
 import '../../features/admin/presentation/screens/colleges_screen.dart';
 
+import '../permissions/pricing_screen.dart' as manager_pricing;
+
 import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_college_review_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
@@ -104,7 +106,9 @@ abstract class AppRoutes {
 
   static const colleges = '/admin/colleges';
 
-  static const pricing = '/admin/pricing';
+  static const pricing = '/pricing';
+
+  static const adminPricing = '/admin/pricing';
 
   static const activityLog = '/admin/activity';
 }
@@ -132,10 +136,16 @@ GoRouter buildRouter(HiveCache cache) {
 
         final isReviewer = role == 'reviewer' || role == 'employee';
 
+        final isManager = role == 'manager' || role == 'quality_manager';
+
         // 🔐 حماية Routes
 
         if (path.startsWith('/admin') && !isAdmin) {
-          return AppRoutes.dashboard;
+          // السماح لمدير الجودة بالدخول لصفحات الموظفين والأدوار
+          if (!(isManager &&
+              (path == AppRoutes.employees || path == AppRoutes.roles))) {
+            return AppRoutes.dashboard;
+          }
         }
 
         // 🔥 أهم سطر
@@ -291,6 +301,10 @@ GoRouter buildRouter(HiveCache cache) {
             path: AppRoutes.profile,
             builder: (ctx, _) => const ProfileScreen(),
           ),
+          GoRoute(
+            path: AppRoutes.pricing,
+            builder: (ctx, _) => const manager_pricing.PricingScreen(),
+          ),
         ],
       ),
 
@@ -317,7 +331,7 @@ GoRouter buildRouter(HiveCache cache) {
             builder: (ctx, _) => const CollegesScreen(),
           ),
           GoRoute(
-            path: AppRoutes.pricing,
+            path: AppRoutes.adminPricing,
             builder: (ctx, _) => const PricingScreen(),
           ),
           GoRoute(

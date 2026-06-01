@@ -187,7 +187,7 @@ class PermissionManager {
 
   // Subscriptions / Pricing
   bool get canManageSubscriptions => isAdmin;
-  bool get canViewPricing => isAdmin;
+  bool get canViewPricing => isAdmin || isManager;
 
   // Notifications
   bool get canViewNotifications => true;
@@ -213,10 +213,13 @@ class PermissionManager {
     // Admin-only routes (dashboard, colleges, pricing, activity log) → admin only
     if (path == AppRoutes.adminDashboard ||
         path.startsWith('/admin/colleges') ||
-        path.startsWith('/admin/pricing') ||
         path.startsWith('/admin/roles') ||
         path == AppRoutes.activityLog) {
       return isAdmin;
+    }
+
+    if (path == AppRoutes.adminPricing || path == AppRoutes.pricing) {
+      return canViewPricing;
     }
 
     // Employees & Roles → admin + manager (read-only)
@@ -319,6 +322,15 @@ class PermissionManager {
       ));
     }
 
+    // 6.5 Pricing – manager only
+    if (isManager && canViewPricing) {
+      items.add(const NavItem(
+        label: 'الاسعار',
+        route: AppRoutes.pricing,
+        iconKey: 'subscriptions',
+      ));
+    }
+
     // 7. Chat – all roles
     items.add(const NavItem(
       label: 'التواصل',
@@ -358,7 +370,7 @@ class PermissionManager {
         label: 'ادارة الكليات', route: AppRoutes.colleges, iconKey: 'colleges'),
     NavItem(
         label: 'ادارة الاشتراكات',
-        route: AppRoutes.pricing,
+        route: AppRoutes.adminPricing,
         iconKey: 'subscriptions'),
     NavItem(
         label: 'الاشعارات',

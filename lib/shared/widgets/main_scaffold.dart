@@ -113,7 +113,7 @@ class MainScaffold extends StatelessWidget {
             break;
 
           case 4:
-            context.go(AppRoutes.pricing);
+            context.go(AppRoutes.adminPricing);
 
             break;
 
@@ -173,6 +173,8 @@ class MainScaffold extends StatelessWidget {
         return const Icon(Icons.notifications_outlined);
       case 'profile':
         return const Icon(Icons.person_outline);
+      case 'subscriptions':
+        return const Icon(Icons.monetization_on_outlined);
       default:
         return const Icon(Icons.circle_outlined);
     }
