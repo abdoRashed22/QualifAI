@@ -130,6 +130,7 @@ abstract class ApiEndpoints {
   // Reports
   static const String reports = '/Reports';
   static const String reportsUi = '/Reports/ui';
+  static const String reportsAll = '/Reports/all';
   static const String reportsMy = '/Reports/my';
 
   static String reportDetail(int id) => '/Reports/$id';

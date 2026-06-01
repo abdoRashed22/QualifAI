@@ -86,7 +86,14 @@ class DioClient {
         compact: true,
         logPrint: (obj) {
           assert(() {
-            debugPrint(obj.toString());
+            final str = obj.toString();
+            // قص السجلات الطويلة جداً (مثل مصفوفات الملفات) لمنع تجميد الكونسول
+            if (str.length > 2000) {
+              debugPrint(
+                  '${str.substring(0, 2000)}\n... [TRUNCATED DUE TO LENGTH]');
+            } else {
+              debugPrint(str);
+            }
             return true;
           }());
         },
@@ -102,6 +109,17 @@ class _Utf8DecoderInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (response.data is List<int>) {
+      final contentType =
+          response.headers.value('content-type')?.toLowerCase() ?? '';
+      final path = response.requestOptions.path.toLowerCase();
+
+      // تجاوز فك التشفير للملفات (مثل PDF) حتى لا تتلف أو تتحول لنصوص مشفرة
+      if (contentType.contains('application/pdf') ||
+          contentType.contains('octet-stream') ||
+          path.endsWith('.pdf')) {
+        return handler.next(response);
+      }
+
       final bytes = response.data as List<int>;
       final decoded = utf8.decode(bytes, allowMalformed: true);
 

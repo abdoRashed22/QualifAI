@@ -241,7 +241,7 @@ class _AccreditationTypeCard extends StatelessWidget {
                     color: color,
                     borderRadius: BorderRadius.circular(10.r),
                   ),
-                  child: const Text('تقييم الاعتماد',
+                  child: const Text('عرض المعايير',
                       style: TextStyle(
                           fontFamily: 'Cairo',
                           color: Colors.white,
