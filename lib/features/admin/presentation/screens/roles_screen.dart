@@ -354,23 +354,6 @@ class _RolesViewState extends State<_RolesView> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.navyBlue),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _showAddEmployeeToRoleDialog(context, roleId);
-                    },
-                    icon: const Icon(Icons.person_add_alt_1, color: AppColors.navyBlue),
-                    label: const Text('تعيين موظف جديد لهذا الدور',
-                        style: TextStyle(color: AppColors.navyBlue, fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.blue),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                     ),
@@ -453,83 +436,6 @@ class _RolesViewState extends State<_RolesView> {
                     child: const Text("إنشاء")),
               ],
             ));
-  }
-
-  void _showAddEmployeeToRoleDialog(BuildContext context, int roleId) {
-    final cubit = context.read<AdminCubit>();
-    final firstCtrl = TextEditingController();
-    final lastCtrl = TextEditingController();
-    final emailCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: const Text('تعيين موظف جديد', textAlign: TextAlign.right),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              AppTextField(
-                label: 'الاسم الأول',
-                controller: firstCtrl,
-                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                label: 'اسم العائلة',
-                controller: lastCtrl,
-                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                label: 'البريد الإلكتروني',
-                controller: emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'مطلوب';
-                  if (!v.contains('@')) return 'بريد غير صحيح';
-                  return null;
-                },
-              ),
-              SizedBox(height: 12.h),
-              AppTextField(
-                label: 'كلمة المرور',
-                controller: passCtrl,
-                obscure: true,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'مطلوب';
-                  if (v.length < 4) return 'كلمة المرور قصيرة';
-                  return null;
-                },
-              ),
-            ]),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('إلغاء')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.of(dialogContext).pop();
-              cubit.createEmployee({
-                'firstName': firstCtrl.text.trim(),
-                'lastName': lastCtrl.text.trim(),
-                'email': emailCtrl.text.trim(),
-                'password': passCtrl.text,
-                'roleId': roleId, // تمرير معرف الدور مباشرة
-              });
-            },
-            child: const Text('إضافة', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showAssignExistingEmployeeDialog(BuildContext context, int roleId) {

@@ -9,6 +9,7 @@ import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart
 
 import '../../../../core/permissions/pricing_screen.dart' as admin_pricing;
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 class AdminScaffold extends StatelessWidget {
   const AdminScaffold({Key? key}) : super(key: key);
@@ -42,6 +43,10 @@ class AdminScaffold extends StatelessWidget {
             icon: Icons.history,
             label: 'سجل النشاط',
             screen: ActivityLogScreen()),
+        NavRailItem(
+            icon: Icons.person_outline,
+            label: 'حسابي',
+            screen: ProfileScreen()),
       ],
       bottomItems: const [
         NavRailItem(icon: Icons.help_outline, label: 'دعم', screen: SizedBox()),

@@ -338,13 +338,19 @@ class _EmployeesView extends StatelessWidget {
 
   void _showAddDialog(BuildContext context) {
     final cubit = context.read<AdminCubit>();
+    
+    // استخراج قائمة الإيميلات المسجلة حالياً
+    final currentState = cubit.state;
+    final existingEmails = currentState is EmployeesLoaded
+        ? currentState.employees.map((e) => (e['email'] ?? '').toString().trim().toLowerCase()).toList()
+        : <String>[];
+
     final firstCtrl = TextEditingController();
     final lastCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
     final passCtrl = TextEditingController();
     int selectedRoleId = 3; // 3 = موظف الجودة كافتراضي
     final formKey = GlobalKey<FormState>();
-    File? selectedImage;
 
     showDialog(
       context: context,
@@ -357,61 +363,6 @@ class _EmployeesView extends StatelessWidget {
             child: Form(
               key: formKey,
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                // ── UI اختيار الصورة ──
-                Center(
-                  child: GestureDetector(
-                    onTap: () async {
-                      try {
-                        final picker = ImagePicker();
-                        final pickedFile =
-                            await picker.pickImage(source: ImageSource.gallery);
-                        if (pickedFile != null) {
-                          setState(() => selectedImage = File(pickedFile.path));
-                        }
-                      } catch (e) {
-                        debugPrint('Error picking image: $e');
-                      }
-                    },
-                    child: Container(
-                      width: 90.w,
-                      height: 90.w,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.navyBlue, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: selectedImage != null
-                          ? ClipOval(
-                              child:
-                                  Image.file(selectedImage!, fit: BoxFit.cover))
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo_outlined,
-                                    color: AppColors.navyBlue, size: 26.sp),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  'صورة',
-                                  style: TextStyle(
-                                      fontFamily: 'Cairo',
-                                      fontSize: 12.sp,
-                                      color: AppColors.navyBlue,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
                 AppTextField(
                   label: 'الاسم الأول',
                   controller: firstCtrl,
@@ -431,6 +382,9 @@ class _EmployeesView extends StatelessWidget {
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'مطلوب';
                     if (!v.contains('@')) return 'بريد غير صحيح';
+                    if (existingEmails.contains(v.trim().toLowerCase())) {
+                      return 'البريد الإلكتروني مسجل مسبقاً';
+                    }
                     return null;
                   },
                 ),
@@ -489,8 +443,6 @@ class _EmployeesView extends StatelessWidget {
                   'email': emailCtrl.text.trim(),
                   'password': passCtrl.text,
                   'roleId': selectedRoleId, // إرسال الدور المختار
-                  // ⚠️ ملاحظة: الـ API يتوقع JSON ولا يدعم رفع الصورة هنا مباشرة.
-                  // 'profileImage': selectedImage?.path,
                 });
               },
               child: const Text('إضافة'),
@@ -503,6 +455,15 @@ class _EmployeesView extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> employee) {
     final cubit = context.read<AdminCubit>();
+    
+    // استخراج الإيميلات لاستبعاد إيميل الموظف الحالي (حتى لا يظهر خطأ إذا لم يغير إيميله)
+    final currentState = cubit.state;
+    final currentEmail = (employee['email'] ?? '').toString().trim().toLowerCase();
+    final existingEmails = currentState is EmployeesLoaded
+        ? currentState.employees.map((e) => (e['email'] ?? '').toString().trim().toLowerCase())
+            .where((email) => email.isNotEmpty && email != currentEmail).toList()
+        : <String>[];
+
     final firstCtrl =
         TextEditingController(text: employee['firstName']?.toString() ?? '');
     final lastCtrl =
@@ -550,6 +511,9 @@ class _EmployeesView extends StatelessWidget {
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'مطلوب';
                     if (!v.contains('@')) return 'بريد غير صحيح';
+                    if (existingEmails.contains(v.trim().toLowerCase())) {
+                      return 'البريد الإلكتروني مسجل مسبقاً لموظف آخر';
+                    }
                     return null;
                   },
                 ),
