@@ -31,6 +31,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   late Animation<double> _scale;
 
+  late Animation<double> _rotation;
+
   bool _navigated = false; // prevent double navigation
 
   @override
@@ -38,12 +40,16 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
 
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200));
+        vsync: this, duration: const Duration(milliseconds: 1800));
 
-    _fade = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0, 0.6)));
+    _fade = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(
+        parent: _ctrl,
+        curve: const Interval(0.2, 1.0, curve: Curves.bounceInOut)));
 
-    _scale = Tween<double>(begin: 0.8, end: 1)
+    _scale = Tween<double>(begin: 0.5, end: 1)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
+
+    _rotation = Tween<double>(begin: -0.5, end: 0)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
 
     _ctrl.forward();
@@ -93,37 +99,27 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 110.w,
-                  height: 110.w,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.cyan.withOpacity(0.3),
-                          blurRadius: 30,
-                          spreadRadius: 5)
-                    ],
-                  ),
-                  child: Center(
-                    child: Stack(alignment: Alignment.center, children: [
-                      Text('Q',
-                          style: GoogleFonts.cairo(
-                              fontSize: 52.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.navyBlue,
-                              height: 1)),
-                      Positioned(
-                          top: 18.h,
-                          right: 18.w,
-                          child: Container(
-                              width: 14.w,
-                              height: 14.w,
-                              decoration: const BoxDecoration(
-                                  color: AppColors.cyan,
-                                  shape: BoxShape.circle))),
-                    ]),
+                RotationTransition(
+                  turns: _rotation,
+                  child: Container(
+                    width: 110.w,
+                    height: 110.w,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                            color: AppColors.cyan.withOpacity(0.3),
+                            blurRadius: 30,
+                            spreadRadius: 5)
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/2 51.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(height: 28.h),
