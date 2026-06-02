@@ -9,6 +9,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import 'dart:io';
 
@@ -129,7 +130,19 @@ class _ProfileViewState extends State<_ProfileView> {
     final role = cache.getRole() ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('حسابي')),
+      appBar: AppBar(
+        title: const Text('حسابي'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       body: BlocConsumer<ProfileCubit, ProfileState>(
         listener: (ctx, state) {
           if (state is ProfileLoaded) {

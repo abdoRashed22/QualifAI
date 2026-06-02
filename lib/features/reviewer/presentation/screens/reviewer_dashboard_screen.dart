@@ -8,6 +8,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../presentation/cubit/reviewer_cubit.dart';
+import '../../../profile/data/remote/side_rail_navigation.dart';
 
 class ReviewerDashboardScreen extends StatefulWidget {
   const ReviewerDashboardScreen({super.key});
@@ -44,6 +45,16 @@ class _ReviewerDashboardView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('لوحة المراجعة'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
       ),
       body: BlocBuilder<ReviewerCubit, ReviewerState>(
         builder: (context, state) {

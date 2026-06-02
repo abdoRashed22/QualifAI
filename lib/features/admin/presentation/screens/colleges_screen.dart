@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
 import '../../../../shared/widgets/app_card.dart';
+import '../../../profile/data/remote/side_rail_navigation.dart';
 
 import '../cubit/admin_cubit.dart';
 
@@ -33,8 +36,19 @@ class _CollegesView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('الكليات'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => _showAddCollegeDialog(context),
         label: const Text('إضافة كلية'),
         icon: const Icon(Icons.add),
@@ -279,7 +293,19 @@ class _PricingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الأسعار والاشتراكات')),
+      appBar: AppBar(
+        title: const Text('الأسعار والاشتراكات'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       body: BlocBuilder<AdminCubit, AdminState>(
         builder: (ctx, state) {
           if (state is AdminLoading)
@@ -435,7 +461,19 @@ class _ActivityView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('سجل الأنشطة')),
+      appBar: AppBar(
+        title: const Text('سجل الأنشطة'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       body: BlocBuilder<AdminCubit, AdminState>(
         builder: (ctx, state) {
           if (state is AdminLoading)

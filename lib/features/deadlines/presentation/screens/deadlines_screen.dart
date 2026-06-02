@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/core/router/app_router.dart';
+import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import '../../../../core/di/injection.dart';
 
@@ -32,7 +35,19 @@ class _DeadlinesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('المواعيد النهائية')),
+      appBar: AppBar(
+        title: const Text('المواعيد النهائية'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       body: BlocBuilder<DeadlinesCubit, DeadlinesState>(
         builder: (ctx, state) {
           if (state is DeadlinesLoading)

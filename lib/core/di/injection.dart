@@ -2,6 +2,10 @@
 
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/support_cubit.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/support_remote_ds.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/support_repository.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/support_repository_impl.dart';
 import '../api/dio_client.dart';
 import '../cache/hive_cache.dart';
 import '../theme/theme_cubit.dart';
@@ -172,6 +176,15 @@ Future<void> setupDI() async {
     () => AdminRepositoryImpl(sl<AdminRemoteDs>()),
   );
   sl.registerFactory<AdminCubit>(() => AdminCubit(sl<AdminRepository>()));
+
+  // ── Support ───────────────────────────────────────
+  sl.registerLazySingleton<SupportRemoteDs>(
+    () => SupportRemoteDs(sl<Dio>()),
+  );
+  sl.registerLazySingleton<SupportRepository>(
+    () => SupportRepositoryImpl(sl<SupportRemoteDs>()),
+  );
+  sl.registerFactory<SupportCubit>(() => SupportCubit(sl<SupportRepository>()));
 
   print('✅ Dependency Injection setup complete');
 }

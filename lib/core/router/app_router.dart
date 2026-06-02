@@ -3,6 +3,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/support_screen.dart';
+import 'package:qualif_ai/features/profile/data/remote/admin_scaffold.dart';
+import 'package:qualif_ai/features/profile/data/remote/employee_scaffold.dart';
+import 'package:qualif_ai/features/profile/data/remote/manager_scaffold.dart';
 
 import '../../features/auth/presentation/screens/splash_screen.dart';
 
@@ -51,8 +55,6 @@ import '../../features/reviewer/presentation/screens/reviewer_college_review_scr
 import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
 
 import '../../shared/screens/file_viewer_screen.dart';
-
-import '../../shared/widgets/main_scaffold.dart';
 
 import '../cache/hive_cache.dart';
 
@@ -111,6 +113,8 @@ abstract class AppRoutes {
   static const adminPricing = '/admin/pricing';
 
   static const activityLog = '/admin/activity';
+
+  static const support = '/support';
 }
 
 GoRouter buildRouter(HiveCache cache) {
@@ -179,166 +183,152 @@ GoRouter buildRouter(HiveCache cache) {
         builder: (ctx, _) => const ForgotPasswordScreen(),
       ),
 
-      // ── Main Shell ────────────────────────────────────────────────────────────
-
-      ShellRoute(
-        builder: (ctx, state, child) => MainScaffold(child: child),
-        routes: [
-          GoRoute(
-            path: AppRoutes.dashboard,
-            builder: (ctx, _) => const DashboardScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.reviewerDashboard,
-            builder: (ctx, _) => const ReviewerDashboardScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.reviewerCollege,
-            builder: (ctx, state) {
-              final collegeId =
-                  int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
-              return ReviewerCollegeReviewScreen(collegeId: collegeId);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.reviewerSection,
-            builder: (ctx, state) {
-              final collegeId =
-                  int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
-              final sectionId =
-                  int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
-              return ReviewerSectionReviewScreen(
-                collegeId: collegeId,
-                sectionId: sectionId,
-              );
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.fileViewer,
-            builder: (ctx, state) {
-              final fileUrl = state.uri.queryParameters['url'] ?? '';
-              final fileName = state.uri.queryParameters['name'] ?? 'ملف';
-              return FileViewerScreen(
-                fileUrl: fileUrl,
-                fileName: fileName,
-              );
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.accreditation,
-            builder: (ctx, _) => const AccreditationTypesScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.standards,
-            builder: (ctx, state) {
-              final type = state.uri.queryParameters['type'] ?? '1';
-
-              return StandardsListScreen(accreditationType: int.parse(type));
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.standardDetail,
-            builder: (ctx, state) {
-              final sectionId =
-                  int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
-              final accreditationType =
-                  int.tryParse(state.uri.queryParameters['type'] ?? '') ?? 1;
-              return StandardDetailScreen(
-                sectionId: sectionId,
-                accreditationType: accreditationType,
-              );
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.fileUpload,
-            builder: (ctx, state) {
-              final docId = int.parse(state.pathParameters['docId']!);
-
-              return FileUploadScreen(documentId: docId);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.aiAnalysis,
-            builder: (ctx, state) {
-              final docId = int.parse(state.pathParameters['docId']!);
-
-              return AiAnalysisScreen(documentId: docId);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.reports,
-            builder: (ctx, _) => const ReportsListScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.reportDetail,
-            builder: (ctx, state) {
-              final id = int.parse(state.pathParameters['id']!);
-
-              return ReportDetailScreen(reportId: id);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.deadlines,
-            builder: (ctx, _) => const DeadlinesScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.notifications,
-            builder: (ctx, _) => const NotificationsScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.chatList,
-            builder: (ctx, _) => const ChatListScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.chatDetail,
-            builder: (ctx, state) {
-              final id = int.parse(state.pathParameters['collegeId']!);
-
-              return ChatScreen(collegeId: id);
-            },
-          ),
-          GoRoute(
-            path: AppRoutes.profile,
-            builder: (ctx, _) => const ProfileScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.pricing,
-            builder: (ctx, _) => const manager_pricing.PricingScreen(),
-          ),
-        ],
+      // ── Top Level App Scaffolds (IndexedStack based tabs) ─────────────
+      GoRoute(
+        path: AppRoutes.dashboard,
+        builder: (ctx, _) => const ManagerScaffold(),
+      ),
+      GoRoute(
+        path: AppRoutes.reviewerDashboard,
+        builder: (ctx, _) => const EmployeeScaffold(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminDashboard,
+        builder: (ctx, _) => const AdminScaffold(),
       ),
 
-      // ── Admin Shell ───────────────────────────────────────────────────────────
-
-      ShellRoute(
-        builder: (ctx, state, child) =>
-            MainScaffold(isAdmin: true, child: child),
-        routes: [
-          GoRoute(
-            path: AppRoutes.adminDashboard,
-            builder: (ctx, _) => const AdminDashboardScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.employees,
-            builder: (ctx, _) => const EmployeesScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.roles,
-            builder: (ctx, _) => const RolesScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.colleges,
-            builder: (ctx, _) => const CollegesScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.adminPricing,
-            builder: (ctx, _) => const PricingScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.activityLog,
-            builder: (ctx, _) => const ActivityLogScreen(),
-          ),
-        ],
+      // ── Standalone routes (Pushed on top) ─────────────────────────────
+      GoRoute(
+        path: AppRoutes.reviewerCollege,
+        builder: (ctx, state) {
+          final collegeId =
+              int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
+          return ReviewerCollegeReviewScreen(collegeId: collegeId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.reviewerSection,
+        builder: (ctx, state) {
+          final collegeId =
+              int.tryParse(state.pathParameters['collegeId'] ?? '') ?? 0;
+          final sectionId =
+              int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
+          return ReviewerSectionReviewScreen(
+            collegeId: collegeId,
+            sectionId: sectionId,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.fileViewer,
+        builder: (ctx, state) {
+          final fileUrl = state.uri.queryParameters['url'] ?? '';
+          final fileName = state.uri.queryParameters['name'] ?? 'ملف';
+          return FileViewerScreen(
+            fileUrl: fileUrl,
+            fileName: fileName,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.accreditation,
+        builder: (ctx, _) => const AccreditationTypesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.standards,
+        builder: (ctx, state) {
+          final type = state.uri.queryParameters['type'] ?? '1';
+          return StandardsListScreen(accreditationType: int.parse(type));
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.standardDetail,
+        builder: (ctx, state) {
+          final sectionId =
+              int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
+          final accreditationType =
+              int.tryParse(state.uri.queryParameters['type'] ?? '') ?? 1;
+          return StandardDetailScreen(
+            sectionId: sectionId,
+            accreditationType: accreditationType,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.fileUpload,
+        builder: (ctx, state) {
+          final docId = int.parse(state.pathParameters['docId']!);
+          return FileUploadScreen(documentId: docId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.aiAnalysis,
+        builder: (ctx, state) {
+          final docId = int.parse(state.pathParameters['docId']!);
+          return AiAnalysisScreen(documentId: docId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.reports,
+        builder: (ctx, _) => const ReportsListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportDetail,
+        builder: (ctx, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return ReportDetailScreen(reportId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.deadlines,
+        builder: (ctx, _) => const DeadlinesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (ctx, _) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chatList,
+        builder: (ctx, _) => const ChatListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chatDetail,
+        builder: (ctx, state) {
+          final id = int.parse(state.pathParameters['collegeId']!);
+          return ChatScreen(collegeId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (ctx, _) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.pricing,
+        builder: (ctx, _) => const manager_pricing.PricingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.employees,
+        builder: (ctx, _) => const EmployeesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.roles,
+        builder: (ctx, _) => const RolesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.colleges,
+        builder: (ctx, _) => const CollegesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminPricing,
+        builder: (ctx, _) => const PricingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.activityLog,
+        builder: (ctx, _) => const ActivityLogScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.support,
+        builder: (ctx, _) => const SupportScreen(),
       ),
     ],
     errorBuilder: (ctx, state) => Scaffold(

@@ -9,6 +9,7 @@ import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../profile/data/remote/side_rail_navigation.dart';
 
 class AccreditationTypesScreen extends StatefulWidget {
   const AccreditationTypesScreen({super.key});
@@ -50,7 +51,19 @@ class _AccreditationTypesScreenState extends State<AccreditationTypesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الاعتماد')),
+      appBar: AppBar(
+        title: const Text('الاعتماد'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(

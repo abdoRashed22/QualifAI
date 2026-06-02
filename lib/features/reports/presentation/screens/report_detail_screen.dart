@@ -203,10 +203,10 @@ class _ReportDetailView extends StatelessWidget {
                           padding: EdgeInsets.symmetric(
                               vertical: 10.h, horizontal: 12.w),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(10.r),
-                            border:
-                                Border.all(color: Colors.grey.withOpacity(0.2)),
+                            border: Border.all(
+                                color: Theme.of(context).dividerColor),
                           ),
                           child: Row(
                             children: [
@@ -264,8 +264,13 @@ class _ReportDetailView extends StatelessWidget {
                                         fontSize: 13.sp,
                                         fontWeight: FontWeight.w600,
                                         color: hasFile
-                                            ? Colors.black87
-                                            : Colors.grey),
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withOpacity(0.5)),
                                     textAlign: TextAlign.right,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -301,8 +306,12 @@ class _ReportDetailView extends StatelessWidget {
                       SizedBox(height: 8.h),
                       Text(
                         'يمكنك استخدام هذه المساحة لتدوين ملاحظاتك، وإرسالها للكلية أو المراجع.',
-                        style:
-                            TextStyle(fontSize: 12.sp, color: Colors.grey[700]),
+                        style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.7)),
                         textAlign: TextAlign.right,
                       ),
                       SizedBox(height: 12.h),

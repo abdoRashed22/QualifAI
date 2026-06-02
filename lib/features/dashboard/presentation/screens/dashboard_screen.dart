@@ -9,6 +9,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../cubit/dashboard_cubit.dart';
+import '../../../profile/data/remote/side_rail_navigation.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -44,25 +45,12 @@ class _DashboardView extends StatefulWidget {
   State<_DashboardView> createState() => _DashboardViewState();
 }
 
-class _DashboardViewState extends State<_DashboardView>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-
+class _DashboardViewState extends State<_DashboardView> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      context.read<DashboardCubit>().load(_tabController.index + 1);
-    });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,41 +61,16 @@ class _DashboardViewState extends State<_DashboardView>
     return Scaffold(
       appBar: AppBar(
         title: const Text('الرئيسية'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push(AppRoutes.notifications),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(44.h),
-          child: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(
-                  child: Text('الأكاديمي',
-                      style: TextStyle(
-                          fontSize: 16.sp,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.green))),
-              Tab(
-                  child: Text('البرامجي',
-                      style: TextStyle(
-                          fontSize: 16.sp,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.green))),
-              Tab(
-                  child: Text('المؤسسي',
-                      style: TextStyle(
-                          fontSize: 16.sp,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.green))),
-            ],
-          ),
-        ),
       ),
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (ctx, state) {
@@ -136,8 +99,7 @@ class _DashboardViewState extends State<_DashboardView>
           final sections = loaded?.sections ?? [];
 
           return RefreshIndicator(
-            onRefresh: () =>
-                ctx.read<DashboardCubit>().load(_tabController.index + 1),
+            onRefresh: () => ctx.read<DashboardCubit>().load(1),
             child: ListView(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               children: [

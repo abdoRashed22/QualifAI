@@ -153,7 +153,10 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.grey[600],
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
                           ),
                         ),
                       ),
@@ -205,9 +208,10 @@ class _FileViewerScreenState extends State<FileViewerScreen> {
                       padding: EdgeInsets.symmetric(
                           vertical: 12.h, horizontal: 16.w),
                       decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        border:
-                            Border(top: BorderSide(color: Colors.grey[300]!)),
+                        color: Theme.of(context).cardColor,
+                        border: Border(
+                            top: BorderSide(
+                                color: Theme.of(context).dividerColor)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

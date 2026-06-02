@@ -3,10 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../profile/data/remote/side_rail_navigation.dart';
 import '../cubit/admin_cubit.dart';
 
 class EmployeesScreen extends StatelessWidget {
@@ -27,12 +30,23 @@ class _EmployeesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الموظفون'), actions: [
-        IconButton(
-          icon: const Icon(Icons.person_add_outlined),
-          onPressed: () => _showAddDialog(context),
+      appBar: AppBar(
+        title: const Text('الموظفون'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
         ),
-      ]),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_add_outlined),
+            onPressed: () => _showAddDialog(context),
+          ),
+        ],
+      ),
       body: BlocConsumer<AdminCubit, AdminState>(
         listener: (ctx, state) {
           if (state is AdminActionSuccess) {
@@ -123,15 +137,13 @@ class _EmployeesView extends StatelessWidget {
                         children: [
                           Text(
                             name,
-                            style:
-                                Theme.of(context).textTheme.titleSmall,
+                            style: Theme.of(context).textTheme.titleSmall,
                             textAlign: TextAlign.right,
                           ),
                           SizedBox(height: 4.h),
                           Text(
                             email,
-                            style:
-                                Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall,
                             textAlign: TextAlign.right,
                           ),
                           SizedBox(height: 4.h),
@@ -146,8 +158,9 @@ class _EmployeesView extends StatelessWidget {
                     SizedBox(width: 10.w),
                     CircleAvatar(
                       backgroundColor: AppColors.blue.withOpacity(0.15),
-                      backgroundImage:
-                          profileImage.isNotEmpty ? NetworkImage(profileImage) : null,
+                      backgroundImage: profileImage.isNotEmpty
+                          ? NetworkImage(profileImage)
+                          : null,
                       radius: 22.r,
                       child: profileImage.isNotEmpty
                           ? null
@@ -169,6 +182,7 @@ class _EmployeesView extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => _showAddDialog(context),
         backgroundColor: AppColors.navyBlue,
         label: const Text('إضافة موظف',
@@ -199,15 +213,13 @@ class _EmployeesView extends StatelessWidget {
               AppTextField(
                 label: 'الاسم الأول',
                 controller: firstCtrl,
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'مطلوب' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
               ),
               SizedBox(height: 12.h),
               AppTextField(
                 label: 'اسم العائلة',
                 controller: lastCtrl,
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'مطلوب' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
               ),
               SizedBox(height: 12.h),
               AppTextField(

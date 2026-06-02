@@ -56,6 +56,14 @@ class DioClient {
         onResponse: (response, handler) {
           debugPrint(
               '📥 [RESPONSE] ${response.statusCode} ${response.requestOptions.path}');
+
+          // طباعة الرد بشكل مختصر لتجنب تجميد وإزعاج الـ Console
+          final respStr = response.data.toString();
+          if (respStr.length > 300) {
+            debugPrint('📥 [BODY] ${respStr.substring(0, 300)}... [TRUNCATED]');
+          } else {
+            debugPrint('📥 [BODY] $respStr');
+          }
           return handler.next(response);
         },
         onError: (error, handler) {
@@ -81,21 +89,11 @@ class DioClient {
       PrettyDioLogger(
         requestHeader: false,
         requestBody: true,
-        responseBody: true,
+        responseBody: false, // تم الإيقاف هنا لمنع تجميد الكونسول
         responseHeader: false,
         compact: true,
         logPrint: (obj) {
-          assert(() {
-            final str = obj.toString();
-            // قص السجلات الطويلة جداً (مثل مصفوفات الملفات) لمنع تجميد الكونسول
-            if (str.length > 2000) {
-              debugPrint(
-                  '${str.substring(0, 2000)}\n... [TRUNCATED DUE TO LENGTH]');
-            } else {
-              debugPrint(str);
-            }
-            return true;
-          }());
+          debugPrint(obj.toString());
         },
       ),
     );

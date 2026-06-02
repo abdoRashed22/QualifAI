@@ -6,9 +6,12 @@ import 'package:qualif_ai/core/permissions/pricing_cubit.dart';
 import 'package:qualif_ai/core/permissions/pricing_remote_ds.dart';
 import 'package:qualif_ai/core/permissions/pricing_repository_impl.dart';
 import 'package:qualif_ai/core/permissions/pricing_state.dart';
+import 'package:go_router/go_router.dart';
 
+import '../router/app_router.dart';
 import '../di/injection.dart';
 import '../theme/app_colors.dart';
+import '../../features/profile/data/remote/side_rail_navigation.dart';
 
 class PricingScreen extends StatelessWidget {
   const PricingScreen({super.key});
@@ -34,6 +37,16 @@ class _PricingView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('الاسعار', style: TextStyle(fontFamily: 'Cairo')),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
       ),
       body: BlocConsumer<PricingCubit, PricingState>(
         listener: (context, state) {
@@ -87,7 +100,7 @@ class _PricingView extends StatelessWidget {
                       fontFamily: 'Cairo',
                       fontSize: 22.sp,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.navyBlue,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -97,7 +110,7 @@ class _PricingView extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 16.sp,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -162,10 +175,10 @@ class _PlanCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 24.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isActive ? AppColors.navyBlue : Colors.grey[300]!,
+          color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
           width: isActive ? 2.0 : 1.0,
         ),
         boxShadow: [
@@ -183,7 +196,7 @@ class _PlanCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(vertical: 8.h),
               decoration: BoxDecoration(
-                color: AppColors.navyBlue,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(14.r),
                   topRight: Radius.circular(14.r),
@@ -211,7 +224,7 @@ class _PlanCard extends StatelessWidget {
                     fontFamily: 'Cairo',
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.navyBlue,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -226,7 +239,7 @@ class _PlanCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 16.sp,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     SizedBox(width: 6.w),
@@ -236,7 +249,7 @@ class _PlanCard extends StatelessWidget {
                         fontFamily: 'Cairo',
                         fontSize: 36.sp,
                         fontWeight: FontWeight.bold,
-                        color: isActive ? AppColors.navyBlue : Colors.black87,
+                        color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -248,7 +261,7 @@ class _PlanCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 14.sp,
-                      color: Colors.grey[700],
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -267,6 +280,7 @@ class _PlanCard extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'Cairo',
                               fontSize: 14.sp,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             textAlign: TextAlign.right,
                           ),
@@ -300,13 +314,13 @@ class _PlanCard extends StatelessWidget {
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isActive ? AppColors.navyBlue : Colors.white,
-                      disabledBackgroundColor: AppColors.navyBlue,
+                          isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor:
-                          isActive ? Colors.white : AppColors.navyBlue,
+                          isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
                       disabledForegroundColor: Colors.white,
                       side: BorderSide(
-                        color: AppColors.navyBlue,
+                        color: Theme.of(context).colorScheme.primary,
                         width: 1.5,
                       ),
                       shape: RoundedRectangleBorder(
@@ -320,7 +334,7 @@ class _PlanCard extends StatelessWidget {
                         fontFamily: 'Cairo',
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
-                        color: isActive ? Colors.white : AppColors.navyBlue,
+                        color: isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),

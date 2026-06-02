@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import '../../../../core/cache/hive_cache.dart';
 
@@ -46,9 +47,22 @@ class _ReportsListView extends StatelessWidget {
     final pm = PermissionManager(sl<HiveCache>());
 
     return Scaffold(
-      appBar: AppBar(title: const Text('التقارير')),
+      appBar: AppBar(
+        title: const Text('التقارير'),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => context.push(AppRoutes.notifications),
+          ),
+        ],
+      ),
       floatingActionButton: pm.isManager
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () async {
                 final result = await FilePicker.platform.pickFiles(
                   type: FileType.custom,
