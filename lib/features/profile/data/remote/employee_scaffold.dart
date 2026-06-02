@@ -15,7 +15,7 @@ class EmployeeScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SideRailNavigation(
-      appTitle: 'QualifAI',
+      appTitle: '         QualifAI',
       homeScreen: const ReviewerDashboardScreen(),
       mainItems: const [
         NavRailItem(

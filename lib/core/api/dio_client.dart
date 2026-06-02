@@ -5,12 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../cache/hive_cache.dart';
 import 'api_endpoints.dart';
+import 'auth_interceptor.dart';
 
 class DioClient {
   final Dio _dio;
   final HiveCache _cache;
+  final AuthInterceptor _authInterceptor;
 
-  DioClient(this._cache)
+  DioClient(this._cache, this._authInterceptor)
       : _dio = Dio(
           BaseOptions(
             baseUrl: ApiEndpoints.baseUrl,
@@ -31,55 +33,8 @@ class DioClient {
   void _setupInterceptors() {
     _dio.interceptors.clear();
 
-    // ✅ Combined Interceptor (Auth + Logging + Error Handling)
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = _cache.getToken();
-
-          // ✅ Bearer Token
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-
-          // ✅ Ensure Content-Type with charset (except FormData)
-          if (options.contentType == null && options.data is! FormData) {
-            options.contentType = 'application/json; charset=utf-8';
-          }
-
-          debugPrint('📤 [REQUEST] ${options.method} ${options.path}');
-          debugPrint('📤 [HEADERS] ${options.headers}');
-          debugPrint('📤 [BODY] ${options.data}');
-
-          return handler.next(options);
-        },
-        onResponse: (response, handler) {
-          debugPrint(
-              '📥 [RESPONSE] ${response.statusCode} ${response.requestOptions.path}');
-
-          // طباعة الرد بشكل مختصر لتجنب تجميد وإزعاج الـ Console
-          final respStr = response.data.toString();
-          if (respStr.length > 300) {
-            debugPrint('📥 [BODY] ${respStr.substring(0, 300)}... [TRUNCATED]');
-          } else {
-            debugPrint('📥 [BODY] $respStr');
-          }
-          return handler.next(response);
-        },
-        onError: (error, handler) {
-          debugPrint(
-              '❌ [ERROR] ${error.response?.statusCode} ${error.message}');
-
-          // ✅ Handle 401
-          if (error.response?.statusCode == 401) {
-            _cache.clearAll();
-            // navigation handled in UI
-          }
-
-          return handler.next(error);
-        },
-      ),
-    );
+    // ✅ Auth & Logging & Error Handling Interceptor
+    _dio.interceptors.add(_authInterceptor);
 
     // ✅ UTF-8 Decoder (IMPORTANT for Arabic)
     _dio.interceptors.add(_Utf8DecoderInterceptor());

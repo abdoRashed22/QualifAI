@@ -1,13 +1,17 @@
 // lib/core/di/injection.dart
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/support_cubit.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/support_remote_ds.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/support_repository.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/support_repository_impl.dart';
+import '../api/auth_interceptor.dart';
 import '../api/dio_client.dart';
 import '../cache/hive_cache.dart';
+import '../router/app_router.dart';
 import '../theme/theme_cubit.dart';
 import '../localization/locale_cubit.dart';
 
@@ -69,8 +73,36 @@ Future<void> setupDI() async {
   await cache.init();
   sl.registerSingleton<HiveCache>(cache);
 
+  // ── Router ────────────────────────────────────────
+  sl.registerSingleton<GoRouter>(buildRouter(cache));
+
+  sl.registerLazySingleton<AuthInterceptor>(
+    () => AuthInterceptor(
+      cache: sl<HiveCache>(),
+      onUnauthorized: () {
+        final router = sl<GoRouter>();
+        final context = router.routerDelegate.navigatorKey.currentContext;
+
+        if (context != null) {
+          ScaffoldMessenger.of(context)
+              .clearSnackBars(); // لمسح أي رسائل سابقة ومنع التكرار
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.',
+                  style: TextStyle(fontFamily: 'Cairo')),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+
+        router.go(AppRoutes.login);
+      },
+    ),
+  );
+
   // Register DioClient with interceptors and cache support
-  final dioClient = DioClient(sl<HiveCache>());
+  final dioClient = DioClient(sl<HiveCache>(), sl<AuthInterceptor>());
   sl.registerSingleton<DioClient>(dioClient);
   sl.registerSingleton<Dio>(dioClient.dio);
 
