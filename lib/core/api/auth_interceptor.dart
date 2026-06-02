@@ -46,7 +46,8 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     debugPrint('❌ [ERROR] ${err.response?.statusCode} ${err.message}');
 
-    if (err.response?.statusCode == 401) {
+    final path = err.requestOptions.path;
+    if (err.response?.statusCode == 401 && !path.contains('/Auth/login')) {
       debugPrint(
           '⚠️ Token expired or unauthorized. Clearing cache and logging out...');
       await cache.clearAll();
