@@ -1,5 +1,6 @@
 // lib/features/admin/presentation/cubit/admin_cubit.dart
 
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/admin_repository.dart';
@@ -346,36 +347,69 @@ class AdminCubit extends Cubit<AdminState> {
     );
   }
 
-  // ✅ أهم fix فعلي عندك
   List<Map<String, dynamic>> _mapEmployeeData(List<dynamic> data) {
-    return data.whereType<Map<String, dynamic>>().map((emp) {
-      final firstName = (emp['firstName'] ??
-              emp['first_name'] ??
-              emp['name'] ??
-              emp['fullName'] ??
-              '')
-          .toString();
-      final lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
-      final email = (emp['email'] ?? emp['userEmail'] ?? '').toString();
-      final role = (emp['roleName'] ??
-              emp['role'] ??
-              emp['roleDisplayName'] ??
-              'employee')
-          .toString();
-      return {
-        'id': emp['id'] ?? emp['employeeId'] ?? 0,
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'role': role,
-        'profileImage': emp['profileImage'] ??
-            emp['image'] ??
-            emp['photo'] ??
-            emp['avatarUrl'] ??
-            '',
-      };
-    }).toList();
+  return data.whereType<Map<String, dynamic>>().map((emp) {
+    
+    final id = emp['employeeId'] ?? emp['id'] ?? 0;
+
+    final firstName = (emp['firstName'] ??
+            emp['first_name'] ??
+            emp['name'] ??
+            '')
+        .toString();
+
+    final lastName = (emp['lastName'] ??
+            emp['last_name'] ??
+            '')
+        .toString();
+
+    final email = (emp['email'] ??
+            emp['userEmail'] ??
+            emp['userName'] ??
+            '')
+        .toString();
+
+    final role = (emp['roleName'] ??
+            emp['role'] ??
+            emp['roleDisplayName'] ??
+            'موظف')
+        .toString();
+
+    final fullName = '$firstName $lastName'.trim();
+
+    debugPrint('RAW Employee => $emp');
+
+    debugPrint(
+      'Mapped => {id:$id , fullName:$fullName , email:$email , role:$role}',
+    );
+
+    return {
+      'id': id,
+
+      'firstName': firstName,
+      'lastName': lastName,
+
+      'fullName': fullName,
+
+      'email': email,
+
+      // نخزن userName كما هو
+      'userName': email,
+
+      'role': role,
+
+      'profileImage': emp['profileImage'] ??
+          emp['image'] ??
+          emp['photo'] ??
+          emp['avatarUrl'] ??
+          '',
+    };
+    
   }
+  
+  ).toList();
+
+}
 
   @override
   Future<void> close() {

@@ -189,10 +189,20 @@ class _ProfileViewState extends State<_ProfileView> {
               state is ProfileLoaded ? state.profile : <String, dynamic>{};
 
           // Use cached avatar values while cubit emits loading/updating
-          final photoUrl = (state is ProfileLoaded)
+          final rawPhotoUrl = (state is ProfileLoaded)
               ? (profile['profileImage'] as String? ??
                   profile['photoUrl'] as String?)
               : _photoUrl;
+              
+          String? photoUrl;
+          if (rawPhotoUrl != null && rawPhotoUrl.isNotEmpty) {
+            final baseUrl = rawPhotoUrl.startsWith('http')
+                ? rawPhotoUrl
+                : 'https://qualefai.runasp.net${rawPhotoUrl.startsWith('/') ? '' : '/'}$rawPhotoUrl';
+            // إضافة timestamp لمنع الكاش وتحديث الصورة فوراً بعد رفعها
+            photoUrl = '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+          }
+
           final localPhotoPath = (state is ProfileLoaded)
               ? profile['localPhotoPath'] as String?
               : _localPhotoPath;
