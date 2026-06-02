@@ -4,6 +4,7 @@ import 'package:qualif_ai/features/admin/presentation/screens/colleges_screen.da
 import 'package:qualif_ai/features/admin/presentation/screens/employees_screen.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/roles_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/nav_rail_item.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/activity_log_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import '../../../../core/permissions/pricing_screen.dart' as admin_pricing;

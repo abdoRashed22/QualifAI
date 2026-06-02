@@ -48,6 +48,8 @@ import '../../features/admin/presentation/screens/roles_screen.dart';
 
 import '../../features/admin/presentation/screens/colleges_screen.dart';
 
+import '../../features/admin/presentation/screens/activity_log_screen.dart';
+
 import '../permissions/pricing_screen.dart' as manager_pricing;
 
 import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.dart';

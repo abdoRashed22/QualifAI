@@ -1,5 +1,7 @@
 // lib/features/admin/presentation/screens/colleges_screen.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
@@ -86,20 +89,35 @@ class _CollegesView extends StatelessWidget {
                 child: AppCard(
                   child: Row(
                     children: [
-                      Container(width: 45.w, height: 25.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      Container(
+                          width: 45.w,
+                          height: 25.h,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.r))),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            Container(
+                                width: double.infinity,
+                                height: 14.h,
+                                color: Colors.white),
                             SizedBox(height: 8.h),
-                            Container(width: 120.w, height: 10.h, color: Colors.white),
+                            Container(
+                                width: 120.w,
+                                height: 10.h,
+                                color: Colors.white),
                           ],
                         ),
                       ),
                       SizedBox(width: 12.w),
-                      Container(width: 32.sp, height: 32.sp, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                      Container(
+                          width: 32.sp,
+                          height: 32.sp,
+                          decoration: const BoxDecoration(
+                              color: Colors.white, shape: BoxShape.circle)),
                     ],
                   ),
                 ),
@@ -127,54 +145,216 @@ class _CollegesView extends StatelessWidget {
                 separatorBuilder: (_, __) => SizedBox(height: 10.h),
                 itemBuilder: (_, i) {
                   final c = colleges[i] as Map<String, dynamic>? ?? {};
+                  final id = c['id'] ?? 0;
+                  final name = c['CollegeName'] ??
+                      c['collegeName'] ??
+                      c['name'] ??
+                      'كلية';
+                  final university = c['UniversityName'] ??
+                      c['universityName'] ??
+                      c['university'] ??
+                      '';
+                  final institutionType =
+                      (c['institutionType'] ?? '').toString();
+                  final accreditationType =
+                      (c['accreditationType'] ?? '').toString();
+                  final status = (c['status'] ?? 'غير محدد').toString();
+                  final statusColorStr =
+                      (c['statusColor'] ?? '').toString().toLowerCase();
+                  final lastUploadDate = (c['lastUploadDate'] ?? '').toString();
+                  final readiness =
+                      (c['readinessPercentage'] as num?)?.toDouble() ?? 0.0;
+
+                  Color badgeColor = AppColors.navyBlue;
+                  if (statusColorStr.contains('gray') ||
+                      statusColorStr.contains('grey'))
+                    badgeColor = Colors.blueGrey;
+                  else if (statusColorStr.contains('green'))
+                    badgeColor = AppColors.success;
+                  else if (statusColorStr.contains('red'))
+                    badgeColor = AppColors.error;
+                  else if (statusColorStr.contains('yellow') ||
+                      statusColorStr.contains('orange'))
+                    badgeColor = AppColors.warning;
+                  else if (statusColorStr.contains('blue'))
+                    badgeColor = AppColors.blue;
+
+                  Color readinessColor = Colors.green;
+                  if (readiness < 40)
+                    readinessColor = Colors.redAccent;
+                  else if (readiness < 70) readinessColor = Colors.orange;
+
+                  String formattedDate = lastUploadDate;
+                  if (lastUploadDate.isNotEmpty &&
+                      lastUploadDate.length >= 10) {
+                    formattedDate = lastUploadDate.substring(0, 10);
+                  }
+
                   return AppCard(
-                    child: Row(
+                    padding: EdgeInsets.all(12.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 10.w, vertical: 5.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: GestureDetector(
-                            onTap: () => ctx
-                                .read<AdminCubit>()
-                                .deleteCollege(c['id'] ?? 0),
-                            child: Text('حذف',
-                                style: TextStyle(
-                                    fontFamily: 'Cairo',
-                                    fontSize: 11.sp,
-                                    color: Colors.white)),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                c['CollegeName'] ??
-                                    c['collegeName'] ??
-                                    c['name'] ??
-                                    'كليه',
-                                style: Theme.of(context).textTheme.titleSmall,
-                                textAlign: TextAlign.right,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w, vertical: 5.h),
+                              decoration: BoxDecoration(
+                                color: AppColors.error,
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
-                              SizedBox(height: 4.h),
+                              child: GestureDetector(
+                                onTap: () =>
+                                    ctx.read<AdminCubit>().deleteCollege(id),
+                                child: Text('حذف',
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 11.sp,
+                                        color: Colors.white)),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            if (status.isNotEmpty && status != 'غير محدد')
+                              AppBadge(
+                                  label: status,
+                                  color: badgeColor,
+                                  small: true),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.right,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (university.isNotEmpty) ...[
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      'جامعة $university',
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                      textAlign: TextAlign.right,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Builder(builder: (context) {
+                              final imagePath = (c['image'] ??
+                                          c['imagePath'] ??
+                                          c['logo'] ??
+                                          c['Image'])
+                                      ?.toString()
+                                      .trim() ??
+                                  '';
+                              String url = '';
+                              if (imagePath.isNotEmpty) {
+                                if (imagePath.startsWith('http')) {
+                                  url = imagePath;
+                                } else if (imagePath.startsWith('/')) {
+                                  url = 'https://qualefai.runasp.net$imagePath';
+                                } else {
+                                  url =
+                                      'https://qualefai.runasp.net/$imagePath';
+                                }
+                              }
+                              return Container(
+                                width: 48.w,
+                                height: 48.w,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: url.isEmpty
+                                    ? Icon(Icons.account_balance,
+                                        size: 24.sp, color: Colors.grey[600])
+                                    : ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(12.r),
+                                        child: Image.network(
+                                          url,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Icon(
+                                              Icons.account_balance,
+                                              size: 24.sp,
+                                              color: Colors.grey[600]),
+                                        ),
+                                      ),
+                              );
+                            }),
+                          ],
+                        ),
+                        if (institutionType.isNotEmpty ||
+                            accreditationType.isNotEmpty ||
+                            formattedDate.isNotEmpty) ...[
+                          SizedBox(height: 12.h),
+                          const Divider(height: 1, thickness: 0.5),
+                          SizedBox(height: 10.h),
+                          Wrap(
+                            spacing: 6.w,
+                            runSpacing: 6.h,
+                            alignment: WrapAlignment.end,
+                            children: [
+                              if (formattedDate.isNotEmpty)
+                                _buildMetaChip(Icons.upload_file_outlined,
+                                    formattedDate, Colors.teal),
+                              if (institutionType.isNotEmpty)
+                                _buildMetaChip(Icons.apartment_outlined,
+                                    institutionType, Colors.indigo),
+                              if (accreditationType.isNotEmpty)
+                                _buildMetaChip(Icons.verified_outlined,
+                                    accreditationType, Colors.purple),
+                            ],
+                          ),
+                        ],
+                        if (c.containsKey('readinessPercentage')) ...[
+                          SizedBox(height: 10.h),
+                          Row(
+                            children: [
+                              /* Text(
+                                '${readiness.toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: readinessColor,
+                                ),
+                              ),*/
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  child: LinearProgressIndicator(
+                                    value: readiness / 100,
+                                    minHeight: 7.h,
+                                    backgroundColor: Colors.grey.shade200,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        readinessColor),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
                               Text(
-                                c['UniversityName'] ??
-                                    c['universityName'] ??
-                                    c['university'] ??
-                                    '',
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.right,
+                                'نسبة الجاهزية',
+                                style: TextStyle(
+                                    fontSize: 11.sp,
+                                    color: Colors.grey[600],
+                                    fontFamily: 'Cairo'),
                               ),
                             ],
                           ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Text('🕵️ ', style: TextStyle(fontSize: 28.sp)),
+                        ],
                       ],
                     ),
                   );
@@ -191,6 +371,27 @@ class _CollegesView extends StatelessWidget {
     );
   }
 
+  Widget _buildMetaChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontFamily: 'Cairo', fontSize: 11.sp, color: color)),
+          SizedBox(width: 4.w),
+          Icon(icon, size: 12.sp, color: color),
+        ],
+      ),
+    );
+  }
+
   void _showAddCollegeDialog(BuildContext context) {
     final nameController = TextEditingController();
     final universityController = TextEditingController();
@@ -199,115 +400,166 @@ class _CollegesView extends StatelessWidget {
     var institutionType = 2;
     var accreditationType = 1;
     final subscriptionDate = DateTime.now();
+    File? selectedImage;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('إضافة كلية جديدة'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              TextField(
-                controller: nameController,
-                textAlign: TextAlign.right,
-                decoration: const InputDecoration(
-                  labelText: 'اسم الكلية',
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const Text('إضافة كلية جديدة', textAlign: TextAlign.right),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Center(
+                  child: GestureDetector(
+                    onTap: () async {
+                      try {
+                        final picker = ImagePicker();
+                        final pickedFile =
+                            await picker.pickImage(source: ImageSource.gallery);
+                        if (pickedFile != null) {
+                          setState(() {
+                            selectedImage = File(pickedFile.path);
+                          });
+                        }
+                      } catch (e) {
+                        debugPrint('Error picking image: $e');
+                      }
+                    },
+                    child: Container(
+                      width: 100.w,
+                      height: 100.w,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: Colors.grey[400]!),
+                      ),
+                      child: selectedImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12.r),
+                              child:
+                                  Image.file(selectedImage!, fit: BoxFit.cover),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo,
+                                    color: Colors.grey[600], size: 30.sp),
+                                SizedBox(height: 8.h),
+                                Text('شعار الكلية',
+                                    style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey[600],
+                                        fontFamily: 'Cairo')),
+                              ],
+                            ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: universityController,
-                textAlign: TextAlign.right,
-                decoration: const InputDecoration(
-                  labelText: 'اسم الجامعة',
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: nameController,
+                  textAlign: TextAlign.right,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم الكلية',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                value: institutionType,
-                decoration: const InputDecoration(
-                  labelText: 'نوع المؤسسة',
+                const SizedBox(height: 12),
+                TextField(
+                  controller: universityController,
+                  textAlign: TextAlign.right,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم الجامعة',
+                  ),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 1, child: Text('حكومية')),
-                  DropdownMenuItem(value: 2, child: Text('جامعة أهلية')),
-                  DropdownMenuItem(value: 3, child: Text('جامعة خاصة')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    institutionType = value;
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                value: accreditationType,
-                decoration: const InputDecoration(
-                  labelText: 'نوع الاعتماد',
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: institutionType,
+                  decoration: const InputDecoration(
+                    labelText: 'نوع المؤسسة',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('حكومية')),
+                    DropdownMenuItem(value: 2, child: Text('جامعة أهلية')),
+                    DropdownMenuItem(value: 3, child: Text('جامعة خاصة')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      institutionType = value;
+                    }
+                  },
                 ),
-                items: const [
-                  DropdownMenuItem(value: 1, child: Text('أكاديمي')),
-                  DropdownMenuItem(value: 2, child: Text('برامجي')),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    accreditationType = value;
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: managerEmailController,
-                textAlign: TextAlign.right,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'البريد الإلكتروني للمدير',
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  value: accreditationType,
+                  decoration: const InputDecoration(
+                    labelText: 'نوع الاعتماد',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('أكاديمي')),
+                    DropdownMenuItem(value: 2, child: Text('برامجي')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      accreditationType = value;
+                    }
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: managerPasswordController,
-                textAlign: TextAlign.right,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'كلمة مرور المدير',
+                const SizedBox(height: 12),
+                TextField(
+                  controller: managerEmailController,
+                  textAlign: TextAlign.right,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'البريد الإلكتروني للمدير',
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: managerPasswordController,
+                  textAlign: TextAlign.right,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'كلمة مرور المدير',
+                  ),
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                final university = universityController.text.trim();
+                final managerEmail = managerEmailController.text.trim();
+                final managerPassword = managerPasswordController.text;
+                if (name.isNotEmpty &&
+                    university.isNotEmpty &&
+                    managerEmail.isNotEmpty &&
+                    managerPassword.isNotEmpty) {
+                  context.read<AdminCubit>().createCollege({
+                    'UniversityName': university,
+                    'CollegeName': name,
+                    'InstitutionType': institutionType,
+                    'AccreditationType': accreditationType,
+                    'SubscriptionStartDate': subscriptionDate.toIso8601String(),
+                    'ManagerEmail': managerEmail,
+                    'ManagerPassword': managerPassword,
+                    if (selectedImage != null) 'Image': selectedImage,
+                  });
+                  Navigator.of(ctx).pop();
+                }
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final university = universityController.text.trim();
-              final managerEmail = managerEmailController.text.trim();
-              final managerPassword = managerPasswordController.text;
-              if (name.isNotEmpty &&
-                  university.isNotEmpty &&
-                  managerEmail.isNotEmpty &&
-                  managerPassword.isNotEmpty) {
-                context.read<AdminCubit>().createCollege({
-                  'UniversityName': university,
-                  'CollegeName': name,
-                  'InstitutionType': institutionType,
-                  'AccreditationType': accreditationType,
-                  'SubscriptionStartDate': subscriptionDate.toIso8601String(),
-                  'ManagerEmail': managerEmail,
-                  'ManagerPassword': managerPassword,
-                });
-                Navigator.of(ctx).pop();
-              }
-            },
-            child: const Text('حفظ'),
-          ),
-        ],
       ),
     );
   }
@@ -467,127 +719,6 @@ class _PricingView extends StatelessWidget {
                                   ]));
                         }),
                       ]),
-                );
-              },
-            );
-          }
-
-          if (state is AdminError) return Center(child: Text(state.message));
-
-          return const SizedBox();
-        },
-      ),
-    );
-  }
-}
-
-// ── ActivityLogScreen ─────────────────────────────────────────────────────────
-
-class ActivityLogScreen extends StatelessWidget {
-  const ActivityLogScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-        create: (_) => sl<AdminCubit>()..loadActivityLog(),
-        child: const _ActivityView());
-  }
-}
-
-class _ActivityView extends StatelessWidget {
-  const _ActivityView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('سجل الأنشطة'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.push(AppRoutes.notifications),
-          ),
-        ],
-      ),
-      body: BlocBuilder<AdminCubit, AdminState>(
-        builder: (ctx, state) {
-          if (state is AdminLoading)
-            return const Center(child: CircularProgressIndicator());
-
-          if (state is ActivityLoaded) {
-            if (state.logs.isEmpty)
-              return const Center(child: Text('لا توجد أنشطة'));
-
-            return ListView.separated(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              itemCount: state.logs.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 0.5.h, thickness: 0.5),
-              itemBuilder: (_, i) {
-                final log = state.logs[i] as Map<String, dynamic>? ?? {};
-
-                return Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  child: Row(children: [
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                          Text(
-                              log['employeeName'] ??
-                                  log['userName'] ??
-                                  "مستخدم",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600)),
-
-                          SizedBox(height: 2.h),
-
-                          // ✅ FIX: show role from log
-
-                          if ((log['role'] ?? '').toString().isNotEmpty)
-                            Text(log['role'].toString(),
-                                style: TextStyle(
-                                    fontFamily: 'Cairo',
-                                    fontSize: 11.sp,
-                                    color: AppColors.blue)),
-
-                          SizedBox(height: 4.h),
-
-                          Text(log['action'] ?? log['description'] ?? '',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              textAlign: TextAlign.right),
-
-                          SizedBox(height: 4.h),
-
-                          // ✅ FIX: API بيبعت 'lastModifiedFormatted' مش 'timestamp' أو 'createdAt'
-
-                          Text(
-                            log['lastModifiedFormatted'] ??
-                                log['timestamp'] ??
-                                log['createdAt'] ??
-                                '',
-                            style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 11.sp,
-                                color: Theme.of(context).disabledColor),
-                          ),
-                        ])),
-                    SizedBox(width: 12.w),
-                    Container(
-                        padding: EdgeInsets.all(8.w),
-                        decoration: BoxDecoration(
-                            color: AppColors.blue.withOpacity(0.1),
-                            shape: BoxShape.circle),
-                        child: Icon(Icons.history,
-                            size: 18.sp, color: AppColors.blue)),
-                  ]),
                 );
               },
             );

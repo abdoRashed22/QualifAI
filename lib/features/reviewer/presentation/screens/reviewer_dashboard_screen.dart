@@ -520,9 +520,9 @@ class _ReviewerDashboardView extends StatelessWidget {
     if (path.isEmpty) return '';
     if (path.startsWith('http')) return path;
     if (path.startsWith('/')) {
-      return 'https://qualifai.runasp.net$path';
+      return 'https://qualefai.runasp.net$path';
     }
-    return path;
+    return 'https://qualefai.runasp.net/$path';
   }
 }
 
