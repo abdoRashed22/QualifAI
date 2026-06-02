@@ -73,6 +73,11 @@ class _RolesViewState extends State<_RolesView> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.list_alt),
+            tooltip: 'قائمة الصلاحيات',
+            onPressed: () => context.push(AppRoutes.permissions),
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push(AppRoutes.notifications),
           ),
@@ -89,10 +94,13 @@ class _RolesViewState extends State<_RolesView> {
             _cachedPermissions = state.permissions;
           }
 
-          if (state is AdminActionSuccess)
+          if (state is AdminActionSuccess) {
             ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                 content: Text(state.message),
                 backgroundColor: AppColors.success));
+            // تحديث قائمة الأدوار لضمان تحديث عداد الموظفين بعد الإضافة
+            ctx.read<AdminCubit>().loadRoles();
+          }
 
           if (state is AdminError)
             ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
@@ -264,7 +272,7 @@ class _RolesViewState extends State<_RolesView> {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _showDetailsBottomSheet(context, roleId),
+                    onPressed: () => _showDetailsBottomSheet(context, roleId, empCount),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.navyBlue,
                       shape: RoundedRectangleBorder(
@@ -308,7 +316,7 @@ class _RolesViewState extends State<_RolesView> {
     );
   }
 
-  void _showDetailsBottomSheet(BuildContext context, int roleId) {
+  void _showDetailsBottomSheet(BuildContext context, int roleId, dynamic empCount) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -335,16 +343,54 @@ class _RolesViewState extends State<_RolesView> {
                 Text(data['roleDescription'] ?? 'لا يوجد وصف',
                     style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp)),
                 SizedBox(height: 16.h),
+
                 _InfoChip(
                     icon: Icons.people_alt_outlined,
-                    label: 'عدد الموظفين: ${data['employeesCount'] ?? 0}',
+                    label: 'عدد الموظفين: $empCount',
                     color: AppColors.blue),
-                SizedBox(height: 24.h),
+                    
+                SizedBox(height: 16.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.navyBlue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _showAddEmployeeToRoleDialog(context, roleId);
+                    },
+                    icon: const Icon(Icons.person_add_alt_1, color: AppColors.navyBlue),
+                    label: const Text('تعيين موظف جديد لهذا الدور',
+                        style: TextStyle(color: AppColors.navyBlue, fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.blue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _showAssignExistingEmployeeDialog(context, roleId);
+                    },
+                    icon: const Icon(Icons.manage_accounts, color: AppColors.blue),
+                    label: const Text('تعديل دور موظف حالي لهذا الدور',
+                        style: TextStyle(color: AppColors.blue, fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                SizedBox(height: 12.h),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.navyBlue),
+                        backgroundColor: AppColors.navyBlue,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
                     onPressed: () => Navigator.pop(ctx),
                     child: const Text('إغلاق',
                         style: TextStyle(
@@ -408,6 +454,177 @@ class _RolesViewState extends State<_RolesView> {
               ],
             ));
   }
+
+  void _showAddEmployeeToRoleDialog(BuildContext context, int roleId) {
+    final cubit = context.read<AdminCubit>();
+    final firstCtrl = TextEditingController();
+    final lastCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        title: const Text('تعيين موظف جديد', textAlign: TextAlign.right),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              AppTextField(
+                label: 'الاسم الأول',
+                controller: firstCtrl,
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                label: 'اسم العائلة',
+                controller: lastCtrl,
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                label: 'البريد الإلكتروني',
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'مطلوب';
+                  if (!v.contains('@')) return 'بريد غير صحيح';
+                  return null;
+                },
+              ),
+              SizedBox(height: 12.h),
+              AppTextField(
+                label: 'كلمة المرور',
+                controller: passCtrl,
+                obscure: true,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'مطلوب';
+                  if (v.length < 4) return 'كلمة المرور قصيرة';
+                  return null;
+                },
+              ),
+            ]),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('إلغاء')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.of(dialogContext).pop();
+              cubit.createEmployee({
+                'firstName': firstCtrl.text.trim(),
+                'lastName': lastCtrl.text.trim(),
+                'email': emailCtrl.text.trim(),
+                'password': passCtrl.text,
+                'roleId': roleId, // تمرير معرف الدور مباشرة
+              });
+            },
+            child: const Text('إضافة', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAssignExistingEmployeeDialog(BuildContext context, int roleId) {
+    final cubit = context.read<AdminCubit>();
+    final future = cubit.fetchEmployeesList();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        Map<String, dynamic>? selectedEmployee;
+
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: future,
+          builder: (ctx, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
+                content: const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+              );
+            }
+            
+            final employees = snapshot.data ?? [];
+            if (employees.isEmpty) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
+                content: const Text('لا يوجد موظفون حالياً في النظام', textAlign: TextAlign.right),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('إغلاق'))
+                ],
+              );
+            }
+
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+                  title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButtonFormField<Map<String, dynamic>>(
+                          decoration: InputDecoration(
+                            labelText: 'اختر الموظف',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                          ),
+                          isExpanded: true,
+                          items: employees.map((emp) {
+                            final String fName = (emp['fullName']?.toString().trim() ?? '');
+                            final String emailStr = (emp['email']?.toString() ?? '');
+                            final String display = fName.isNotEmpty ? fName : (emailStr.isNotEmpty ? emailStr : 'مستخدم ${emp['id']}');
+                            
+                            return DropdownMenuItem(
+                              value: emp,
+                              child: Text('$display (${emp['role']})', textAlign: TextAlign.right),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            setState(() => selectedEmployee = val);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('إلغاء')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
+                      onPressed: selectedEmployee == null
+                          ? null
+                          : () {
+                              Navigator.of(dialogContext).pop();
+                              cubit.updateEmployeeData(
+                                selectedEmployee!['id'] as int,
+                                {
+                                  'firstName': selectedEmployee!['firstName'],
+                                  'lastName': selectedEmployee!['lastName'],
+                                  'email': selectedEmployee!['email'],
+                                  'roleId': roleId,
+                                },
+                              );
+                            },
+                      child: const Text('تأكيد النقل', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 class _SummaryCard extends StatelessWidget {
@@ -446,6 +663,7 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 }
+
 
 class _InfoChip extends StatelessWidget {
   final IconData icon;

@@ -46,6 +46,8 @@ import '../../features/admin/presentation/screens/employees_screen.dart';
 
 import '../../features/admin/presentation/screens/roles_screen.dart';
 
+import '../../features/admin/presentation/screens/permissions_screen.dart';
+
 import '../../features/admin/presentation/screens/colleges_screen.dart';
 
 import '../../features/admin/presentation/screens/activity_log_screen.dart';
@@ -108,6 +110,8 @@ abstract class AppRoutes {
 
   static const roles = '/admin/roles';
 
+  static const permissions = '/admin/permissions';
+
   static const colleges = '/admin/colleges';
 
   static const pricing = '/pricing';
@@ -149,7 +153,9 @@ GoRouter buildRouter(HiveCache cache) {
         if (path.startsWith('/admin') && !isAdmin) {
           // السماح لمدير الجودة بالدخول لصفحات الموظفين والأدوار
           if (!(isManager &&
-              (path == AppRoutes.employees || path == AppRoutes.roles))) {
+              (path == AppRoutes.employees ||
+                  path == AppRoutes.roles ||
+                  path == AppRoutes.permissions))) {
             return AppRoutes.dashboard;
           }
         }
@@ -315,6 +321,10 @@ GoRouter buildRouter(HiveCache cache) {
       GoRoute(
         path: AppRoutes.roles,
         builder: (ctx, _) => const RolesScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.permissions,
+        builder: (ctx, _) => const PermissionsScreen(),
       ),
       GoRoute(
         path: AppRoutes.colleges,

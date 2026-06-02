@@ -258,6 +258,21 @@ class AdminCubit extends Cubit<AdminState> {
     );
   }
 
+  Future<void> loadPermissionsOnly() async {
+    if (isClosed || _isDisposed) return;
+    emit(const AdminLoading());
+    final r = await _repo.getPermissions();
+    if (isClosed || _isDisposed) return;
+    r.fold(
+      (f) {
+        if (!isClosed && !_isDisposed) emit(AdminError(f.message));
+      },
+      (perms) {
+        if (!isClosed && !_isDisposed) emit(PermissionsLoadedList(perms));
+      },
+    );
+  }
+
   Future<void> loadColleges({String? successMessage}) async {
     if (isClosed || _isDisposed) return;
 
@@ -388,69 +403,92 @@ class AdminCubit extends Cubit<AdminState> {
     );
   }
 
-  List<Map<String, dynamic>> _mapEmployeeData(List<dynamic> data) {
-  return data.whereType<Map<String, dynamic>>().map((emp) {
-    
-    final id = emp['employeeId'] ?? emp['id'] ?? 0;
-
-    final firstName = (emp['firstName'] ??
-            emp['first_name'] ??
-            emp['name'] ??
-            '')
-        .toString();
-
-    final lastName = (emp['lastName'] ??
-            emp['last_name'] ??
-            '')
-        .toString();
-
-    final email = (emp['email'] ??
-            emp['userEmail'] ??
-            emp['userName'] ??
-            '')
-        .toString();
-
-    final role = (emp['roleName'] ??
-            emp['role'] ??
-            emp['roleDisplayName'] ??
-            'موظف')
-        .toString();
-
-    final fullName = '$firstName $lastName'.trim();
-
-    debugPrint('RAW Employee => $emp');
-
-    debugPrint(
-      'Mapped => {id:$id , fullName:$fullName , email:$email , role:$role}',
+  Future<List<Map<String, dynamic>>> fetchEmployeesList() async {
+    final r = await _repo.getEmployees();
+    return r.fold(
+      (_) => <Map<String, dynamic>>[],
+      (list) => _mapEmployeeData(list),
     );
-
-    return {
-      'id': id,
-
-      'firstName': firstName,
-      'lastName': lastName,
-
-      'fullName': fullName,
-
-      'email': email,
-
-      // نخزن userName كما هو
-      'userName': email,
-
-      'role': role,
-
-      'profileImage': emp['profileImage'] ??
-          emp['image'] ??
-          emp['photo'] ??
-          emp['avatarUrl'] ??
-          '',
-    };
-    
   }
-  
-  ).toList();
 
-}
+  Future<void> updateEmployeeData(int id, Map<String, dynamic> data) async {
+    if (isClosed || _isDisposed) return;
+    emit(const AdminActionLoading());
+
+    final payload = {
+      'firstName': data['firstName']?.toString().trim(),
+      'lastName': data['lastName']?.toString().trim(),
+      'email': data['email']?.toString().trim(),
+      'roleId': int.tryParse('${data['roleId'] ?? ''}') ?? 0,
+    };
+
+    if (data.containsKey('password') && data['password'] != null && data['password'].toString().isNotEmpty) {
+      payload['password'] = data['password']?.toString();
+    }
+
+    final r = await _repo.updateEmployee(id, payload);
+
+    if (isClosed || _isDisposed) return;
+
+    r.fold(
+      (f) {
+        emit(AdminError(f.message));
+      },
+      (_) {
+        emit(const AdminActionSuccess('تم تحديث بيانات الموظف بنجاح'));
+        loadRoles();
+        loadEmployees(); // تحديث شاشة الموظفين إذا كانت مفتوحة
+      },
+    );
+  }
+  List<Map<String, dynamic>> _mapEmployeeData(List<dynamic> data) {
+    return data.whereType<Map<String, dynamic>>().map((emp) {
+      final id = emp['employeeId'] ?? emp['id'] ?? 0;
+
+      final firstName =
+          (emp['firstName'] ?? emp['first_name'] ?? emp['name'] ?? '')
+              .toString();
+
+      final lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
+
+      final email = (emp['email'] ?? emp['userEmail'] ?? emp['userName'] ?? '')
+          .toString();
+
+      final role =
+          (emp['roleName'] ?? emp['role'] ?? emp['roleDisplayName'] ?? 'موظف')
+              .toString();
+
+      final fullName = '$firstName $lastName'.trim();
+
+      debugPrint('RAW Employee => $emp');
+
+      debugPrint(
+        'Mapped => {id:$id , fullName:$fullName , email:$email , role:$role}',
+      );
+
+      return {
+        'id': id,
+
+        'firstName': firstName,
+        'lastName': lastName,
+
+        'fullName': fullName,
+
+        'email': email,
+
+        // نخزن userName كما هو
+        'userName': email,
+
+        'role': role,
+
+        'profileImage': emp['profileImage'] ??
+            emp['image'] ??
+            emp['photo'] ??
+            emp['avatarUrl'] ??
+            '',
+      };
+    }).toList();
+  }
 
   @override
   Future<void> close() {

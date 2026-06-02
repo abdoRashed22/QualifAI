@@ -33,6 +33,15 @@ class EmployeesLoaded extends AdminState {
   List<Object?> get props => [employees];
 }
 
+class PermissionsLoadedList extends AdminState {
+  final List<dynamic> permissions;
+
+  const PermissionsLoadedList(this.permissions);
+
+  @override
+  List<Object?> get props => [permissions];
+}
+
 // ⚠️ REMOVED duplication (Roles/Colleges/Plans/Activity not in NEW but kept OLD support)
 
 class RolesLoaded extends AdminState {

@@ -226,7 +226,7 @@ class PermissionManager {
     if (path == AppRoutes.deadlines) {
       return canViewDeadlines;
     }
-    if (path.startsWith('/admin/roles')) {
+    if (path.startsWith('/admin/roles') || path == AppRoutes.permissions) {
       return isAdmin || isManager;
     }
 

@@ -149,137 +149,150 @@ class _EmployeesView extends StatelessWidget {
               itemCount: employees.length,
               separatorBuilder: (_, __) => SizedBox(height: 10.h),
               itemBuilder: (_, i) {
-     final e = employees[i];
-debugPrint('Employee Data => $e');
+                final e = employees[i];
+                debugPrint('Employee Data => $e');
 
-final id =
-    (e['id'] ?? e['employeeId'] ?? 0) as int;
+                final id = (e['id'] ?? e['employeeId'] ?? 0) as int;
 
-final role =
-    (e['role'] ?? e['roleName'] ?? 'موظف').toString();
+                final role = (e['role'] ?? e['roleName'] ?? 'موظف').toString();
 
-final profileImage =
-    (e['profileImage'] ?? '').toString();
+                final profileImage = (e['profileImage'] ?? '').toString();
 
-final fullName =
-    (e['fullName'] ?? '').toString().trim();
+                final fullName = (e['fullName'] ?? '').toString().trim();
 
-final email =
-    (e['email'] ?? '').toString().trim();
+                final email = (e['email'] ?? '').toString().trim();
 
-final userName =
-    (e['userName'] ?? '').toString().trim();
+                final userName = (e['userName'] ?? '').toString().trim();
 
-final displayName = fullName.isNotEmpty
-    ? fullName
-    : (email.isNotEmpty
-        ? email
-        : (userName.isNotEmpty
-            ? userName
-            : 'مستخدم رقم $id'));
+                final displayName = fullName.isNotEmpty
+                    ? fullName
+                    : (email.isNotEmpty
+                        ? email
+                        : (userName.isNotEmpty ? userName : 'مستخدم رقم $id'));
 
-final secondaryInfo = 'ID: $id';
+                final secondaryInfo = 'ID: $id';
                 return AppCard(
                   padding: EdgeInsets.all(12.w),
                   child: Row(children: [
-                    // زر الحذف
-                    GestureDetector(
-                      onTap: () => _showDeleteConfirm(
-                          context, ctx.read<AdminCubit>(), id, displayName),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 8.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(
-                              color: AppColors.error.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline,
-                                color: AppColors.error, size: 16.sp),
-                            SizedBox(width: 4.w),
-                            Text(
-                              'حذف',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.error,
-                              ),
+                    // أزرار الإجراءات
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () => _showEditDialog(context, e),
+                          child: Container(
+                            width: 70.w,
+                            padding: EdgeInsets.symmetric(vertical: 6.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
-                          ],
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.edit_outlined,
+                                    color: AppColors.blue, size: 14.sp),
+                                SizedBox(width: 4.w),
+                                Text('تعديل',
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 11.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.blue)),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        SizedBox(height: 6.h),
+                        GestureDetector(
+                          onTap: () => _showDeleteConfirm(
+                              context, ctx.read<AdminCubit>(), id, displayName),
+                          child: Container(
+                            width: 70.w,
+                            padding: EdgeInsets.symmetric(vertical: 6.h),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.delete_outline,
+                                    color: AppColors.error, size: 14.sp),
+                                SizedBox(width: 4.w),
+                                Text('حذف',
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 11.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.error)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(width: 12.w),
                     // تفاصيل الموظف
-                   Expanded(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Text(
-        displayName,
-        style: TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 14.sp,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context)
-              .textTheme
-              .bodyLarge
-              ?.color,
-        ),
-        textAlign: TextAlign.right,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-
-      SizedBox(height: 4.h),
-
-      Text(
-        secondaryInfo,
-        style: TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 11.sp,
-          color: Theme.of(context).disabledColor,
-        ),
-        textAlign: TextAlign.right,
-      ),
-
-      SizedBox(height: 6.h),
-
-      AppBadge(
-        label: role.isNotEmpty ? role : 'موظف',
-        color: AppColors.navyBlue,
-        small: true,
-      ),
-    ],
-  ),
-),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            displayName,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                            textAlign: TextAlign.right,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            secondaryInfo,
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 11.sp,
+                              color: Theme.of(context).disabledColor,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                          SizedBox(height: 6.h),
+                          AppBadge(
+                            label: role.isNotEmpty ? role : 'موظف',
+                            color: AppColors.navyBlue,
+                            small: true,
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(width: 10.w),
                     // الصورة الشخصية
-                  CircleAvatar(
-  backgroundColor:
-      AppColors.navyBlue.withOpacity(0.1),
-  backgroundImage: profileImage.isNotEmpty
-      ? NetworkImage(profileImage)
-      : null,
-  radius: 26.r,
-  child: profileImage.isNotEmpty
-      ? null
-      : Text(
-          displayName.isNotEmpty
-              ? displayName[0].toUpperCase()
-              : "م",
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.navyBlue,
-          ),
-        ),
-),   ]),
+                    CircleAvatar(
+                      backgroundColor: AppColors.navyBlue.withOpacity(0.1),
+                      backgroundImage: profileImage.isNotEmpty
+                          ? NetworkImage(profileImage)
+                          : null,
+                      radius: 26.r,
+                      child: profileImage.isNotEmpty
+                          ? null
+                          : Text(
+                              displayName.isNotEmpty
+                                  ? displayName[0].toUpperCase()
+                                  : "م",
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.navyBlue,
+                              ),
+                            ),
+                    ),
+                  ]),
                 );
               },
             ),
@@ -481,6 +494,117 @@ final secondaryInfo = 'ID: $id';
                 });
               },
               child: const Text('إضافة'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Map<String, dynamic> employee) {
+    final cubit = context.read<AdminCubit>();
+    final firstCtrl =
+        TextEditingController(text: employee['firstName']?.toString() ?? '');
+    final lastCtrl =
+        TextEditingController(text: employee['lastName']?.toString() ?? '');
+    final emailCtrl =
+        TextEditingController(text: employee['email']?.toString() ?? '');
+    final passCtrl = TextEditingController();
+
+    final roleName = employee['role']?.toString().toLowerCase() ?? '';
+    int selectedRoleId = 3; // Default to Employee
+    if (roleName.contains('نظام') || roleName.contains('admin'))
+      selectedRoleId = 1;
+    else if (roleName.contains('مدير') || roleName.contains('manager'))
+      selectedRoleId = 2;
+
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: const Text('تعديل بيانات الموظف', textAlign: TextAlign.right),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                AppTextField(
+                  label: 'الاسم الأول',
+                  controller: firstCtrl,
+                  validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+                ),
+                SizedBox(height: 12.h),
+                AppTextField(
+                  label: 'اسم العائلة',
+                  controller: lastCtrl,
+                  validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+                ),
+                SizedBox(height: 12.h),
+                AppTextField(
+                  label: 'البريد الإلكتروني',
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'مطلوب';
+                    if (!v.contains('@')) return 'بريد غير صحيح';
+                    return null;
+                  },
+                ),
+                SizedBox(height: 12.h),
+                AppTextField(
+                  label: 'كلمة المرور الجديدة (اختياري)',
+                  controller: passCtrl,
+                  obscure: true,
+                ),
+                SizedBox(height: 12.h),
+                DropdownButtonFormField<int>(
+                  value: selectedRoleId,
+                  decoration: InputDecoration(
+                    labelText: 'الصلاحية (الدور)',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 1, child: Text('مدير النظام (Admin)')),
+                    DropdownMenuItem(
+                        value: 2, child: Text('مدير الجودة (Manager)')),
+                    DropdownMenuItem(
+                        value: 3, child: Text('موظف الجودة (Employee)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => selectedRoleId = val);
+                  },
+                ),
+              ]),
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('إلغاء')),
+            ElevatedButton(
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
+              onPressed: () {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.of(dialogContext).pop();
+                cubit.updateEmployeeData(
+                  employee['id'] as int,
+                  {
+                    'firstName': firstCtrl.text.trim(),
+                    'lastName': lastCtrl.text.trim(),
+                    'email': emailCtrl.text.trim(),
+                    'password': passCtrl.text,
+                    'roleId': selectedRoleId,
+                  },
+                );
+              },
+              child: const Text('حفظ التعديلات',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
