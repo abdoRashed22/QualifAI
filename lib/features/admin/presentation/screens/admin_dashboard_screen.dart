@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -170,7 +172,28 @@ class _AdminDashboardView extends StatelessWidget {
       body: BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
         builder: (ctx, state) {
           if (state is AdminDashboardLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Shimmer.fromColors(
+              baseColor: Theme.of(context).cardColor,
+              highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+              child: ListView(
+                padding: EdgeInsets.all(16.w),
+                children: [
+                  Container(height: 180.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.r))),
+                  SizedBox(height: 16.h),
+                  Row(
+                    children: [
+                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      SizedBox(width: 8.w),
+                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      SizedBox(width: 8.w),
+                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+                  Container(height: 250.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                ],
+              ),
+            );
           }
 
           if (state is AdminDashboardError) {
@@ -214,7 +237,13 @@ class _AdminDashboardView extends StatelessWidget {
             final totalSubscriptions = active + suspended + expired;
 
             return RefreshIndicator(
-              onRefresh: () => ctx.read<AdminDashboardCubit>().loadData(),
+              color: AppColors.cyan,
+              backgroundColor: AppColors.navyBlue,
+              strokeWidth: 3.0,
+              onRefresh: () async {
+                HapticFeedback.lightImpact();
+                await ctx.read<AdminDashboardCubit>().loadData();
+              },
               child: ListView(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
                 children: [

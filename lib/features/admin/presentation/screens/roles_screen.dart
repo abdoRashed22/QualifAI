@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -81,64 +83,101 @@ class _RolesViewState extends State<_RolesView> {
         },
         builder: (ctx, state) {
           if (state is AdminLoading)
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              itemCount: 6,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, __) => Shimmer.fromColors(
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Container(width: 45.w, height: 25.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(width: 120.w, height: 10.h, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Container(width: 40.sp, height: 40.sp, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                    ],
+                  ),
+                ),
+              ),
+            );
 
           final rolesState = state is RolesLoaded
               ? state
               : RolesLoaded(_cachedRoles, _cachedPermissions);
 
-          if (rolesState.roles.isNotEmpty || state is RolesLoaded) {
-            return ListView.separated(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
-              itemCount: rolesState.roles.length,
-              separatorBuilder: (_, __) => SizedBox(height: 10.h),
-              itemBuilder: (_, i) {
-                final r = rolesState.roles[i] as Map<String, dynamic>? ?? {};
-
-                return AppCard(
-                    child: Row(children: [
-                  GestureDetector(
-                    onTap: () => ctx.read<AdminCubit>().deleteRole(
-                          int.tryParse('${r['id'] ?? r['roleId'] ?? 0}') ?? 0,
-                        ),
-                    child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.w, vertical: 5.h),
-                        decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(8.r)),
-                        child: Text('حذف',
-                            style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 11.sp,
-                                color: Colors.white))),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                        Text(r['roleName'] ?? r['name'] ?? 'دور',
-                            style: Theme.of(context).textTheme.titleSmall,
-                            textAlign: TextAlign.right),
-                        SizedBox(height: 4.h),
-                        Text(r['description'] ?? r['roleDescription'] ?? '',
-                            style: Theme.of(context).textTheme.bodySmall,
-                            textAlign: TextAlign.right,
-                            maxLines: 2),
-                      ])),
-                  SizedBox(width: 10.w),
-                  Container(
-                      padding: EdgeInsets.all(10.w),
-                      decoration: BoxDecoration(
-                          color: AppColors.adminColor.withOpacity(0.1),
-                          shape: BoxShape.circle),
-                      child: Icon(Icons.security_outlined,
-                          color: AppColors.adminColor, size: 20.sp)),
-                ]));
+          if (rolesState.roles.isNotEmpty || state is RolesLoaded) 
+            return RefreshIndicator(
+              color: AppColors.cyan,
+              backgroundColor: AppColors.navyBlue,
+              strokeWidth: 3.0,
+              onRefresh: () async {
+                HapticFeedback.lightImpact();
+                await ctx.read<AdminCubit>().loadRoles();
               },
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+                itemCount: rolesState.roles.length,
+                separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                itemBuilder: (_, i) {
+                  final r = rolesState.roles[i] as Map<String, dynamic>? ?? {};
+  
+                  return AppCard(
+                      child: Row(children: [
+                    GestureDetector(
+                      onTap: () => ctx.read<AdminCubit>().deleteRole(
+                            int.tryParse('${r['id'] ?? r['roleId'] ?? 0}') ?? 0,
+                          ),
+                      child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10.w, vertical: 5.h),
+                          decoration: BoxDecoration(
+                              color: AppColors.error,
+                              borderRadius: BorderRadius.circular(8.r)),
+                          child: Text('حذف',
+                              style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 11.sp,
+                                  color: Colors.white))),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                          Text(r['roleName'] ?? r['name'] ?? 'دور',
+                              style: Theme.of(context).textTheme.titleSmall,
+                              textAlign: TextAlign.right),
+                          SizedBox(height: 4.h),
+                          Text(r['description'] ?? r['roleDescription'] ?? '',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              textAlign: TextAlign.right,
+                              maxLines: 2),
+                        ])),
+                    SizedBox(width: 10.w),
+                    Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                            color: AppColors.adminColor.withOpacity(0.1),
+                            shape: BoxShape.circle),
+                        child: Icon(Icons.security_outlined,
+                            color: AppColors.adminColor, size: 20.sp)),
+                  ]));
+                },
+              ),
             );
-          }
+          
 
           if (state is AdminError) return Center(child: Text(state.message));
 

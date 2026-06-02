@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -68,7 +70,37 @@ class _EmployeesView extends StatelessWidget {
         },
         builder: (ctx, state) {
           if (state is AdminLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              itemCount: 6,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, __) => Shimmer.fromColors(
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Container(width: 45.w, height: 25.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(width: 120.w, height: 10.h, color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(width: 60.w, height: 14.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.r))),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Container(width: 44.w, height: 44.w, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                    ],
+                  ),
+                ),
+              ),
+            );
           }
 
           // ✅ FIX 1: type safety
@@ -83,7 +115,13 @@ class _EmployeesView extends StatelessWidget {
           }
 
           return RefreshIndicator(
-            onRefresh: () => ctx.read<AdminCubit>().loadEmployees(),
+            color: AppColors.cyan,
+            backgroundColor: AppColors.navyBlue,
+            strokeWidth: 3.0,
+            onRefresh: () async {
+              HapticFeedback.lightImpact();
+              await ctx.read<AdminCubit>().loadEmployees();
+            },
             child: ListView.separated(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               itemCount: employees.length,

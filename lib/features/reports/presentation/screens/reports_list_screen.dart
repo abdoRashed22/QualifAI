@@ -12,6 +12,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/cache/hive_cache.dart';
 
@@ -91,9 +93,52 @@ class _ReportsListView extends StatelessWidget {
           }
         },
         builder: (ctx, state) {
-          if (state is ReportsLoading)
-            return const Center(child: CircularProgressIndicator());
-
+          if (state is ReportsLoading) {
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              itemCount: 5,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, __) => Shimmer.fromColors(
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 60.w,
+                        height: 24.h,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.r)),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                                width: double.infinity,
+                                height: 14.h,
+                                color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(
+                                width: 80.w, height: 10.h, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Container(
+                        width: 28.sp,
+                        height: 28.sp,
+                        decoration: const BoxDecoration(
+                            color: Colors.white, shape: BoxShape.circle),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
           if (state is ReportsError) {
             return Center(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -123,7 +168,13 @@ class _ReportsListView extends StatelessWidget {
             }
 
             return RefreshIndicator(
-              onRefresh: () => ctx.read<ReportsCubit>().loadReports(),
+              color: AppColors.cyan,
+              backgroundColor: AppColors.navyBlue,
+              strokeWidth: 3.0,
+              onRefresh: () async {
+                HapticFeedback.lightImpact();
+                await ctx.read<ReportsCubit>().loadReports();
+              },
               child: ListView.separated(
                 padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
                 itemCount: state.reports.length,

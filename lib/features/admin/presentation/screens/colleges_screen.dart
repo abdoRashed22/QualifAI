@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -74,7 +76,35 @@ class _CollegesView extends StatelessWidget {
         },
         builder: (ctx, state) {
           if (state is AdminLoading)
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              itemCount: 6,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, __) => Shimmer.fromColors(
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Container(width: 45.w, height: 25.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(width: 120.w, height: 10.h, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Container(width: 32.sp, height: 32.sp, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                    ],
+                  ),
+                ),
+              ),
+            );
 
           if (state is CollegesLoaded || state is CollegesLoadedSuccess) {
             final colleges = state is CollegesLoadedSuccess
@@ -83,64 +113,73 @@ class _CollegesView extends StatelessWidget {
             if (colleges.isEmpty)
               return const Center(child: Text('لا توجد كليات'));
 
-            return ListView.separated(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
-              itemCount: colleges.length,
-              separatorBuilder: (_, __) => SizedBox(height: 10.h),
-              itemBuilder: (_, i) {
-                final c = colleges[i] as Map<String, dynamic>? ?? {};
-                return AppCard(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.w, vertical: 5.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: GestureDetector(
-                          onTap: () => ctx
-                              .read<AdminCubit>()
-                              .deleteCollege(c['id'] ?? 0),
-                          child: Text('حذف',
-                              style: TextStyle(
-                                  fontFamily: 'Cairo',
-                                  fontSize: 11.sp,
-                                  color: Colors.white)),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              c['CollegeName'] ??
-                                  c['collegeName'] ??
-                                  c['name'] ??
-                                  'كليه',
-                              style: Theme.of(context).textTheme.titleSmall,
-                              textAlign: TextAlign.right,
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              c['UniversityName'] ??
-                                  c['universityName'] ??
-                                  c['university'] ??
-                                  '',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              textAlign: TextAlign.right,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 10.w),
-                      Text('🕵️ ', style: TextStyle(fontSize: 28.sp)),
-                    ],
-                  ),
-                );
+            return RefreshIndicator(
+              color: AppColors.cyan,
+              backgroundColor: AppColors.navyBlue,
+              strokeWidth: 3.0,
+              onRefresh: () async {
+                HapticFeedback.lightImpact();
+                await ctx.read<AdminCubit>().loadColleges();
               },
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+                itemCount: colleges.length,
+                separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                itemBuilder: (_, i) {
+                  final c = colleges[i] as Map<String, dynamic>? ?? {};
+                  return AppCard(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 10.w, vertical: 5.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: GestureDetector(
+                            onTap: () => ctx
+                                .read<AdminCubit>()
+                                .deleteCollege(c['id'] ?? 0),
+                            child: Text('حذف',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 11.sp,
+                                    color: Colors.white)),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                c['CollegeName'] ??
+                                    c['collegeName'] ??
+                                    c['name'] ??
+                                    'كليه',
+                                style: Theme.of(context).textTheme.titleSmall,
+                                textAlign: TextAlign.right,
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                c['UniversityName'] ??
+                                    c['universityName'] ??
+                                    c['university'] ??
+                                    '',
+                                style: Theme.of(context).textTheme.bodySmall,
+                                textAlign: TextAlign.right,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 10.w),
+                        Text('🕵️ ', style: TextStyle(fontSize: 28.sp)),
+                      ],
+                    ),
+                  );
+                },
+              ),
             );
           }
 

@@ -8,6 +8,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qualif_ai/core/router/app_router.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 
@@ -51,7 +53,33 @@ class _DeadlinesView extends StatelessWidget {
       body: BlocBuilder<DeadlinesCubit, DeadlinesState>(
         builder: (ctx, state) {
           if (state is DeadlinesLoading)
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              itemCount: 6,
+              separatorBuilder: (_, __) => SizedBox(height: 10.h),
+              itemBuilder: (_, __) => Shimmer.fromColors(
+                baseColor: Theme.of(context).cardColor,
+                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Container(width: 50.w, height: 40.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            SizedBox(height: 8.h),
+                            Container(width: 80.w, height: 10.h, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
 
           if (state is DeadlinesError) {
             return Center(
@@ -98,7 +126,13 @@ class _DeadlinesView extends StatelessWidget {
 
                 Expanded(
                   child: RefreshIndicator(
-                    onRefresh: () => ctx.read<DeadlinesCubit>().load(),
+                    color: AppColors.cyan,
+                    backgroundColor: AppColors.navyBlue,
+                    strokeWidth: 3.0,
+                    onRefresh: () async {
+                      HapticFeedback.lightImpact();
+                      await ctx.read<DeadlinesCubit>().load();
+                    },
                     child: state.filtered.isEmpty
                         ? const Center(child: Text('لا توجد مواعيد'))
                         : ListView.separated(

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/app_badge.dart';
@@ -59,7 +61,26 @@ class _ReviewerDashboardView extends StatelessWidget {
       body: BlocBuilder<ReviewerCubit, ReviewerState>(
         builder: (context, state) {
           if (state is ReviewerLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Shimmer.fromColors(
+              baseColor: Theme.of(context).cardColor,
+              highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+              child: ListView(
+                padding: EdgeInsets.all(16.w),
+                children: [
+                  Container(height: 140.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.r))),
+                  SizedBox(height: 20.h),
+                  Container(height: 20.h, width: 150.w, color: Colors.white),
+                  SizedBox(height: 12.h),
+                  Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                  SizedBox(height: 12.h),
+                  Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                  SizedBox(height: 20.h),
+                  Container(height: 20.h, width: 100.w, color: Colors.white),
+                  SizedBox(height: 12.h),
+                  Container(height: 60.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                ],
+              ),
+            );
           }
 
           if (state is ReviewerError) {
@@ -81,8 +102,13 @@ class _ReviewerDashboardView extends StatelessWidget {
 
           if (state is ReviewerDashboardLoaded) {
             return RefreshIndicator(
-              onRefresh: () async =>
-                  context.read<ReviewerCubit>().loadDashboard(),
+              color: AppColors.cyan,
+              backgroundColor: AppColors.navyBlue,
+              strokeWidth: 3.0,
+              onRefresh: () async {
+                HapticFeedback.lightImpact();
+                await context.read<ReviewerCubit>().loadDashboard();
+              },
               child: ListView(
                 padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
                 children: [

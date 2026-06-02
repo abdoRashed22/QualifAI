@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/cache/hive_cache.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -75,7 +77,28 @@ class _DashboardViewState extends State<_DashboardView> {
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (ctx, state) {
           if (state is DashboardLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return Shimmer.fromColors(
+              baseColor: Theme.of(context).cardColor,
+              highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+              child: ListView(
+                padding: EdgeInsets.all(16.w),
+                children: [
+                  Container(height: 110.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.r))),
+                  SizedBox(height: 16.h),
+                  Row(
+                    children: [
+                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      SizedBox(width: 10.w),
+                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      SizedBox(width: 10.w),
+                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                    ],
+                  ),
+                  SizedBox(height: 16.h),
+                  Container(height: 220.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                ],
+              ),
+            );
           }
           if (state is DashboardError) {
             return Center(
@@ -99,7 +122,13 @@ class _DashboardViewState extends State<_DashboardView> {
           final sections = loaded?.sections ?? [];
 
           return RefreshIndicator(
-            onRefresh: () => ctx.read<DashboardCubit>().load(1),
+            color: AppColors.cyan,
+            backgroundColor: AppColors.navyBlue,
+            strokeWidth: 3.0,
+            onRefresh: () async {
+              HapticFeedback.lightImpact(); // اهتزاز خفيف وجميل
+              await ctx.read<DashboardCubit>().load(1);
+            },
             child: ListView(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               children: [
