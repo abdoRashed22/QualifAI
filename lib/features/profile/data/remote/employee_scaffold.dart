@@ -22,10 +22,10 @@ class EmployeeScaffold extends StatelessWidget {
             icon: Icons.home,
             label: 'الرئيسية',
             screen: ReviewerDashboardScreen()),
-        NavRailItem(
+       /* NavRailItem(
             icon: Icons.file_copy,
             label: 'الاعتماد',
-            screen: AccreditationTypesScreen()),
+            screen: AccreditationTypesScreen()),*/
         NavRailItem(
             icon: Icons.calendar_today,
             label: 'المواعيد النهائية',
