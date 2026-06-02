@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/admin_repository.dart';
+import 'package:dio/dio.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/api/api_endpoints.dart';
 
 part 'admin_state.dart';
 
@@ -213,6 +216,44 @@ class AdminCubit extends Cubit<AdminState> {
             emit(RolesLoaded(refreshed, rollbackPerms));
           }
         }
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> fetchRoleDetails(int id) async {
+    try {
+      final res = await sl<Dio>().get(ApiEndpoints.roleById(id));
+      return res.data as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<int>> fetchRolePermissions(int id) async {
+    try {
+      final res = await sl<Dio>().get(ApiEndpoints.rolePermissions(id));
+      if (res.data is List) {
+        return (res.data as List).map((e) => int.tryParse('$e') ?? 0).toList();
+      }
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> assignRolePermissions(int roleId, List<int> permIds) async {
+    if (isClosed || _isDisposed) return;
+    emit(const AdminActionLoading());
+
+    final r = await _repo.setRolePermissions(roleId, permIds);
+
+    if (isClosed || _isDisposed) return;
+
+    r.fold(
+      (f) => emit(AdminError(f.message)),
+      (_) {
+        emit(const AdminActionSuccess('تم تحديث الصلاحيات بنجاح'));
+        loadRoles();
       },
     );
   }
