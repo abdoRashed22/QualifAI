@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import '../../../../core/di/injection.dart';
 
@@ -51,6 +53,27 @@ class _NotificationsView extends StatelessWidget {
     return Scaffold(
 
       appBar: AppBar(
+         leading: Builder(
+          builder: (ctx) {
+            final sideRail = SideRailNavigation.of(ctx);
+            if (sideRail != null) {
+              return IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => sideRail.openDrawer(),
+              );
+            }
+            return IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+            );
+          },
+        ),
 
         title: const Text('الإشعارات'),
 

@@ -1,6 +1,5 @@
 ﻿// lib/features/chat/presentation/screens/chat_list_screen.dart
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,9 +37,26 @@ class _ChatListView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('المحادثات'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
+        leading: Builder(
+          builder: (ctx) {
+            final sideRail = SideRailNavigation.of(ctx);
+            if (sideRail != null) {
+              return IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => sideRail.openDrawer(),
+              );
+            }
+            return IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+            );
+          },
         ),
         actions: [
           IconButton(
@@ -103,7 +119,7 @@ class _ChatListView extends StatelessWidget {
 
                     // ✅ FIX: navigate بالـ real ID
 
-                    context.go('/chat/$collegeId');
+                    context.push('/chat/$collegeId');
                   },
                   leading: CircleAvatar(
                     radius: 24.r,
