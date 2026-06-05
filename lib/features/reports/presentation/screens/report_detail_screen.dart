@@ -55,14 +55,21 @@ class _ReportDetailView extends StatelessWidget {
           if (state is ReportDetailLoaded) {
             final r = state.report;
 
-            final uploaded = (r['uploadedDocuments'] ?? 0) as int;
+            final pct = (r['completionDegree'] is num
+                    ? (r['completionDegree'] as num).toDouble()
+                    : (r['completionPercentage'] is num
+                        ? (r['completionPercentage'] as num).toDouble() / 100
+                        : 0.0))
+                .clamp(0.0, 1.0);
 
-            final required = (r['requiredDocumentsCount'] ?? 1) as int;
-
-            final pct =
-                required > 0 ? (uploaded / required).clamp(0.0, 1.0) : 0.0;
-
-            final docs = (r['requiredDocuments'] as List?) ?? [];
+            final aiAnalysis =
+                (r['aiAnalysis'] ?? 'لم يتم إتمام التحليل بعد').toString();
+            final reviewerFeedback = (r['reviewerFeedback'] ??
+                    r['reviewerAssessment'] ??
+                    'لا توجد ملاحظات من المراجع حتى الآن')
+                .toString();
+            final requiredRevisions =
+                (r['requiredRevisions'] ?? 'لا توجد تعديلات مطلوبة').toString();
 
             return ListView(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
@@ -119,210 +126,91 @@ class _ReportDetailView extends StatelessWidget {
 
                 SizedBox(height: 16.h),
 
-                // Missing documents
+                // AI Analysis
 
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('الوثائق الرئيسية',
-                          style: Theme.of(context).textTheme.titleSmall),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text('تحليل الذكاء الاصطناعي',
+                              style: Theme.of(context).textTheme.titleSmall),
+                          SizedBox(width: 8.w),
+                          Icon(Icons.smart_toy_outlined,
+                              color: AppColors.blue, size: 20.sp),
+                        ],
+                      ),
                       SizedBox(height: 12.h),
-                      ...docs
-                          .where((d) {
-                            final doc = d as Map<String, dynamic>? ?? {};
-
-                            return !(doc['hasFile'] == true);
-                          })
-                          .take(5)
-                          .map((d) {
-                            final doc = d as Map<String, dynamic>? ?? {};
-
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 6.h),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      doc['name'] ?? 'وثيقة مطلوبة',
-                                      style: TextStyle(
-                                          fontFamily: 'Cairo',
-                                          fontSize: 12.sp,
-                                          color: AppColors.warning),
-                                      textAlign: TextAlign.right,
-                                    ),
-                                  ),
-                                  SizedBox(width: 6.w),
-                                  Icon(Icons.warning_amber_outlined,
-                                      size: 14.sp, color: AppColors.warning),
-                                ],
-                              ),
-                            );
-                          }),
-                      if (docs.every((d) =>
-                          (d as Map<String, dynamic>?)?['hasFile'] == true))
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'جميع المستندات مكتملة ✓',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 12.sp,
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Documents list
-
-                AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('الملفات (${docs.length})',
-                          style: Theme.of(context).textTheme.titleSmall),
-                      SizedBox(height: 12.h),
-                      ...docs.map((d) {
-                        final doc = d as Map<String, dynamic>? ?? {};
-
-                        final hasFile = doc['hasFile'] == true;
-                        final fileUrl = doc['fullFileUrl']?.toString() ?? '';
-                        final fileName =
-                            doc['name']?.toString() ?? 'وثيقة مطلوبة';
-
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 8.h),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 10.h, horizontal: 12.w),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(10.r),
-                            border: Border.all(
-                                color: Theme.of(context).dividerColor),
-                          ),
-                          child: Row(
-                            children: [
-                              if (hasFile) ...[
-                                IconButton(
-                                  icon: Icon(Icons.download_rounded,
-                                      color: AppColors.navyBlue, size: 22.sp),
-                                  onPressed: () async {
-                                    if (fileUrl.isNotEmpty) {
-                                      final uri = Uri.parse(fileUrl);
-                                      try {
-                                        await launchUrl(uri,
-                                            mode:
-                                                LaunchMode.externalApplication);
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content: Text(
-                                                    'لا يمكن تحميل الملف')),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  },
-                                  tooltip: 'تحميل',
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                                SizedBox(width: 16.w),
-                                IconButton(
-                                  icon: Icon(Icons.visibility_rounded,
-                                      color: AppColors.success, size: 22.sp),
-                                  onPressed: () {
-                                    if (fileUrl.isNotEmpty) {
-                                      context.push(
-                                        '${AppRoutes.fileViewer}?url=${Uri.encodeComponent(fileUrl)}&name=${Uri.encodeComponent(fileName)}',
-                                      );
-                                    }
-                                  },
-                                  tooltip: 'عرض الملف',
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ],
-                              Expanded(
-                                child: Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 12.w),
-                                  child: Text(
-                                    fileName,
-                                    style: TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: hasFile
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withOpacity(0.5)),
-                                    textAlign: TextAlign.right,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                hasFile
-                                    ? Icons.check_circle
-                                    : Icons.cancel_outlined,
-                                size: 24.sp,
-                                color: hasFile
-                                    ? AppColors.success
-                                    : AppColors.error,
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                      Text(
+                        aiAnalysis,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.6),
+                        textAlign: TextAlign.right,
+                      ),
                     ],
                   ),
                 ),
 
                 SizedBox(height: 16.h),
 
-                // Notes Section
+                // Required Revisions Section
+
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('ملاحظات التقييم',
-                          style: Theme.of(context).textTheme.titleSmall),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'يمكنك استخدام هذه المساحة لتدوين ملاحظاتك، وإرسالها للكلية أو المراجع.',
-                        style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.7)),
-                        textAlign: TextAlign.right,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text('التعديلات المطلوبة',
+                              style: Theme.of(context).textTheme.titleSmall),
+                          SizedBox(width: 8.w),
+                          Icon(Icons.checklist_rtl_outlined,
+                              color: AppColors.warning, size: 20.sp),
+                        ],
                       ),
                       SizedBox(height: 12.h),
-                      TextField(
-                        maxLines: 4,
+                      Text(
+                        requiredRevisions,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.6),
                         textAlign: TextAlign.right,
-                        decoration: InputDecoration(
-                          hintText: 'أضف ملاحظاتك هنا...',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.r)),
-                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 16.h),
+
+                // Reviewer Feedback Section
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text('ملاحظات المراجع',
+                              style: Theme.of(context).textTheme.titleSmall),
+                          SizedBox(width: 8.w),
+                          Icon(Icons.rate_review_outlined,
+                              color: AppColors.success, size: 20.sp),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      Text(
+                        reviewerFeedback,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(height: 1.6),
+                        textAlign: TextAlign.right,
                       ),
                     ],
                   ),
@@ -331,21 +219,8 @@ class _ReportDetailView extends StatelessWidget {
                 SizedBox(height: 24.h),
 
                 // Action buttons
-
                 Row(
                   children: [
-                    Expanded(
-                      child: AppButton(
-                        label: 'تقييم الاعتماد',
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('تم حفظ تقييم الاعتماد')),
-                          );
-                        },
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
                     Expanded(
                       child: AppButton(
                         label: "التواصل مع المراجع",

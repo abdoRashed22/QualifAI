@@ -50,6 +50,40 @@ class ReportsRepositoryImpl implements ReportsRepository {
   }
 
   @override
+  Future<Either<Failure, Map<String, dynamic>>> getReportUiDetails() async {
+    try {
+      return Right(await _remote.getReportUiDetails());
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<dynamic>>> getReportsByCollege(
+      int collegeId) async {
+    try {
+      return Right(await _remote.getReportsByCollege(collegeId));
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> downloadReport(int collegeId) async {
+    try {
+      return Right(await _remote.downloadReport(collegeId));
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (_) {
+      return const Left(UnknownFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> uploadReport(File file) async {
     try {
       await _remote.uploadReport(file);

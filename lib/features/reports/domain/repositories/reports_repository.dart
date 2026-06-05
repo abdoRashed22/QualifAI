@@ -13,5 +13,11 @@ abstract class ReportsRepository {
 
   Future<Either<Failure, Map<String, dynamic>>> getReportDetail(int reportId);
 
+  Future<Either<Failure, Map<String, dynamic>>> getReportUiDetails();
+
+  Future<Either<Failure, List<dynamic>>> getReportsByCollege(int collegeId);
+
+  Future<Either<Failure, dynamic>> downloadReport(int collegeId);
+
   Future<Either<Failure, void>> uploadReport(File file);
 }

@@ -28,8 +28,32 @@ class EmployeesScreen extends StatelessWidget {
   }
 }
 
-class _EmployeesView extends StatelessWidget {
+class _EmployeesView extends StatefulWidget {
   const _EmployeesView();
+
+  @override
+  State<_EmployeesView> createState() => _EmployeesViewState();
+}
+
+class _EmployeesViewState extends State<_EmployeesView> {
+  String _searchQuery = '';
+  final TextEditingController _searchCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() {
+      setState(() {
+        _searchQuery = _searchCtrl.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,9 +156,13 @@ class _EmployeesView extends StatelessWidget {
                 state.employees.whereType<Map<String, dynamic>>().toList();
           }
 
-          if (employees.isEmpty && state is EmployeesLoaded) {
-            return const Center(child: Text('لا يوجد موظفون'));
-          }
+          final filteredEmployees = employees.where((e) {
+            final fName = (e['fullName'] ?? '').toString().toLowerCase();
+            final email = (e['email'] ?? '').toString().toLowerCase();
+            final role = (e['role'] ?? '').toString().toLowerCase();
+            final q = _searchQuery.toLowerCase();
+            return fName.contains(q) || email.contains(q) || role.contains(q);
+          }).toList();
 
           return RefreshIndicator(
             color: AppColors.cyan,
@@ -144,157 +172,35 @@ class _EmployeesView extends StatelessWidget {
               HapticFeedback.lightImpact();
               await ctx.read<AdminCubit>().loadEmployees();
             },
-            child: ListView.separated(
+            child: ListView(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
-              itemCount: employees.length,
-              separatorBuilder: (_, __) => SizedBox(height: 10.h),
-              itemBuilder: (_, i) {
-                final e = employees[i];
-                debugPrint('Employee Data => $e');
-
-                final id = (e['id'] ?? e['employeeId'] ?? 0) as int;
-
-                final role = (e['role'] ?? e['roleName'] ?? 'موظف').toString();
-
-                final profileImage = (e['profileImage'] ?? '').toString();
-
-                final fullName = (e['fullName'] ?? '').toString().trim();
-
-                final email = (e['email'] ?? '').toString().trim();
-
-                final userName = (e['userName'] ?? '').toString().trim();
-
-                final displayName = fullName.isNotEmpty
-                    ? fullName
-                    : (email.isNotEmpty
-                        ? email
-                        : (userName.isNotEmpty ? userName : 'مستخدم رقم $id'));
-
-                final secondaryInfo = 'ID: $id';
-                return AppCard(
-                  padding: EdgeInsets.all(12.w),
-                  child: Row(children: [
-                    // أزرار الإجراءات
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _showEditDialog(context, e),
-                          child: Container(
-                            width: 70.w,
-                            padding: EdgeInsets.symmetric(vertical: 6.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.blue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.edit_outlined,
-                                    color: AppColors.blue, size: 14.sp),
-                                SizedBox(width: 4.w),
-                                Text('تعديل',
-                                    style: TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.blue)),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 6.h),
-                        GestureDetector(
-                          onTap: () => _showDeleteConfirm(
-                              context, ctx.read<AdminCubit>(), id, displayName),
-                          child: Container(
-                            width: 70.w,
-                            padding: EdgeInsets.symmetric(vertical: 6.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.delete_outline,
-                                    color: AppColors.error, size: 14.sp),
-                                SizedBox(width: 4.w),
-                                Text('حذف',
-                                    style: TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.error)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(width: 12.w),
-                    // تفاصيل الموظف
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            displayName,
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                            textAlign: TextAlign.right,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            secondaryInfo,
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 11.sp,
-                              color: Theme.of(context).disabledColor,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                          SizedBox(height: 6.h),
-                          AppBadge(
-                            label: role.isNotEmpty ? role : 'موظف',
-                            color: AppColors.navyBlue,
-                            small: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    // الصورة الشخصية
-                    CircleAvatar(
-                      backgroundColor: AppColors.navyBlue.withOpacity(0.1),
-                      backgroundImage: profileImage.isNotEmpty
-                          ? NetworkImage(profileImage)
-                          : null,
-                      radius: 26.r,
-                      child: profileImage.isNotEmpty
-                          ? null
-                          : Text(
-                              displayName.isNotEmpty
-                                  ? displayName[0].toUpperCase()
-                                  : "م",
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.navyBlue,
-                              ),
-                            ),
-                    ),
-                  ]),
-                );
-              },
+              children: [
+                AppTextField(
+                  controller: _searchCtrl,
+                  label: 'ابحث بالاسم أو البريد الإلكتروني...',
+                ),
+                SizedBox(height: 16.h),
+                if (employees.isEmpty && state is EmployeesLoaded)
+                  const Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Text('لا يوجد موظفون',
+                        style: TextStyle(fontFamily: 'Cairo')),
+                  ))
+                else if (filteredEmployees.isEmpty)
+                  const Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Text('لا يوجد موظف مطابق للبحث',
+                        style: TextStyle(fontFamily: 'Cairo')),
+                  ))
+                else
+                  ...filteredEmployees.map((e) => Padding(
+                        padding: EdgeInsets.only(bottom: 10.h),
+                        child: _buildEmployeeCard(
+                            e, context, ctx.read<AdminCubit>()),
+                      )),
+              ],
             ),
           );
         },
@@ -307,6 +213,137 @@ class _EmployeesView extends StatelessWidget {
             style: TextStyle(fontFamily: 'Cairo', color: Colors.white)),
         icon: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+
+  Widget _buildEmployeeCard(
+      Map<String, dynamic> e, BuildContext context, AdminCubit cubit) {
+    final id = (e['id'] ?? e['employeeId'] ?? 0) as int;
+    final role = (e['role'] ?? e['roleName'] ?? 'موظف').toString();
+    final profileImage = (e['profileImage'] ?? '').toString();
+    final fullName = (e['fullName'] ?? '').toString().trim();
+    final email = (e['email'] ?? '').toString().trim();
+
+    final displayName = fullName.isNotEmpty ? fullName : 'مستخدم رقم $id';
+    final secondaryInfo = email.isNotEmpty ? email : 'ID: $id';
+
+    return AppCard(
+      padding: EdgeInsets.all(12.w),
+      child: Row(children: [
+        // أزرار الإجراءات
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () => _showEditDialog(context, e),
+              child: Container(
+                width: 70.w,
+                padding: EdgeInsets.symmetric(vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: AppColors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.edit_outlined,
+                        color: AppColors.blue, size: 14.sp),
+                    SizedBox(width: 4.w),
+                    Text('تعديل',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.blue)),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 6.h),
+            GestureDetector(
+              onTap: () => _showDeleteConfirm(context, cubit, id, displayName),
+              child: Container(
+                width: 70.w,
+                padding: EdgeInsets.symmetric(vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.delete_outline,
+                        color: AppColors.error, size: 14.sp),
+                    SizedBox(width: 4.w),
+                    Text('حذف',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(width: 12.w),
+        // تفاصيل الموظف
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                displayName,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                secondaryInfo,
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 11.sp,
+                  color: Theme.of(context).disabledColor,
+                ),
+                textAlign: TextAlign.right,
+              ),
+              SizedBox(height: 6.h),
+              AppBadge(
+                label: role.isNotEmpty ? role : 'موظف',
+                color: AppColors.navyBlue,
+                small: true,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: 10.w),
+        // الصورة الشخصية
+        CircleAvatar(
+          backgroundColor: AppColors.navyBlue.withOpacity(0.1),
+          backgroundImage:
+              profileImage.isNotEmpty ? NetworkImage(profileImage) : null,
+          radius: 26.r,
+          child: profileImage.isNotEmpty
+              ? null
+              : Text(
+                  displayName.isNotEmpty ? displayName[0].toUpperCase() : "م",
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.navyBlue,
+                  ),
+                ),
+        ),
+      ]),
     );
   }
 
@@ -338,11 +375,13 @@ class _EmployeesView extends StatelessWidget {
 
   void _showAddDialog(BuildContext context) {
     final cubit = context.read<AdminCubit>();
-    
+
     // استخراج قائمة الإيميلات المسجلة حالياً
     final currentState = cubit.state;
     final existingEmails = currentState is EmployeesLoaded
-        ? currentState.employees.map((e) => (e['email'] ?? '').toString().trim().toLowerCase()).toList()
+        ? currentState.employees
+            .map((e) => (e['email'] ?? '').toString().trim().toLowerCase())
+            .toList()
         : <String>[];
 
     final firstCtrl = TextEditingController();
@@ -455,13 +494,16 @@ class _EmployeesView extends StatelessWidget {
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> employee) {
     final cubit = context.read<AdminCubit>();
-    
+
     // استخراج الإيميلات لاستبعاد إيميل الموظف الحالي (حتى لا يظهر خطأ إذا لم يغير إيميله)
     final currentState = cubit.state;
-    final currentEmail = (employee['email'] ?? '').toString().trim().toLowerCase();
+    final currentEmail =
+        (employee['email'] ?? '').toString().trim().toLowerCase();
     final existingEmails = currentState is EmployeesLoaded
-        ? currentState.employees.map((e) => (e['email'] ?? '').toString().trim().toLowerCase())
-            .where((email) => email.isNotEmpty && email != currentEmail).toList()
+        ? currentState.employees
+            .map((e) => (e['email'] ?? '').toString().trim().toLowerCase())
+            .where((email) => email.isNotEmpty && email != currentEmail)
+            .toList()
         : <String>[];
 
     final firstCtrl =

@@ -168,7 +168,8 @@ class PermissionManager {
   bool get canViewAllColleges => isAdmin || isManager;
 
   // Reports
-  bool get canViewReports => isAdmin || hasCollegeAccess;
+  // bool get canViewReports => isAdmin || hasCollegeAccess;
+  bool get canViewReports => isAdmin || hasCollegeAccess || isEmployee;
 
   /// Managers/Admins can send notes back to quality employee
   bool get canSendReportNotes => isAdmin || isManager;

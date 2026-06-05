@@ -40,6 +40,13 @@ class ReportsError extends ReportsState {
   List<Object?> get props => [message];
 }
 
+class ReportDownloadSuccess extends ReportsState {
+  final String url;
+  const ReportDownloadSuccess(this.url);
+  @override
+  List<Object?> get props => [url];
+}
+
 class ReportActionSuccess extends ReportsState {
   final String message;
 

@@ -12,6 +12,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -62,6 +63,7 @@ class _ReportsListView extends StatelessWidget {
           ),
         ],
       ),
+      // API: POST /api/Reports/upload -> Quality Manager ONLY
       floatingActionButton: pm.isManager
           ? FloatingActionButton.extended(
               heroTag: null,
@@ -90,6 +92,17 @@ class _ReportsListView extends StatelessWidget {
                 backgroundColor: AppColors.success,
               ),
             );
+          }
+          if (state is ReportDownloadSuccess) {
+            if (state.url.startsWith('http')) {
+              launchUrl(Uri.parse(state.url),
+                  mode: LaunchMode.externalApplication);
+            } else {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(
+                    content: Text(state.url), backgroundColor: AppColors.blue),
+              );
+            }
           }
         },
         builder: (ctx, state) {
@@ -186,9 +199,14 @@ class _ReportsListView extends StatelessWidget {
 
                   final required = (r['requiredDocumentsCount'] ?? 1) as int;
 
+                  final collegeName = (r['collegeName'] ?? '').toString();
+                  final collegeId =
+                      int.tryParse(r['collegeId']?.toString() ?? '0') ?? 0;
+
                   final pct = required > 0
                       ? (uploaded / required).clamp(0.0, 1.0)
                       : 0.0;
+                  final status = (r['status'] ?? 'قيد المراجعة').toString();
 
                   return AppCard(
                     onTap: () => context.push(
@@ -220,46 +238,19 @@ class _ReportsListView extends StatelessWidget {
                                         color: Colors.white)),
                               ),
                             ),
-                            if (pm.isManager) ...[
+                            if (pm.isEmployee) ...[
                               SizedBox(height: 8.h),
                               GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('تأكيد الحذف',
-                                          textAlign: TextAlign.right),
-                                      content: const Text(
-                                          'هل أنت متأكد من رغبتك في حذف هذا التقرير؟',
-                                          textAlign: TextAlign.right),
-                                      actionsAlignment: MainAxisAlignment.start,
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(ctx),
-                                          child: const Text('إلغاء'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(ctx);
-                                            context
-                                                .read<ReportsCubit>()
-                                                .deleteReport(r['id'] ?? 0);
-                                          },
-                                          child: const Text('حذف',
-                                              style:
-                                                  TextStyle(color: Colors.red)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                onTap: () => ctx
+                                    .read<ReportsCubit>()
+                                    .downloadCollegeReport(collegeId),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 5.h),
                                   decoration: BoxDecoration(
-                                      color: AppColors.error,
+                                      color: AppColors.success,
                                       borderRadius: BorderRadius.circular(8.r)),
-                                  child: Text("حذف التقرير",
+                                  child: Text("تحميل التقرير",
                                       style: TextStyle(
                                           fontFamily: 'Cairo',
                                           fontSize: 11.sp,
@@ -274,8 +265,19 @@ class _ReportsListView extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              if (pm.isEmployee && collegeName.isNotEmpty)
+                                Text(collegeName,
+                                    style: TextStyle(
+                                        fontFamily: 'Cairo',
+                                        fontSize: 11.sp,
+                                        color: AppColors.blue),
+                                    textAlign: TextAlign.right),
                               Text(r['name'] ?? "تقرير",
                                   style: Theme.of(context).textTheme.titleSmall,
+                                  textAlign: TextAlign.right),
+                              SizedBox(height: 4.h),
+                              Text('الحالة: $status',
+                                  style: Theme.of(context).textTheme.bodySmall,
                                   textAlign: TextAlign.right),
                               SizedBox(height: 8.h),
                               Row(

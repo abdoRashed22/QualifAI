@@ -422,7 +422,9 @@ class AdminCubit extends Cubit<AdminState> {
       'roleId': int.tryParse('${data['roleId'] ?? ''}') ?? 0,
     };
 
-    if (data.containsKey('password') && data['password'] != null && data['password'].toString().isNotEmpty) {
+    if (data.containsKey('password') &&
+        data['password'] != null &&
+        data['password'].toString().isNotEmpty) {
       payload['password'] = data['password']?.toString();
     }
 
@@ -441,18 +443,29 @@ class AdminCubit extends Cubit<AdminState> {
       },
     );
   }
+
   List<Map<String, dynamic>> _mapEmployeeData(List<dynamic> data) {
     return data.whereType<Map<String, dynamic>>().map((emp) {
       final id = emp['employeeId'] ?? emp['id'] ?? 0;
 
-      final firstName =
+      String firstName =
           (emp['firstName'] ?? emp['first_name'] ?? emp['name'] ?? '')
               .toString();
 
-      final lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
+      String lastName = (emp['lastName'] ?? emp['last_name'] ?? '').toString();
 
       final email = (emp['email'] ?? emp['userEmail'] ?? emp['userName'] ?? '')
           .toString();
+
+      // استخراج الاسم الأول والأخير من البريد الإلكتروني في حال عدم رجوعهما من الـ API
+      if (email.isNotEmpty) {
+        final parts = email.split('@');
+        if (parts.isNotEmpty) {
+          final username = parts.first;
+          if (firstName.isEmpty) firstName = username;
+          if (lastName.isEmpty || lastName == '-') lastName = username;
+        }
+      }
 
       final role =
           (emp['roleName'] ?? emp['role'] ?? emp['roleDisplayName'] ?? 'موظف')

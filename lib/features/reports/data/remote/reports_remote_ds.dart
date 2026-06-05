@@ -67,6 +67,18 @@ class ReportsRemoteDs {
     }
   }
 
+  /// Fetch report UI details (For Quality Employee)
+  Future<Map<String, dynamic>> getReportUiDetails() async {
+    try {
+      print('📤 [REPORTS] Fetching report UI details from /Reports/ui');
+      final res = await _dio.get(ApiEndpoints.reportsUi);
+      return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
+    } on DioException catch (e) {
+      print('❌ [REPORTS] Error fetching UI details: ${e.message}');
+      throw dioToFailure(e);
+    }
+  }
+
   /// Get reports for a specific college
   Future<List<dynamic>> getReportsByCollege(int collegeId) async {
     try {
@@ -115,17 +127,6 @@ class ReportsRemoteDs {
       final res = await _dio.post('/Reports/upload', data: form);
       return res.data is Map ? Map<String, dynamic>.from(res.data) : {};
     } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
-  Future<void> deleteReport(int reportId) async {
-    try {
-      print('📤 [REPORTS] Deleting report $reportId');
-      await _dio.delete('/api/Reports/$reportId');
-      print('📥 [REPORTS] Successfully deleted report $reportId');
-    } on DioException catch (e) {
-      print('❌ [REPORTS] Error deleting report: ${e.message}');
       throw dioToFailure(e);
     }
   }
