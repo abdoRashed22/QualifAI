@@ -94,23 +94,29 @@ class _PricingView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Icon(Icons.workspace_premium_rounded,
+                      size: 64.sp, color: AppColors.warning),
+                  SizedBox(height: 16.h),
                   Text(
                     'باقات الاشتراكات - QualifAI',
                     style: TextStyle(
                       fontFamily: 'Cairo',
                       fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                       color: Theme.of(context).textTheme.titleLarge?.color,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'فتح إمكانيات لا نهاية لها',
+                    'ارتقِ بجودة مؤسستك التعليمية مع باقاتنا المتميزة',
                     style: TextStyle(
                       fontFamily: 'Cairo',
-                      fontSize: 16.sp,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      fontSize: 15.sp,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -172,177 +178,245 @@ class _PlanCard extends StatelessWidget {
           .toList();
     }
 
+    final theme = Theme.of(context);
+
     return Container(
       margin: EdgeInsets.only(bottom: 24.h),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16.r),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(24.r),
         border: Border.all(
-          color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
-          width: isActive ? 2.0 : 1.0,
+          color: isActive
+              ? AppColors.navyBlue
+              : theme.dividerColor.withOpacity(0.3),
+          width: isActive ? 2.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: isActive
+                ? AppColors.navyBlue.withOpacity(0.12)
+                : Colors.black.withOpacity(0.03),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (isActive)
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(14.r),
-                  topRight: Radius.circular(14.r),
-                ),
-              ),
-              child: Text(
-                'خطتك الحالية',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Cairo',
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ),
-          Padding(
-            padding: EdgeInsets.all(24.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.titleLarge?.color,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (isActive)
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.navyBlue, AppColors.blue],
                   ),
-                  textAlign: TextAlign.right,
                 ),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(Icons.star_rounded,
+                        color: AppColors.warning, size: 18.sp),
+                    SizedBox(width: 8.w),
                     Text(
-                      'ر.س',
+                      'الباقة الحالية',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Cairo',
-                        fontSize: 16.sp,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      price,
-                      style: TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 36.sp,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
+                        fontSize: 14.sp,
                       ),
                     ),
                   ],
                 ),
-                if (description.isNotEmpty) ...[
-                  SizedBox(height: 16.h),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 14.sp,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    textAlign: TextAlign.right,
+              ),
+            Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.navyBlue.withOpacity(0.1)
+                              : theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.diamond_outlined,
+                          color: isActive
+                              ? AppColors.navyBlue
+                              : theme.disabledColor,
+                          size: 28.sp,
+                        ),
+                      ),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 22.sp,
+                          fontWeight: FontWeight.w800,
+                          color: theme.textTheme.titleLarge?.color,
+                        ),
+                        textAlign: TextAlign.right,
+                      ),
+                    ],
                   ),
-                ],
-                SizedBox(height: 24.h),
-                ...features.map((feature) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 12.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            feature,
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 14.sp,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
+                  SizedBox(height: 20.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'سنوياً /',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: theme.disabledColor,
                         ),
-                        SizedBox(width: 12.w),
-                        Icon(
-                          Icons.check_circle,
-                          color: AppColors.success,
-                          size: 20.sp,
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        'ر.س',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isActive
+                              ? AppColors.navyBlue
+                              : theme.textTheme.bodyLarge?.color,
                         ),
-                      ],
-                    ),
-                  );
-                }),
-                SizedBox(height: 24.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50.h,
-                  child: ElevatedButton(
-                    onPressed: isActive
-                        ? null
-                        : () {
-                            showDialog(
-                              context: context,
-                              builder: (dialogCtx) =>
-                                  _PaymentDialog(onSubmit: (data) {
-                                Navigator.pop(dialogCtx); // إغلاق النافذة
-                                context.read<PricingCubit>().subscribe(data);
-                              }),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor:
-                          isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
-                      disabledForegroundColor: Colors.white,
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.5,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                      SizedBox(width: 6.w),
+                      Text(
+                        price,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 40.sp,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                          color: isActive
+                              ? AppColors.navyBlue
+                              : theme.textTheme.titleLarge?.color,
+                        ),
                       ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      isActive ? 'خطتك الحالية' : 'اشترك الآن',
+                    ],
+                  ),
+                  if (description.isNotEmpty) ...[
+                    SizedBox(height: 16.h),
+                    Text(
+                      description,
                       style: TextStyle(
                         fontFamily: 'Cairo',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: isActive ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.primary,
+                        fontSize: 14.sp,
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                  SizedBox(height: 24.h),
+                  Divider(color: theme.dividerColor.withOpacity(0.3)),
+                  SizedBox(height: 16.h),
+                  ...features.map((feature) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.8),
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Container(
+                            padding: EdgeInsets.all(2.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.check,
+                              color: AppColors.success,
+                              size: 16.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54.h,
+                    child: ElevatedButton(
+                      onPressed: isActive
+                          ? null
+                          : () {
+                              showDialog(
+                                context: context,
+                                builder: (dialogCtx) =>
+                                    _PaymentDialog(onSubmit: (data) {
+                                  Navigator.pop(dialogCtx); // إغلاق النافذة
+                                  context.read<PricingCubit>().subscribe(data);
+                                }),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            isActive ? AppColors.success : AppColors.navyBlue,
+                        disabledBackgroundColor:
+                            AppColors.success.withOpacity(0.8),
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.r),
+                        ),
+                        elevation: isActive ? 0 : 4,
+                        shadowColor: AppColors.navyBlue.withOpacity(0.4),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isActive) ...[
+                            Icon(Icons.check_circle,
+                                color: Colors.white, size: 20.sp),
+                            SizedBox(width: 8.w),
+                          ],
+                          Text(
+                            isActive ? 'أنت مشترك في هذه الباقة' : 'اشترك الآن',
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -376,98 +450,220 @@ class _PaymentDialogState extends State<_PaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('إدخال بيانات الدفع',
-          textAlign: TextAlign.right,
-          style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameCtrl,
-                textAlign: TextAlign.right,
-                decoration:
-                    const InputDecoration(labelText: 'الاسم على البطاقة'),
-                validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+    final theme = Theme.of(context);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      backgroundColor: theme.cardColor,
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 24.h),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.navyBlue, AppColors.blue],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                ),
               ),
-              SizedBox(height: 12.h),
-              TextFormField(
-                controller: _cardCtrl,
-                textAlign: TextAlign.right,
-                keyboardType: TextInputType.number,
-                maxLength: 16,
-                decoration: const InputDecoration(
-                    labelText: 'رقم البطاقة', counterText: ''),
-                validator: (v) =>
-                    v!.length != 16 ? 'يجب أن يتكون من 16 رقم' : null,
-              ),
-              SizedBox(height: 12.h),
-              Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cvvCtrl,
-                      textAlign: TextAlign.right,
-                      keyboardType: TextInputType.number,
-                      maxLength: 4,
-                      decoration: const InputDecoration(
-                          labelText: 'CVV', counterText: ''),
-                      validator: (v) => v!.length < 3 ? 'مطلوب' : null,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _expiryCtrl,
-                      textAlign: TextAlign.right,
-                      decoration: const InputDecoration(
-                          labelText: 'تاريخ الانتهاء (MM/YY)',
-                          hintText: '12/25'),
-                      validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                    ),
-                  ),
+                  Icon(Icons.credit_card_outlined,
+                      color: Colors.white, size: 48.sp),
+                  SizedBox(height: 12.h),
+                  Text('بيانات الدفع',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20.sp,
+                          color: Colors.white)),
+                  Text('دفع آمن ومحمي بالكامل',
+                      style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 12.sp,
+                          color: Colors.white70)),
                 ],
               ),
-              SizedBox(height: 12.h),
-              CheckboxListTile(
-                value: _remember,
-                onChanged: (v) => setState(() => _remember = v ?? true),
-                title: const Text('حفظ البطاقة للمرات القادمة',
-                    textAlign: TextAlign.right,
-                    style: TextStyle(fontFamily: 'Cairo', fontSize: 13)),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
+            ),
+            Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTextField(
+                      controller: _nameCtrl,
+                      label: 'الاسم على البطاقة',
+                      icon: Icons.person_outline,
+                      validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      controller: _cardCtrl,
+                      label: 'رقم البطاقة',
+                      icon: Icons.numbers_outlined,
+                      keyboardType: TextInputType.number,
+                      maxLength: 16,
+                      validator: (v) =>
+                          v!.length != 16 ? 'يجب أن يتكون من 16 رقم' : null,
+                    ),
+                    SizedBox(height: 16.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _cvvCtrl,
+                            label: 'CVV',
+                            icon: Icons.security_outlined,
+                            keyboardType: TextInputType.number,
+                            maxLength: 4,
+                            validator: (v) => v!.length < 3 ? 'مطلوب' : null,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _buildTextField(
+                            controller: _expiryCtrl,
+                            label: 'الانتهاء',
+                            hint: 'MM/YY',
+                            icon: Icons.date_range_outlined,
+                            validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                            color: theme.dividerColor.withOpacity(0.5)),
+                      ),
+                      child: CheckboxListTile(
+                        value: _remember,
+                        activeColor: AppColors.navyBlue,
+                        onChanged: (v) => setState(() => _remember = v ?? true),
+                        title: Text('حفظ البطاقة للمرات القادمة',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600)),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12.w, vertical: 4.h),
+                      ),
+                    ),
+                    SizedBox(height: 32.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r)),
+                            ),
+                            child: Text('إلغاء',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    fontSize: 15.sp,
+                                    color: theme.disabledColor,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.navyBlue,
+                              padding: EdgeInsets.symmetric(vertical: 14.h),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r)),
+                              elevation: 4,
+                              shadowColor: AppColors.navyBlue.withOpacity(0.4),
+                            ),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                widget.onSubmit({
+                                  "cardHolderName": _nameCtrl.text.trim(),
+                                  "cardNumber": _cardCtrl.text.trim(),
+                                  "cvv": _cvvCtrl.text.trim(),
+                                  "expiryDate": _expiryCtrl.text.trim(),
+                                  "rememberCardInfo": _remember,
+                                });
+                              }
+                            },
+                            child: Text('دفع واشتراك',
+                                style: TextStyle(
+                                    fontFamily: 'Cairo',
+                                    color: Colors.white,
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      actionsAlignment: MainAxisAlignment.spaceBetween,
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo')),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    int? maxLength,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    final theme = Theme.of(context);
+    return TextFormField(
+      controller: controller,
+      textAlign: TextAlign.right,
+      keyboardType: keyboardType,
+      maxLength: maxLength,
+      style: TextStyle(
+          fontFamily: 'Cairo', fontSize: 14.sp, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        counterText: '',
+        prefixIcon: Icon(icon, color: theme.disabledColor, size: 20.sp),
+        labelStyle: TextStyle(
+            fontFamily: 'Cairo', fontSize: 13.sp, color: theme.disabledColor),
+        filled: true,
+        fillColor: theme.scaffoldBackgroundColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.5)),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              widget.onSubmit({
-                "cardHolderName": _nameCtrl.text.trim(),
-                "cardNumber": _cardCtrl.text.trim(),
-                "cvv": _cvvCtrl.text.trim(),
-                "expiryDate": _expiryCtrl.text.trim(),
-                "rememberCardInfo": _remember,
-              });
-            }
-          },
-          child: const Text('دفع واشتراك',
-              style: TextStyle(fontFamily: 'Cairo', color: Colors.white)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.5)),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: const BorderSide(color: AppColors.navyBlue, width: 1.5),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      ),
+      validator: validator,
     );
   }
 }
