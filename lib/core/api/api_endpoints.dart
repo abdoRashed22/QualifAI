@@ -7,7 +7,7 @@ abstract class ApiEndpoints {
   static const String login = '/Auth/login';
   static const String forgotPassword = '/Auth/forgot-password';
 
-  // ✅ ADDED (Claude)
+  // logout
   static const String logout = '/Auth/logout';
 
   // ── Profile ─────────────────────────────────────

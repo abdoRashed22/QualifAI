@@ -89,10 +89,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isManager = PermissionManager(sl<HiveCache>()).isManager;
+
     return BlocProvider.value(
       value: _cubit,
       child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
+          elevation: 1,
+          scrolledUnderElevation: 1,
+          shadowColor: Colors.black12,
+          titleSpacing: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -103,30 +111,53 @@ class _ChatScreenState extends State<ChatScreen> {
               }
             },
           ),
-          title: Text(PermissionManager(sl<HiveCache>()).isManager
-              ? 'موظف الجودة'
-              : 'المحادثة'),
-          actions: [
-            Padding(
-              padding: EdgeInsets.only(left: 16.w),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8.w,
-                    height: 8.w,
-                    decoration: const BoxDecoration(
-                        color: AppColors.success, shape: BoxShape.circle),
-                  ),
-                  SizedBox(width: 4.w),
-                  Text('متصل',
-                      style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 12.sp,
-                          color: AppColors.success)),
-                ],
+          title: Row(
+            children: [
+              Hero(
+                tag: isManager
+                    ? 'avatar_employee'
+                    : 'avatar_${widget.collegeId}',
+                child: CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: AppColors.navyBlue.withOpacity(0.1),
+                  child: Icon(
+                      isManager ? Icons.support_agent : Icons.account_balance,
+                      color: AppColors.navyBlue,
+                      size: 20.sp),
+                ),
               ),
-            ),
-          ],
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isManager ? 'موظف الجودة' : 'ممثل الجودة (الكلية)',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Container(
+                            width: 6.r,
+                            height: 6.r,
+                            decoration: const BoxDecoration(
+                                color: AppColors.success,
+                                shape: BoxShape.circle)),
+                        SizedBox(width: 4.w),
+                        Text('متصل الآن',
+                            style: TextStyle(
+                                fontFamily: 'Cairo',
+                                fontSize: 11.sp,
+                                color: AppColors.success,
+                                height: 1)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         body: BlocConsumer<ChatCubit, ChatState>(
           listener: (ctx, state) {
@@ -156,19 +187,30 @@ class _ChatScreenState extends State<ChatScreen> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('💬', style: TextStyle(fontSize: 48.sp)),
-                                  SizedBox(height: 12.h),
-                                  const Text(
-                                    'ابدأ المحادثة',
-                                    style: TextStyle(fontFamily: 'Cairo'),
+                                  Container(
+                                    padding: EdgeInsets.all(24.w),
+                                    decoration: BoxDecoration(
+                                        color: theme.primaryColor
+                                            .withOpacity(0.05),
+                                        shape: BoxShape.circle),
+                                    child: Icon(Icons.waving_hand_outlined,
+                                        size: 48.sp,
+                                        color: theme.primaryColor
+                                            .withOpacity(0.5)),
                                   ),
+                                  SizedBox(height: 12.h),
+                                  Text('قل مرحباً! 👋',
+                                      style: TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontSize: 16.sp,
+                                          fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             )
                           : ListView.builder(
                               controller: _scrollCtrl,
                               padding:
-                                  EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 8.h),
+                                  EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 20.h),
                               itemCount: messages.length,
                               itemBuilder: (_, i) {
                                 final msg =
@@ -317,6 +359,88 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
+  Widget _buildComposer(BuildContext ctx) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+          16.w, 10.h, 16.w, MediaQuery.of(context).padding.bottom + 10.h),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              offset: const Offset(0, -2),
+              blurRadius: 10),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Attachments
+          IconButton(
+            icon: Icon(Icons.add_circle_outline,
+                color: theme.disabledColor, size: 26.sp),
+            onPressed: () {}, // Action for attachments
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          SizedBox(width: 12.w),
+
+          // Text Field
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(24.r),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+              ),
+              child: TextField(
+                controller: _msgCtrl,
+                maxLines: 5,
+                minLines: 1,
+                textInputAction: TextInputAction.newline,
+                style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp),
+                onChanged: (val) =>
+                    setState(() {}), // Refresh to toggle send button
+                decoration: InputDecoration(
+                  hintText: 'اكتب رسالة...',
+                  hintStyle: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13.sp,
+                      color: theme.disabledColor),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+
+          // Send Button
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _msgCtrl.text.trim().isNotEmpty
+                ? GestureDetector(
+                    onTap: () => _sendMessage(ctx),
+                    child: CircleAvatar(
+                      radius: 22.r,
+                      backgroundColor: AppColors.navyBlue,
+                      child: Icon(Icons.send, color: Colors.white, size: 20.sp),
+                    ),
+                  )
+                : CircleAvatar(
+                    radius: 22.r,
+                    backgroundColor: theme.scaffoldBackgroundColor,
+                    child: Icon(Icons.mic_none,
+                        color: theme.disabledColor, size: 24.sp),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MessageBubble extends StatelessWidget {
@@ -337,93 +461,84 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.only(bottom: 16.h),
       child: Column(
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (!isMe) ...[
-            Text(senderName,
-                style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 11.sp,
-                    color: Theme.of(context).disabledColor)),
-            SizedBox(height: 4.h),
-          ],
           Row(
             mainAxisAlignment:
                 isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (!isMe) ...[
-                CircleAvatar(
-                  radius: 16.r,
-                  backgroundColor: AppColors.blue.withOpacity(0.15),
-                  child: Icon(Icons.person_outline,
-                      size: 16.sp, color: AppColors.blue),
-                ),
-                SizedBox(width: 8.w),
-              ],
               Flexible(
                 child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 6.h),
                   decoration: BoxDecoration(
                     color: isMe
                         ? AppColors.navyBlue
-                        : (Theme.of(context).brightness == Brightness.dark
+                        : (theme.brightness == Brightness.dark
                             ? Colors.grey[800]
-                            : Colors.grey[200]),
+                            : const Color(0xFFF2F4F8)),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.r),
                       topRight: Radius.circular(16.r),
                       bottomRight:
-                          isMe ? Radius.circular(16.r) : Radius.circular(0),
+                          isMe ? Radius.circular(2.r) : Radius.circular(16.r),
                       bottomLeft:
-                          isMe ? Radius.circular(0) : Radius.circular(16.r),
+                          isMe ? Radius.circular(16.r) : Radius.circular(2.r),
                     ),
-                    border: isMe
-                        ? null
-                        : Border.all(color: Colors.transparent, width: 0),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          offset: const Offset(0, 1),
+                          blurRadius: 2),
+                    ],
                   ),
-                  child: Text(
-                    content,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 14.sp,
-                      color: isMe
-                          ? Colors.white
-                          : (Theme.of(context).brightness == Brightness.dark
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      Text(
+                        content,
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 14.sp,
+                          color: isMe
                               ? Colors.white
-                              : Colors.black87),
-                    ),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
+                              : (theme.brightness == Brightness.dark
+                                  ? Colors.white
+                                  : AppColors.textDark),
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTime(time),
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 10.sp,
+                              color:
+                                  isMe ? Colors.white70 : theme.disabledColor,
+                            ),
+                          ),
+                          if (isMe) ...[
+                            SizedBox(width: 4.w),
+                            Icon(Icons.done_all,
+                                size: 14.sp, color: Colors.white70),
+                          ]
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-              if (isMe) ...[
-                SizedBox(width: 8.w),
-                CircleAvatar(
-                  radius: 16.r,
-                  backgroundColor: AppColors.navyBlue.withOpacity(0.15),
-                  child: Icon(Icons.person,
-                      size: 16.sp, color: AppColors.navyBlue),
-                ),
-              ],
             ],
-          ),
-          SizedBox(height: 4.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40.w),
-            child: Text(
-              _formatTime(time),
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 10.sp,
-                  color: Theme.of(context).disabledColor),
-            ),
           ),
         ],
       ),
