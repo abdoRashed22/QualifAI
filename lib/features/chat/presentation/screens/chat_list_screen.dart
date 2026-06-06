@@ -12,6 +12,8 @@ import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart
 import '../../../../core/di/injection.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../core/cache/hive_cache.dart';
+import '../../../../core/permissions/permission_manager.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -72,6 +74,74 @@ class _ChatListView extends StatelessWidget {
           }
 
           if (state is CollegesLoaded) {
+            final pm = PermissionManager(sl<HiveCache>());
+
+            // ✅ تخصيص الواجهة لمدير الجودة فقط: يرى موظف الجودة فقط كجهة اتصال
+            if (pm.isManager) {
+              int collegeId = 0;
+              final myData = sl<HiveCache>().getUserData();
+              final idFromProfile = myData?['collegeId'] ?? myData?['id'] ?? 0;
+
+              if (state.colleges.isNotEmpty) {
+                final myEmail =
+                    myData?['email']?.toString().toLowerCase() ?? '';
+                // البحث عن الكلية الخاصة بهذا المدير تحديداً
+                final matched = state.colleges.firstWhere(
+                  (c) =>
+                      (c['managerEmail']?.toString().toLowerCase() == myEmail),
+                  orElse: () => null,
+                );
+
+                if (matched != null) {
+                  collegeId =
+                      matched['collegeId'] ?? matched['id'] ?? idFromProfile;
+                } else {
+                  collegeId = idFromProfile; // Fallback
+                }
+              } else {
+                collegeId = idFromProfile;
+              }
+
+              print('Selected CollegeId => $collegeId');
+
+              return ListView(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                children: [
+                  ListTile(
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    onTap: () {
+                      if (collegeId == 0) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                              content: Text('خطأ: معرّف الكلية غير صحيح')),
+                        );
+                        return;
+                      }
+                      context.push('/chat/$collegeId');
+                    },
+                    leading: CircleAvatar(
+                      radius: 24.r,
+                      backgroundColor: AppColors.success.withOpacity(0.15),
+                      child: Icon(Icons.support_agent,
+                          color: AppColors.success, size: 24.sp),
+                    ),
+                    title: Text('موظف الجودة',
+                        style: Theme.of(context).textTheme.titleSmall,
+                        textAlign: TextAlign.right),
+                    subtitle: Text('اضغط هنا للتواصل مع موظف الجودة',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 12.sp,
+                            color: Theme.of(context).disabledColor),
+                        textAlign: TextAlign.right),
+                    trailing: Icon(Icons.arrow_back_ios, size: 14.sp),
+                  )
+                ],
+              );
+            }
+
+            // ✅ واجهة موظف الجودة الطبيعية: يرى جميع الكليات
             if (state.colleges.isEmpty) {
               return Center(
                 child: Column(

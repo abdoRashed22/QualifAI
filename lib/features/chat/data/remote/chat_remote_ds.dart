@@ -38,17 +38,25 @@ class ChatRemoteDs {
   Future<void> sendMessage(String content, int collegeId,
       {int? receiverId}) async {
     try {
-      // ✅ FIX: 415 — use proper JSON content type with charset
+      // 🚀 الحل الجذري والنهائي:
+      // الباك إند لا يقرأ الحقول من الـ FormData بشكل صحيح (يقوم بحفظها كـ 0).
+      // لذلك سنقوم بإرسالها في الـ FormData (مُحولة لنصوص) + إرسالها كـ Query Parameters معاً كحل احتياطي!
+      final queryParams = {
+        'content': content,
+        'collegeId': collegeId,
+        if (receiverId != null) 'receiverId': receiverId,
+      };
 
-   // Temporary test in your chat_remote_ds.dart sendMessage method
-await _dio.post(
-  ApiEndpoints.sendMessage,
-  data: FormData.fromMap({
-    'content': content,
-    'collegeId': collegeId,
-    if (receiverId != null) 'receiverId': receiverId,
-  }),
-);
+      await _dio.post(
+        ApiEndpoints.sendMessage,
+        data: FormData.fromMap({
+          'Content': content,
+          'CollegeId': collegeId.toString(), // تحويل إجباري لنص
+          if (receiverId != null) 'ReceiverId': receiverId.toString(),
+        }),
+        queryParameters:
+            queryParams, // إجبار الباك إند على قراءتها من الرابط في حال فشل قراءة الـ Body
+      );
     } on DioException catch (e) {
       print("❌ Chat Send Error: ${e.response?.statusCode}");
 

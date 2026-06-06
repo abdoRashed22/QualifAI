@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/cache/hive_cache.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/permissions/permission_manager.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -36,6 +37,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+
+    print('Chat Screen CollegeId => ${widget.collegeId}');
 
     _cubit = sl<ChatCubit>()..openChat(widget.collegeId);
   }
@@ -72,7 +75,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     _msgCtrl.clear();
 
-    ctx.read<ChatCubit>().sendMessage(text, widget.collegeId);
+    // ✅ إضافة logic مدير الجودة لإرسال الرسالة إلى موظف الجودة مباشرة
+    final pm = PermissionManager(sl<HiveCache>());
+    int? receiverId;
+    if (pm.isManager) {
+      receiverId = 38; // المعرّف الخاص بموظف الجودة
+    }
+
+    ctx
+        .read<ChatCubit>()
+        .sendMessage(text, widget.collegeId, receiverId: receiverId);
   }
 
   @override
@@ -91,7 +103,9 @@ class _ChatScreenState extends State<ChatScreen> {
               }
             },
           ),
-          title: const Text('المحادثة'),
+          title: Text(PermissionManager(sl<HiveCache>()).isManager
+              ? 'موظف الجودة'
+              : 'المحادثة'),
           actions: [
             Padding(
               padding: EdgeInsets.only(left: 16.w),
@@ -160,11 +174,26 @@ class _ChatScreenState extends State<ChatScreen> {
                                 final msg =
                                     messages[i] as Map<String, dynamic>? ?? {};
 
-                                final senderEmail = msg['senderEmail'] ??
-                                    msg['sender']?['email'] ??
+                                final senderType = msg['senderType']
+                                        ?.toString()
+                                        .toLowerCase() ??
                                     '';
+                                final pm = PermissionManager(sl<HiveCache>());
+                                bool isMe = false;
 
-                                final isMe = senderEmail == myEmail;
+                                if (pm.isManager) {
+                                  isMe = (senderType == 'manager') ||
+                                      msg['__temp'] == true;
+                                } else {
+                                  // إبقاء المنطق القديم لموظف الجودة كخيار احتياطي لضمان عدم كسره
+                                  final senderEmail = msg['senderEmail'] ??
+                                      msg['sender']?['email'] ??
+                                      '';
+                                  isMe = (senderType == 'employee') ||
+                                      senderEmail == myEmail ||
+                                      senderEmail == '__me__' ||
+                                      msg['__temp'] == true;
+                                }
 
                                 return _MessageBubble(
                                   content: msg['content'] ?? '',
@@ -343,19 +372,20 @@ class _MessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isMe
                         ? AppColors.navyBlue
-                        : Theme.of(context).cardTheme.color,
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey[800]
+                            : Colors.grey[200]),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16.r),
                       topRight: Radius.circular(16.r),
-                      bottomLeft:
-                          isMe ? Radius.circular(16.r) : Radius.circular(4.r),
                       bottomRight:
-                          isMe ? Radius.circular(4.r) : Radius.circular(16.r),
+                          isMe ? Radius.circular(16.r) : Radius.circular(0),
+                      bottomLeft:
+                          isMe ? Radius.circular(0) : Radius.circular(16.r),
                     ),
                     border: isMe
                         ? null
-                        : Border.all(
-                            color: Theme.of(context).dividerColor, width: 0.5),
+                        : Border.all(color: Colors.transparent, width: 0),
                   ),
                   child: Text(
                     content,
@@ -364,7 +394,9 @@ class _MessageBubble extends StatelessWidget {
                       fontSize: 14.sp,
                       color: isMe
                           ? Colors.white
-                          : Theme.of(context).textTheme.bodyMedium?.color,
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87),
                     ),
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,

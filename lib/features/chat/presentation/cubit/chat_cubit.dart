@@ -72,6 +72,8 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> _fetchMessages(int collegeId) async {
     if (isClosed || _isDisposed) return;
 
+    print('Loading Messages For => $collegeId');
+
     try {
       final r = await _repo.getMessages(collegeId);
 
@@ -113,6 +115,7 @@ class ChatCubit extends Cubit<ChatState> {
       'content': content,
       'sentAt': DateTime.now().toIso8601String(),
       'senderEmail': '__me__',
+      'senderType': 'manager',
       'senderName': 'أنت',
       '__temp': true,
     };
