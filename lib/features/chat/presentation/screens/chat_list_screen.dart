@@ -203,30 +203,8 @@ class _ChatListViewState extends State<_ChatListView> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('الآن',
-                                    style: TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 11.sp,
-                                        color: AppColors.success)),
-                                SizedBox(height: 4.h),
-                                Container(
-                                  padding: EdgeInsets.all(4.w),
-                                  decoration: const BoxDecoration(
-                                      color: AppColors.success,
-                                      shape: BoxShape.circle),
-                                  child: Text('1',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10.sp,
-                                          fontWeight: FontWeight.bold,
-                                          height: 1)),
-                                ),
-                              ],
-                            ),
+                            trailing: Icon(Icons.arrow_back_ios_new,
+                                size: 14.sp, color: theme.disabledColor),
                           )
                         ],
                       );
