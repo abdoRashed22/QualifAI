@@ -14,6 +14,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/di/injection.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_badge.dart';
 
 import '../../../../shared/widgets/app_card.dart';
 
@@ -63,15 +64,24 @@ class _DeadlinesView extends StatelessWidget {
                 child: AppCard(
                   child: Row(
                     children: [
-                      Container(width: 50.w, height: 40.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+                      Container(
+                          width: 50.w,
+                          height: 40.h,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.r))),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Container(width: double.infinity, height: 14.h, color: Colors.white),
+                            Container(
+                                width: double.infinity,
+                                height: 14.h,
+                                color: Colors.white),
                             SizedBox(height: 8.h),
-                            Container(width: 80.w, height: 10.h, color: Colors.white),
+                            Container(
+                                width: 80.w, height: 10.h, color: Colors.white),
                           ],
                         ),
                       ),
@@ -237,18 +247,22 @@ class _DeadlineCard extends StatelessWidget {
             children: [
               AppBadge(label: statusLabel, color: statusColor, small: true),
               SizedBox(height: 6.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.navyBlue,
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  'تحديد الموعد',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 10.sp,
-                    color: Colors.white,
+              GestureDetector(
+                onTap: () => _showDeadlineDialog(context, data),
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.navyBlue,
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Text(
+                    'تحديد الموعد',
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 10.sp,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -282,6 +296,112 @@ class _DeadlineCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showDeadlineDialog(BuildContext context, Map<String, dynamic> data) {
+    final cubit = context.read<DeadlinesCubit>();
+    final docId = data['requiredDocumentId'] ?? data['id'] ?? 0;
+
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
+    DateTime selectedDate = firstDate.add(const Duration(days: 7));
+
+    bool oneWeek = true, oneDay = true, onDue = true;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: const Text('تحديد الموعد النهائي', textAlign: TextAlign.right),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: ctx,
+                    initialDate: selectedDate.isBefore(firstDate)
+                        ? firstDate
+                        : selectedDate,
+                    firstDate: firstDate,
+                    lastDate: firstDate.add(const Duration(days: 365)),
+                  );
+
+                  if (picked != null) setState(() => selectedDate = picked);
+                },
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.borderLight),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, size: 18),
+                      Text(
+                        '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                        style: const TextStyle(fontFamily: 'Cairo'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              const Text('التذكيرات',
+                  style: TextStyle(
+                      fontFamily: 'Cairo', fontWeight: FontWeight.w600)),
+              CheckboxListTile(
+                value: oneWeek,
+                onChanged: (v) => setState(() => oneWeek = v!),
+                title: const Text('قبل أسبوع',
+                    style: TextStyle(fontFamily: 'Cairo', fontSize: 13)),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: oneDay,
+                onChanged: (v) => setState(() => oneDay = v!),
+                title: const Text('قبل يوم',
+                    style: TextStyle(fontFamily: 'Cairo', fontSize: 13)),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                value: onDue,
+                onChanged: (v) => setState(() => onDue = v!),
+                title: const Text('يوم الاستحقاق',
+                    style: TextStyle(fontFamily: 'Cairo', fontSize: 13)),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('إلغاء')),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                cubit.setDeadline(
+                  docId,
+                  '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                  oneWeek,
+                  oneDay,
+                  onDue,
+                );
+              },
+              child: const Text('حفظ'),
+            ),
+          ],
+        ),
       ),
     );
   }

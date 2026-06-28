@@ -178,19 +178,42 @@ class _AdminDashboardView extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.all(16.w),
                 children: [
-                  Container(height: 180.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.r))),
+                  Container(
+                      height: 180.h,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20.r))),
                   SizedBox(height: 16.h),
                   Row(
                     children: [
-                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 100.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                       SizedBox(width: 8.w),
-                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 100.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                       SizedBox(width: 8.w),
-                      Expanded(child: Container(height: 100.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 100.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  Container(height: 250.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                  Container(
+                      height: 250.h,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r))),
                 ],
               ),
             );
@@ -306,29 +329,38 @@ class _AdminDashboardView extends StatelessWidget {
                   SizedBox(height: 16.h),
 
                   // ── SECTION 2: Stats Cards
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _StatCard(
-                              title: 'طلبات تقييم الاعتماد',
-                              value: '${state.pendingReviewsCount}',
-                              color: AppColors.warning)),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                          child: _StatCard(
-                              title: 'اشعارات جديدة',
-                              value: '${state.unreadNotifications}',
-                              color: AppColors.info)),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                          child: _StatCard(
-                              title: 'الكليات المسجلة',
-                              value: '${state.collegesCount}',
-                              color: AppColors.success)),
-                    ],
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                            child: _StatCard(
+                                title: 'طلبات تقييم الاعتماد',
+                                value: '${state.pendingReviewsCount}',
+                                color: AppColors.warning)),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                            child: _StatCard(
+                                title: 'اشعارات جديدة',
+                                value: '${state.unreadNotifications}',
+                                color: AppColors.info)),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                            child: _StatCard(
+                                title: 'الكليات المسجلة',
+                                value: '${state.collegesCount}',
+                                color: AppColors.success)),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 16.h),
 
+                  // ── السكشن الجديد: Static Bar Chart
+                  // _buildStaticBarChart(context),
+                  //SizedBox(height: 16.h),
+// الـ Chart الخطي الجديد
+                  _buildStaticLineChart(context),
+                  SizedBox(height: 16.h),
                   // ── SECTION 3: Pie Chart
                   AppCard(
                     child: Column(
@@ -564,32 +596,273 @@ class _StatCard extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _StatCard(
-      {required this.title, required this.value, required this.color});
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 8.w),
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 10.w),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  fontFamily: 'Cairo')),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontFamily: 'Cairo',
+            ),
+          ),
           SizedBox(height: 8.h),
-          Text(title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontFamily: 'Cairo'),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+              fontFamily: 'Cairo',
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
+}
+
+Widget _buildStaticBarChart(BuildContext context) {
+  return AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          'معدل تقديم طلبات الاعتماد (آخر 6 أشهر)',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        SizedBox(height: 24.h),
+        SizedBox(
+          height: 180.h,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: 20,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (_) => AppColors.navyBlue,
+                  tooltipBorder:
+                      const BorderSide(color: AppColors.cyan, width: 1),
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    return BarTooltipItem(
+                      '${rod.toY.toInt()} طلب',
+                      TextStyle(
+                        fontFamily: 'Cairo',
+                        color: Colors.white,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 30,
+                    getTitlesWidget: (value, meta) {
+                      const months = [
+                        'يناير',
+                        'فبراير',
+                        'مارس',
+                        'أبريل',
+                        'مايو',
+                        'يونيو'
+                      ];
+                      if (value.toInt() >= 0 && value.toInt() < months.length) {
+                        return Padding(
+                          padding: EdgeInsets.only(top: 8.h),
+                          child: Text(
+                            months[value.toInt()],
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 10.sp,
+                              color: Theme.of(context).hintColor,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              gridData: const FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              barGroups: [
+                _makeBarGroup(0, 8, AppColors.blue),
+                _makeBarGroup(1, 14, AppColors.cyan),
+                _makeBarGroup(2, 11, AppColors.success),
+                _makeBarGroup(3, 18, AppColors.warning),
+                _makeBarGroup(4, 9, AppColors.info),
+                _makeBarGroup(5, 15, AppColors.blue),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+BarChartGroupData _makeBarGroup(int x, double y, Color color) {
+  return BarChartGroupData(
+    x: x,
+    barRods: [
+      BarChartRodData(
+        toY: y,
+        color: color,
+        width: 14.w,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(6.r),
+          topRight: Radius.circular(6.r),
+        ),
+        backDrawRodData: BackgroundBarChartRodData(
+          show: true,
+          toY: 20,
+          color: Colors.grey.withOpacity(0.1),
+        ),
+      ),
+    ],
+  );
+}
+
+//------------------------------------------------------------
+Widget _buildStaticLineChart(BuildContext context) {
+  return AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          'منحنى نشاط النظام وتقديم الطلبات',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        SizedBox(height: 24.h),
+        SizedBox(
+          height: 180.h,
+          child: LineChart(
+            LineChartData(
+              lineTouchData: LineTouchData(
+                handleBuiltInTouches: true,
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipColor: (_) => AppColors.navyBlue,
+                  tooltipBorder:
+                      const BorderSide(color: AppColors.cyan, width: 1),
+                  getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                    return touchedSpots.map((LineBarSpot touchedSpot) {
+                      return LineTooltipItem(
+                        '${touchedSpot.y.toInt()} طلب',
+                        TextStyle(
+                          fontFamily: 'Cairo',
+                          color: Colors.white,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
+              gridData: const FlGridData(
+                  show: false), // إبقاء الخلفية نظيفة بدون خطوط شبكية مكدسة
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 30,
+                    getTitlesWidget: (value, meta) {
+                      const months = [
+                        'يناير',
+                        'فبراير',
+                        'مارس',
+                        'أبريل',
+                        'مايو',
+                        'يونيو'
+                      ];
+                      if (value.toInt() >= 0 && value.toInt() < months.length) {
+                        return Padding(
+                          padding: EdgeInsets.only(top: 8.h),
+                          child: Text(
+                            months[value.toInt()],
+                            style: TextStyle(
+                              fontFamily: 'Cairo',
+                              fontSize: 10.sp,
+                              color: Theme.of(context).hintColor,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              minX: 0,
+              maxX: 5,
+              minY: 0,
+              maxY: 20,
+              lineBarsData: [
+                LineChartBarData(
+                  spots: const [
+                    FlSpot(0, 6),
+                    FlSpot(1, 14),
+                    FlSpot(2, 10),
+                    FlSpot(3, 18),
+                    FlSpot(4, 12),
+                    FlSpot(5, 16),
+                  ],
+                  isCurved: true, // يجعل المنحنى انسيابي وناعم
+                  curveSmoothness: 0.35,
+                  color: AppColors.cyan,
+                  barWidth: 4.w,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(
+                    show:
+                        true, // إظهار النقاط الدائرية عند كل شهر لسهولة القراءة
+                  ),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: AppColors.cyan.withOpacity(
+                        0.15), // تعبئة خفيفة تحت المنحنى تعطي مظهراً رائعاً
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

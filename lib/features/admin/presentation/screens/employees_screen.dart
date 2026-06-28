@@ -69,10 +69,10 @@ class _EmployeesViewState extends State<_EmployeesView> {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push(AppRoutes.notifications),
           ),
-          IconButton(
+          /* IconButton(
             icon: const Icon(Icons.person_add_outlined),
             onPressed: () => _showAddDialog(context),
-          ),
+          ),*/
         ],
       ),
       body: BlocConsumer<AdminCubit, AdminState>(

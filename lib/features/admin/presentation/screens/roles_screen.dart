@@ -81,10 +81,10 @@ class _RolesViewState extends State<_RolesView> {
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push(AppRoutes.notifications),
           ),
-          IconButton(
+          /*  IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () => _showAddRoleDialog(context),
-          ),
+          ),*/
         ],
       ),
       body: BlocConsumer<AdminCubit, AdminState>(
@@ -272,7 +272,8 @@ class _RolesViewState extends State<_RolesView> {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _showDetailsBottomSheet(context, roleId, empCount),
+                    onPressed: () =>
+                        _showDetailsBottomSheet(context, roleId, empCount),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.navyBlue,
                       shape: RoundedRectangleBorder(
@@ -316,7 +317,8 @@ class _RolesViewState extends State<_RolesView> {
     );
   }
 
-  void _showDetailsBottomSheet(BuildContext context, int roleId, dynamic empCount) {
+  void _showDetailsBottomSheet(
+      BuildContext context, int roleId, dynamic empCount) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -343,27 +345,30 @@ class _RolesViewState extends State<_RolesView> {
                 Text(data['roleDescription'] ?? 'لا يوجد وصف',
                     style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp)),
                 SizedBox(height: 16.h),
-
                 _InfoChip(
                     icon: Icons.people_alt_outlined,
                     label: 'عدد الموظفين: $empCount',
                     color: AppColors.blue),
-                    
                 SizedBox(height: 16.h),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.blue),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                     ),
                     onPressed: () {
                       Navigator.pop(ctx);
                       _showAssignExistingEmployeeDialog(context, roleId);
                     },
-                    icon: const Icon(Icons.manage_accounts, color: AppColors.blue),
+                    icon: const Icon(Icons.manage_accounts,
+                        color: AppColors.blue),
                     label: const Text('تعديل دور موظف حالي لهذا الدور',
-                        style: TextStyle(color: AppColors.blue, fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            color: AppColors.blue,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
                 SizedBox(height: 12.h),
@@ -371,8 +376,9 @@ class _RolesViewState extends State<_RolesView> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.navyBlue,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                      backgroundColor: AppColors.navyBlue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                     ),
                     onPressed: () => Navigator.pop(ctx),
                     child: const Text('إغلاق',
@@ -452,20 +458,29 @@ class _RolesViewState extends State<_RolesView> {
           builder: (ctx, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
-                content: const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
+                title: const Text('نقل موظف حالي لهذا الدور',
+                    textAlign: TextAlign.right),
+                content: const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator())),
               );
             }
-            
+
             final employees = snapshot.data ?? [];
             if (employees.isEmpty) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
-                content: const Text('لا يوجد موظفون حالياً في النظام', textAlign: TextAlign.right),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r)),
+                title: const Text('نقل موظف حالي لهذا الدور',
+                    textAlign: TextAlign.right),
+                content: const Text('لا يوجد موظفون حالياً في النظام',
+                    textAlign: TextAlign.right),
                 actions: [
-                  TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('إغلاق'))
+                  TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('إغلاق'))
                 ],
               );
             }
@@ -473,8 +488,10 @@ class _RolesViewState extends State<_RolesView> {
             return StatefulBuilder(
               builder: (context, setState) {
                 return AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-                  title: const Text('نقل موظف حالي لهذا الدور', textAlign: TextAlign.right),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.r)),
+                  title: const Text('نقل موظف حالي لهذا الدور',
+                      textAlign: TextAlign.right),
                   content: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -482,17 +499,25 @@ class _RolesViewState extends State<_RolesView> {
                         DropdownButtonFormField<Map<String, dynamic>>(
                           decoration: InputDecoration(
                             labelText: 'اختر الموظف',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r)),
                           ),
                           isExpanded: true,
                           items: employees.map((emp) {
-                            final String fName = (emp['fullName']?.toString().trim() ?? '');
-                            final String emailStr = (emp['email']?.toString() ?? '');
-                            final String display = fName.isNotEmpty ? fName : (emailStr.isNotEmpty ? emailStr : 'مستخدم ${emp['id']}');
-                            
+                            final String fName =
+                                (emp['fullName']?.toString().trim() ?? '');
+                            final String emailStr =
+                                (emp['email']?.toString() ?? '');
+                            final String display = fName.isNotEmpty
+                                ? fName
+                                : (emailStr.isNotEmpty
+                                    ? emailStr
+                                    : 'مستخدم ${emp['id']}');
+
                             return DropdownMenuItem(
                               value: emp,
-                              child: Text('$display (${emp['role']})', textAlign: TextAlign.right),
+                              child: Text('$display (${emp['role']})',
+                                  textAlign: TextAlign.right),
                             );
                           }).toList(),
                           onChanged: (val) {
@@ -503,9 +528,12 @@ class _RolesViewState extends State<_RolesView> {
                     ),
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('إلغاء')),
+                    TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        child: const Text('إلغاء')),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.navyBlue),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.navyBlue),
                       onPressed: selectedEmployee == null
                           ? null
                           : () {
@@ -520,7 +548,8 @@ class _RolesViewState extends State<_RolesView> {
                                 },
                               );
                             },
-                      child: const Text('تأكيد النقل', style: TextStyle(color: Colors.white)),
+                      child: const Text('تأكيد النقل',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 );
@@ -569,7 +598,6 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 }
-
 
 class _InfoChip extends StatelessWidget {
   final IconData icon;

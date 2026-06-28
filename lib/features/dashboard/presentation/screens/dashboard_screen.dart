@@ -53,7 +53,6 @@ class _DashboardViewState extends State<_DashboardView> {
     super.initState();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final userData = sl<HiveCache>().getUserData();
@@ -83,19 +82,42 @@ class _DashboardViewState extends State<_DashboardView> {
               child: ListView(
                 padding: EdgeInsets.all(16.w),
                 children: [
-                  Container(height: 110.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20.r))),
+                  Container(
+                      height: 110.h,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20.r))),
                   SizedBox(height: 16.h),
                   Row(
                     children: [
-                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 90.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                       SizedBox(width: 10.w),
-                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 90.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                       SizedBox(width: 10.w),
-                      Expanded(child: Container(height: 90.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)))),
+                      Expanded(
+                          child: Container(
+                              height: 90.h,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16.r)))),
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  Container(height: 220.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r))),
+                  Container(
+                      height: 220.h,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r))),
                 ],
               ),
             );
@@ -212,6 +234,158 @@ class _DashboardViewState extends State<_DashboardView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        Text(
+                          'الامتثال للمعايير',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        SizedBox(height: 24.h),
+                        SizedBox(
+                          height: 200
+                              .h, // زيادات طفيفة في الارتفاع لتناسب خطوط المقياس
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              maxY: 100,
+                              // 1. تفعيل التفاعل وإظهار Tooltip مخصص عند الضغط على العمود
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchTooltipData: BarTouchTooltipData(
+                                  getTooltipColor: (_) => AppColors.navyBlue,
+                                  tooltipBorder: const BorderSide(
+                                      color: AppColors.cyan, width: 1),
+                                  getTooltipItem:
+                                      (group, groupIndex, rod, rodIndex) {
+                                    final sectionName =
+                                        sections[group.x.toInt()].name;
+                                    return BarTooltipItem(
+                                      '$sectionName\n',
+                                      TextStyle(
+                                        fontFamily: 'Cairo',
+                                        color: Colors.white,
+                                        fontSize: 11.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              'نسبة الإنجاز: ${rod.toY.round()}%',
+                                          style: TextStyle(
+                                            color: rod.color,
+                                            fontSize: 12.sp,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                // عناوين المحور السفلي (أرقام المعايير)
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 28,
+                                    getTitlesWidget: (val, meta) {
+                                      final i = val.toInt();
+                                      if (i >= sections.length)
+                                        return const SizedBox();
+                                      return Padding(
+                                        padding: EdgeInsets.only(top: 6.h),
+                                        child: Text(
+                                          'م ${i + 1}', // اختصار لـ (معيار 1، معيار 2...)
+                                          style: TextStyle(
+                                            fontFamily: 'Cairo',
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Theme.of(context).hintColor,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                // 2. إظهار مقياس نسبي على اليسار لتوضيح مستويات الأداء المرجعية
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 35,
+                                    interval:
+                                        50, // إظهار القيم عند 0، 50، 100 فقط لمنع الازدحام
+                                    getTitlesWidget: (value, meta) {
+                                      return Text(
+                                        '${value.toInt()}%',
+                                        style: TextStyle(
+                                          fontFamily: 'Cairo',
+                                          fontSize: 10.sp,
+                                          color: Theme.of(context).hintColor,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                topTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false)),
+                              ),
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval:
+                                    50, // رسم خطوط أفقية مرجعية عند الـ 50 والـ 100
+                                getDrawingHorizontalLine: (_) => FlLine(
+                                  color: Theme.of(context)
+                                      .dividerColor
+                                      .withOpacity(0.4),
+                                  strokeWidth: 0.8,
+                                ),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              barGroups: sections.asMap().entries.map((e) {
+                                final pct = (e.value.completionPercent * 100);
+                                return BarChartGroupData(
+                                  x: e.key,
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY: pct,
+                                      color:
+                                          _pctColor(e.value.completionPercent),
+                                      width: 16
+                                          .w, // عرض متناسق ومستجيب للشاشات المختلفة
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(5.r),
+                                        topRight: Radius.circular(5.r),
+                                      ),
+                                      // 3. إضافة مجرى خلفي شفاف (Track) يوضح الحد الأقصى للعمود (%100)
+                                      backDrawRodData:
+                                          BackgroundBarChartRodData(
+                                        show: true,
+                                        toY: 100,
+                                        color: Theme.of(context)
+                                            .disabledColor
+                                            .withOpacity(0.08),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+                SizedBox(height: 16.h),
+
+                /*       // ── Chart Card ────────────────────────────
+                if (sections.isNotEmpty) ...[
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
                         Text('الامتثال للمعايير',
                             style: Theme.of(context).textTheme.titleMedium),
                         SizedBox(height: 16.h),
@@ -281,7 +455,7 @@ class _DashboardViewState extends State<_DashboardView> {
                   ),
                   SizedBox(height: 16.h),
                 ],
-
+*/
                 // ── Standards List ────────────────────────
                 AppCard(
                   padding: EdgeInsets.all(16.w),
@@ -346,29 +520,33 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 22.sp,
-              fontWeight: FontWeight.w700,
-              color: color,
+    return SizedBox(
+      height: 90.h,
+      child: AppCard(
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            SizedBox(height: 4.h),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
