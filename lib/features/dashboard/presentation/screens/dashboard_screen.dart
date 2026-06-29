@@ -176,6 +176,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                 color: Colors.white,
                               ),
                             ),
+
                             //  SizedBox(height: 4.h),
                             Text(
                               _roleLabel(role),
@@ -282,7 +283,7 @@ class _DashboardViewState extends State<_DashboardView> {
                               ),
                               titlesData: FlTitlesData(
                                 show: true,
-                                // عناوين المحور السفلي (أرقام المعايير)
+                                // عناوين المحور السفلي (أرقام المعايير فقط بدون حرف م)
                                 bottomTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
@@ -294,7 +295,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                       return Padding(
                                         padding: EdgeInsets.only(top: 6.h),
                                         child: Text(
-                                          'م ${i + 1}', // اختصار لـ (معيار 1، معيار 2...)
+                                          '${i + 1}', // تم إزالة حرف الـ "م" ليظهر الرقم فقط (1، 2، 3...)
                                           style: TextStyle(
                                             fontFamily: 'Cairo',
                                             fontSize: 11.sp,
@@ -306,7 +307,7 @@ class _DashboardViewState extends State<_DashboardView> {
                                     },
                                   ),
                                 ),
-                                // 2. إظهار مقياس نسبي على اليسار لتوضيح مستويات الأداء المرجعية
+                                // إظهار مقياس نسبي على اليسار لتوضيح مستويات الأداء المرجعية
                                 leftTitles: AxisTitles(
                                   sideTitles: SideTitles(
                                     showTitles: true,
@@ -330,18 +331,8 @@ class _DashboardViewState extends State<_DashboardView> {
                                 rightTitles: const AxisTitles(
                                     sideTitles: SideTitles(showTitles: false)),
                               ),
-                              gridData: FlGridData(
-                                show: true,
-                                drawVerticalLine: false,
-                                horizontalInterval:
-                                    50, // رسم خطوط أفقية مرجعية عند الـ 50 والـ 100
-                                getDrawingHorizontalLine: (_) => FlLine(
-                                  color: Theme.of(context)
-                                      .dividerColor
-                                      .withOpacity(0.4),
-                                  strokeWidth: 0.8,
-                                ),
-                              ),
+                              // تم تعيين show إلى false لإخفاء الخط الرمادي العرضي تماماً عند 50%
+                              gridData: const FlGridData(show: false),
                               borderData: FlBorderData(show: false),
                               barGroups: sections.asMap().entries.map((e) {
                                 final pct = (e.value.completionPercent * 100);
@@ -354,11 +345,9 @@ class _DashboardViewState extends State<_DashboardView> {
                                           _pctColor(e.value.completionPercent),
                                       width: 16
                                           .w, // عرض متناسق ومستجيب للشاشات المختلفة
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(5.r),
-                                        topRight: Radius.circular(5.r),
-                                      ),
-                                      // 3. إضافة مجرى خلفي شفاف (Track) يوضح الحد الأقصى للعمود (%100)
+                                      // تم تعديلها لتصبح دائرية من جميع الجهات (فوق وتحت)
+                                      borderRadius: BorderRadius.circular(5.r),
+                                      // إضافة مجرى خلفي شفاف (Track) يوضح الحد الأقصى للعمود (%100)
                                       backDrawRodData:
                                           BackgroundBarChartRodData(
                                         show: true,

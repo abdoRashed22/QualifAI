@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:qualif_ai/features/chatbot/presentation/cubit/chatbot_cubit.dart';
+import 'package:qualif_ai/features/chatbot/presentation/screens/chatbot_entry_screen.dart';
+import 'package:qualif_ai/features/chatbot/presentation/widgets/chatbot_floating_button.dart';
 import 'package:qualif_ai/features/profile/data/remote/nav_rail_item.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
@@ -15,43 +19,53 @@ class EmployeeScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SideRailNavigation(
-      appTitle: '         QualifAI',
-      homeScreen: const ReviewerDashboardScreen(),
-      mainItems: const [
-        NavRailItem(
-            icon: Icons.home,
-            label: 'الرئيسية',
-            screen: ReviewerDashboardScreen()),
-        /* NavRailItem(
-            icon: Icons.file_copy,
-            label: 'الاعتماد',
-            screen: AccreditationTypesScreen()),*/
-        NavRailItem(
-            icon: Icons.calendar_today,
-            label: 'المواعيد النهائية',
-            screen: DeadlinesScreen()),
-        NavRailItem(
-            icon: Icons.bar_chart_outlined,
-            label: 'التقارير',
-            screen: ReportsListScreen()),
-        NavRailItem(
-            icon: Icons.notifications_outlined,
-            label: 'الإشعارات',
-            screen: NotificationsScreen()),
-        NavRailItem(
-            icon: Icons.chat_bubble_outline,
-            label: 'التواصل',
-            screen: ChatListScreen()),
-        NavRailItem(
-            icon: Icons.person_outline,
-            label: 'حسابي',
-            screen: ProfileScreen()),
-      ],
-      bottomItems: const [
-        NavRailItem(icon: Icons.help_outline, label: 'دعم', screen: SizedBox()),
-        NavRailItem(icon: Icons.logout, label: 'الخروج', screen: SizedBox()),
-      ],
+    // توفير الـ Cubit للشجرة بأكملها
+    return BlocProvider(
+      create: (context) => ChatbotCubit(),
+      child: Stack(
+        children: [
+          // المحتوى الرئيسي للتطبيق
+          SideRailNavigation(
+            appTitle: '         QualifAI',
+            homeScreen: const ReviewerDashboardScreen(),
+            mainItems: const [
+              NavRailItem(
+                  icon: Icons.home,
+                  label: 'الرئيسية',
+                  screen: ReviewerDashboardScreen()),
+              NavRailItem(
+                  icon: Icons.calendar_today,
+                  label: 'المواعيد النهائية',
+                  screen: DeadlinesScreen()),
+              NavRailItem(
+                  icon: Icons.bar_chart_outlined,
+                  label: 'التقارير',
+                  screen: ReportsListScreen()),
+              NavRailItem(
+                  icon: Icons.notifications_outlined,
+                  label: 'الإشعارات',
+                  screen: NotificationsScreen()),
+              NavRailItem(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'التواصل',
+                  screen: ChatListScreen()),
+              NavRailItem(
+                  icon: Icons.person_outline,
+                  label: 'حسابي',
+                  screen: ProfileScreen()),
+            ],
+            bottomItems: const [
+              NavRailItem(
+                  icon: Icons.help_outline, label: 'دعم', screen: SizedBox()),
+              NavRailItem(
+                  icon: Icons.logout, label: 'الخروج', screen: SizedBox()),
+            ],
+          ),
+          // الزر العائم وواجهة الشات كطبقة علوية
+          const ChatbotFloatingButton(),
+          const ChatbotEntryScreen(),
+        ],
+      ),
     );
   }
 }

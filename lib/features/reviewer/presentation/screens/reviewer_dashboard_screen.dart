@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -177,6 +178,12 @@ class _ReviewerDashboardView extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // ── Chart Card ────────────────────────────
+                  if (state.assignedColleges.isNotEmpty) ...[
+                    SizedBox(height: 20.h),
+                    _buildCollegesLineChart(context, state.assignedColleges),
+                  ],
 
                   SizedBox(height: 20.h),
 
@@ -411,6 +418,116 @@ class _ReviewerDashboardView extends StatelessWidget {
 
   // ── Helpers ──────────────────────────────────────────────
 
+  Widget _buildCollegesLineChart(BuildContext context, List<dynamic> colleges) {
+    final theme = Theme.of(context);
+    final spots = colleges.asMap().entries.map((entry) {
+      final index = entry.key.toDouble();
+      final college = entry.value;
+      final readiness =
+          (college['readinessPercentage'] as num?)?.toDouble() ?? 0.0;
+      return FlSpot(index, readiness);
+    }).toList();
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            'مستوى جاهزية الكليات',
+            style: theme.textTheme.titleMedium,
+          ),
+          SizedBox(height: 24.h),
+          SizedBox(
+            height: 200.h,
+            child: LineChart(
+              LineChartData(
+                minY: 0,
+                maxY: 100,
+                lineTouchData: LineTouchData(
+                  handleBuiltInTouches: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => AppColors.navyBlue,
+                    tooltipBorder:
+                        const BorderSide(color: AppColors.cyan, width: 1),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final collegeName =
+                            _stringValue(colleges[spot.spotIndex]['name']);
+                        return LineTooltipItem(
+                          '$collegeName\n',
+                          TextStyle(
+                            fontFamily: 'Cairo',
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'الجاهزية: ${spot.y.toInt()}%',
+                              style: TextStyle(
+                                color: AppColors.cyan,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 35,
+                      interval: 50,
+                      getTitlesWidget: (value, meta) => Text(
+                        '${value.toInt()}%',
+                        style: TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 10.sp,
+                            color: theme.hintColor),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index >= colleges.length) return const SizedBox();
+                        final name = _stringValue(colleges[index]['name']);
+                        return Padding(
+                          padding: EdgeInsets.only(top: 8.h),
+                          child: Text(name,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontFamily: 'Cairo',
+                                  fontSize: 10.sp,
+                                  color: theme.hintColor)),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+                lineBarsData: [_mainLine(spots)],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _shimmerCard(double height) => Container(
         height: height,
         decoration: BoxDecoration(
@@ -418,6 +535,30 @@ class _ReviewerDashboardView extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
         ),
       );
+
+  LineChartBarData _mainLine(List<FlSpot> spots) {
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      curveSmoothness: 0.35,
+      color: AppColors.cyan,
+      barWidth: 4.w,
+      isStrokeCapRound: true,
+      dotData: FlDotData(
+        show: true,
+        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+          radius: 4,
+          color: AppColors.cyan,
+          strokeWidth: 1.5,
+          strokeColor: AppColors.bgDark,
+        ),
+      ),
+      belowBarData: BarAreaData(
+        show: true,
+        color: AppColors.cyan.withOpacity(0.15),
+      ),
+    );
+  }
 
   String _stringValue(dynamic value) {
     if (value == null) return '';
@@ -526,8 +667,6 @@ class _ReviewerDashboardView extends StatelessWidget {
   }
 }
 
-// ── _StatInfo ──────────────────────────────────────────────
-
 class _StatInfo extends StatelessWidget {
   final String label;
   final String value;
@@ -551,17 +690,23 @@ class _StatInfo extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        // 1. تغيير المحاذاة الأفقية للعمود إلى المنتصف
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            // 2. تغيير محاذاة عناصر الـ Row لتتوسط الكرت
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(fontSize: 11.sp, color: color),
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+              // إزالة الـ Expanded أو تركه بدون محاذاة يمين لضمان توسط النص بجانب الأيقونة
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 11.sp, color: color),
+                  textAlign: TextAlign.center, // 3. توسط النص داخلياً
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               SizedBox(width: 4.w),
               Icon(icon, size: 13.sp, color: color),
@@ -575,13 +720,13 @@ class _StatInfo extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: color,
             ),
+            textAlign: TextAlign.center, // 4. لضمان توسط الرقم تماماً
           ),
         ],
       ),
     );
   }
 }
-
 // ── _MetaChip ──────────────────────────────────────────────
 
 class _MetaChip extends StatelessWidget {

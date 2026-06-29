@@ -12,6 +12,7 @@ dependencies:
   dartz: ^0.10.1
   dio: ^5.7.0
   equatable: ^2.0.5
+  flutter_chat_ui: ^1.6.12
   file_picker: ^8.1.2
   fl_chart: ^0.69.0
   flutter:

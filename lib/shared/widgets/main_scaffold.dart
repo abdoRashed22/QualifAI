@@ -1,19 +1,16 @@
 // lib/shared/widgets/main_scaffold.dart
 
 import 'package:flutter/material.dart';
-
 import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/features/chatbot/presentation/widgets/chatbot_floating_button.dart';
 
 import '../../core/router/app_router.dart';
-
 import '../../core/di/injection.dart';
-
 import '../../core/cache/hive_cache.dart';
 import '../../core/permissions/permission_manager.dart';
 
 class MainScaffold extends StatelessWidget {
   final Widget child;
-
   final bool isAdmin;
 
   const MainScaffold({
@@ -41,6 +38,7 @@ class MainScaffold extends StatelessWidget {
     );
     if (currentIndex < 0) currentIndex = 0;
 
+    // ✅ تم إصلاح الـ Container والـ BoxDecoration هنا بشكل صحيح
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -85,45 +83,29 @@ class MainScaffold extends StatelessWidget {
 
     return BottomNavigationBar(
       currentIndex: currentIndex,
-
-      // ✅ FIX: type fixed مهم عشان 6 tabs ميطلعوش رمادي
-
       type: BottomNavigationBarType.fixed,
-
       onTap: (i) {
         switch (i) {
           case 0:
             context.go(AppRoutes.adminDashboard);
-
             break;
-
           case 1:
             context.go(AppRoutes.employees);
-
             break;
-
           case 2:
             context.go(AppRoutes.roles);
-
             break;
-
           case 3:
             context.go(AppRoutes.colleges);
-
             break;
-
           case 4:
             context.go(AppRoutes.adminPricing);
-
             break;
-
           case 5:
             context.go(AppRoutes.activityLog);
-
             break;
         }
       },
-
       items: const [
         BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
