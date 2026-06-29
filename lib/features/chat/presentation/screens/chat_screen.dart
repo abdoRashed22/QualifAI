@@ -284,22 +284,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 16.h),
                   child: Row(
                     children: [
-                      // Send button
-
-                      GestureDetector(
-                        onTap: () => _sendMessage(ctx),
-                        child: Container(
-                          width: 44.w,
-                          height: 44.w,
-                          decoration: const BoxDecoration(
-                              color: AppColors.navyBlue,
-                              shape: BoxShape.circle),
-                          child: const Icon(Icons.send,
-                              color: Colors.white, size: 18),
-                        ),
-                      ),
-
-                      SizedBox(width: 8.w),
+                      Icon(Icons.attach_file_outlined,
+                          size: 22.sp, color: Theme.of(context).disabledColor),
 
                       // Text input
 
@@ -346,9 +332,22 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
 
                       SizedBox(width: 8.w),
+                      // Send button
 
-                      Icon(Icons.attach_file_outlined,
-                          size: 22.sp, color: Theme.of(context).disabledColor),
+                      GestureDetector(
+                        onTap: () => _sendMessage(ctx),
+                        child: Container(
+                          width: 44.w,
+                          height: 44.w,
+                          decoration: const BoxDecoration(
+                              color: AppColors.navyBlue,
+                              shape: BoxShape.circle),
+                          child: const Icon(Icons.send,
+                              color: Colors.white, size: 18),
+                        ),
+                      ),
+
+                      SizedBox(width: 8.w),
                     ],
                   ),
                 ),
