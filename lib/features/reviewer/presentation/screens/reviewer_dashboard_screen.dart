@@ -279,7 +279,7 @@ class _ReviewerDashboardView extends StatelessWidget {
                                           ),
                                           if (university.isNotEmpty)
                                             Text(
-                                              'جامعة $university',
+                                              ' $university جامعة',
                                               style: TextStyle(
                                                   fontSize: 12.sp,
                                                   color: Colors.grey[600]),

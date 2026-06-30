@@ -210,32 +210,58 @@ class _ReviewerSectionReviewScreenState
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: AppCard(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium),
-                                SizedBox(height: 6.h),
-                                Text(
-                                    _stringValue(file['description'] ??
-                                        file['notes'] ??
-                                        ''),
-                                    style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12.sp)),
-                              ],
+                      // ─── تعديل: تغيير طريقة العرض حسب حالة الملف ───
+                      if (status == 'لم يُرفع' || status == 'مكتمل')
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            AppBadge(
+                                label: status, color: _statusColor(status)),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 12.w),
-                          AppBadge(label: status, color: _statusColor(status)),
-                        ],
-                      ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 8.w),
+                              child: Icon(Icons.arrow_back_ios_new,
+                                  size: 14.sp,
+                                  color: Theme.of(context).disabledColor),
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium),
+                                  SizedBox(height: 6.h),
+                                  Text(
+                                      _stringValue(file['description'] ??
+                                          file['notes'] ??
+                                          ''),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12.sp)),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            AppBadge(
+                                label: status, color: _statusColor(status)),
+                          ],
+                        ),
                       if (hasFile) ...[
                         SizedBox(height: 12.h),
                         Row(
