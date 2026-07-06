@@ -10,6 +10,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
+import '../widgets/accreditation_type_card.dart';
 
 class AccreditationTypesScreen extends StatefulWidget {
   const AccreditationTypesScreen({super.key});
@@ -108,7 +109,7 @@ class _AccreditationTypesScreenState extends State<AccreditationTypesScreen> {
                     separatorBuilder: (_, __) => SizedBox(height: 16.h),
                     itemBuilder: (context, index) {
                       final type = types[index];
-                      return _AccreditationTypeCard(
+                      return AccreditationTypeCard(
                         icon: type.icon,
                         title: type.title,
                         subtitle: type.subtitle,
@@ -213,81 +214,5 @@ class AccreditationTypeModel {
       AppColors.error,
     ];
     return palette[id.abs() % palette.length];
-  }
-}
-
-class _AccreditationTypeCard extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _AccreditationTypeCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
-        ),
-        child: Row(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: const Text('عرض المعايير',
-                      style: TextStyle(
-                          fontFamily: 'Cairo',
-                          color: Colors.white,
-                          fontSize: 12)),
-                ),
-              ],
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(title,
-                          style: Theme.of(context).textTheme.titleMedium),
-                      SizedBox(width: 10.w),
-                      Text(icon, style: TextStyle(fontSize: 32.sp)),
-                    ],
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    textAlign: TextAlign.right,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

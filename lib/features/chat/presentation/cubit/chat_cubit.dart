@@ -45,7 +45,7 @@ class ChatCubit extends Cubit<ChatState> {
     }
   }
 
-  Future<void> openChat(int collegeId) async {
+  Future<void> openChat({required int collegeId}) async {
     if (isClosed || _isDisposed) return;
 
     _activeCollegeId = collegeId;

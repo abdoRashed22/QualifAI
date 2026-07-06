@@ -1,10 +1,12 @@
+// lib/features/reviewer/presentation/screens/reviewer_dashboard_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:fl_chart/fl_chart.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
@@ -12,6 +14,10 @@ import '../../../../shared/widgets/app_badge.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../presentation/cubit/reviewer_cubit.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
+import '../widgets/stat_info.dart';
+import '../widgets/meta_chip.dart';
+import '../widgets/colleges_line_chart.dart';
+import '../widgets/reviewer_helpers.dart';
 
 class ReviewerDashboardScreen extends StatefulWidget {
   const ReviewerDashboardScreen({super.key});
@@ -61,353 +67,16 @@ class _ReviewerDashboardView extends StatelessWidget {
       ),
       body: BlocBuilder<ReviewerCubit, ReviewerState>(
         builder: (context, state) {
-          // ── Loading shimmer ──
           if (state is ReviewerLoading) {
-            return Shimmer.fromColors(
-              baseColor: Theme.of(context).cardColor,
-              highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
-              child: ListView(
-                padding: EdgeInsets.all(16.w),
-                children: [
-                  Container(
-                      height: 140.h,
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20.r))),
-                  SizedBox(height: 20.h),
-                  Container(height: 20.h, width: 150.w, color: Colors.white),
-                  SizedBox(height: 12.h),
-                  _shimmerCard(120.h),
-                  SizedBox(height: 12.h),
-                  _shimmerCard(120.h),
-                  SizedBox(height: 12.h),
-                  _shimmerCard(120.h),
-                ],
-              ),
-            );
+            return _buildLoadingState(context);
           }
 
-          // ── Error ──
           if (state is ReviewerError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  SizedBox(height: 12.h),
-                  Text(state.message, textAlign: TextAlign.center),
-                  SizedBox(height: 16.h),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () =>
-                        context.read<ReviewerCubit>().loadDashboard(),
-                    label: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            );
+            return _buildErrorState(context, state);
           }
 
-          // ── Loaded ──
           if (state is ReviewerDashboardLoaded) {
-            return RefreshIndicator(
-              color: AppColors.cyan,
-              backgroundColor: AppColors.navyBlue,
-              strokeWidth: 3.0,
-              onRefresh: () async {
-                HapticFeedback.lightImpact();
-                await context.read<ReviewerCubit>().loadDashboard();
-              },
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-                children: [
-                  // ── Welcome + stats card ──
-                  AppCard(
-                    borderRadius: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            'مرحباً بك في لوحة مراجعة الاعتماد',
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            'هنا تجد الكليات المخصصة لك والملاحظات الحديثة',
-                            style: TextStyle(
-                                fontSize: 13.sp, color: Colors.grey[600]),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        SizedBox(height: 14.h),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _StatInfo(
-                                label: 'الكليات المكلفة',
-                                value: '${state.totalAssigned}',
-                                color: Colors.blue,
-                                icon: Icons.school_outlined,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: _StatInfo(
-                                label: 'قيد المراجعة',
-                                value: '${state.pendingReviews}',
-                                color: Colors.orange,
-                                icon: Icons.hourglass_top_outlined,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: _StatInfo(
-                                label: 'المكتملة',
-                                value: '${state.completedReviews}',
-                                color: Colors.green,
-                                icon: Icons.check_circle_outline,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Chart Card ────────────────────────────
-                  if (state.assignedColleges.isNotEmpty) ...[
-                    SizedBox(height: 20.h),
-                    _buildCollegesLineChart(context, state.assignedColleges),
-                  ],
-
-                  SizedBox(height: 20.h),
-
-                  // ── Section title ──
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${state.assignedColleges.length} كلية',
-                        style:
-                            TextStyle(fontSize: 13.sp, color: Colors.grey[500]),
-                      ),
-                      Text(
-                        'الكليات المخصصة للمراجعة',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12.h),
-
-                  // ── College cards ──
-                  if (state.assignedColleges.isEmpty)
-                    AppCard(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 28.h),
-                        child: Column(
-                          children: [
-                            Icon(Icons.inbox_outlined,
-                                size: 48, color: Colors.grey[400]),
-                            SizedBox(height: 12.h),
-                            Text('لا توجد كليات مخصصة للمراجعة حالياً',
-                                style: TextStyle(color: Colors.grey[500])),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    ...state.assignedColleges.map((college) {
-                      final id =
-                          _intValue(college['id'] ?? college['collegeId']);
-                      final name = _stringValue(college['name'] ??
-                          college['collegeName'] ??
-                          college['college']);
-                      final university =
-                          _stringValue(college['university'] ?? '');
-                      final institutionType =
-                          _stringValue(college['institutionType'] ?? '');
-                      final accreditationType = _stringValue(
-                          college['accreditationType'] ??
-                              college['type'] ??
-                              '');
-                      final readiness = (college['readinessPercentage'] as num?)
-                              ?.toDouble() ??
-                          0.0;
-                      final status = _statusLabel(college);
-                      final badgeColor = _statusColor(status);
-                      final lastUploadDate =
-                          _formatDate(college['lastUploadDate']);
-
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 10.h),
-                        child: AppCard(
-                          borderRadius: 16,
-                          onTap: () => context.go(AppRoutes.reviewerCollege
-                              .replaceAll(':collegeId', '$id')),
-                          child: Padding(
-                            padding: EdgeInsets.all(12.w),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // ── Row 1: image + name/university + status ──
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    AppBadge(label: status, color: badgeColor),
-                                    SizedBox(width: 8.w),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            name,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                            textAlign: TextAlign.right,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          if (university.isNotEmpty)
-                                            Text(
-                                              ' $university جامعة',
-                                              style: TextStyle(
-                                                  fontSize: 12.sp,
-                                                  color: Colors.grey[600]),
-                                              textAlign: TextAlign.right,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(width: 10.w),
-                                    _buildCollegeImage(college['imagePath'] ??
-                                        college['image'] ??
-                                        college['logo']),
-                                  ],
-                                ),
-
-                                SizedBox(height: 10.h),
-                                const Divider(height: 1, thickness: 0.6),
-                                SizedBox(height: 10.h),
-
-                                // ── Row 2: meta chips ──
-                                Wrap(
-                                  spacing: 6.w,
-                                  runSpacing: 6.h,
-                                  alignment: WrapAlignment.end,
-                                  children: [
-                                    if (lastUploadDate.isNotEmpty)
-                                      _MetaChip(
-                                        icon: Icons.upload_file_outlined,
-                                        label: lastUploadDate,
-                                        color: Colors.teal,
-                                      ),
-                                    if (institutionType.isNotEmpty)
-                                      _MetaChip(
-                                        icon: Icons.apartment_outlined,
-                                        label: institutionType,
-                                        color: Colors.indigo,
-                                      ),
-                                    if (accreditationType.isNotEmpty)
-                                      _MetaChip(
-                                        icon: Icons.verified_outlined,
-                                        label: accreditationType,
-                                        color: Colors.purple,
-                                      ),
-                                  ],
-                                ),
-                                SizedBox(height: 10.h),
-
-                                // ── Row 3: readiness progress bar ──
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${readiness.toInt()}%',
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: _readinessColor(readiness),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(8.r),
-                                        child: LinearProgressIndicator(
-                                          value: readiness / 100,
-                                          minHeight: 7.h,
-                                          backgroundColor: Colors.grey.shade200,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  _readinessColor(readiness)),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      'نسبة الجاهزية',
-                                      style: TextStyle(
-                                          fontSize: 11.sp,
-                                          color: Colors.grey[600]),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-
-                  // ── Recent activity ──
-                  if (state.recentActivity.isNotEmpty) ...[
-                    SizedBox(height: 20.h),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text('آخر النشاطات',
-                          style: Theme.of(context).textTheme.titleMedium),
-                    ),
-                    SizedBox(height: 12.h),
-                    ...state.recentActivity.map((item) {
-                      final id = _intValue(
-                          item['id'] ?? item['collegeId'] ?? item['sectionId']);
-                      final title = _stringValue(
-                          item['name'] ?? item['collegeName'] ?? item['title']);
-                      final subtitle =
-                          _stringValue(item['status'] ?? item['reviewStatus']);
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 10.h),
-                        child: AppCard(
-                          child: ListTile(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12.w),
-                            title: Text(title),
-                            subtitle: Text(subtitle),
-                            trailing: const Icon(Icons.chevron_left),
-                            onTap: id > 0
-                                ? () => context.go(AppRoutes.reviewerCollege
-                                    .replaceAll(':collegeId', '$id'))
-                                : null,
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ],
-              ),
-            );
+            return _buildLoadedState(context, state);
           }
 
           return const SizedBox.shrink();
@@ -416,346 +85,344 @@ class _ReviewerDashboardView extends StatelessWidget {
     );
   }
 
-  // ── Helpers ──────────────────────────────────────────────
-
-  Widget _buildCollegesLineChart(BuildContext context, List<dynamic> colleges) {
-    final theme = Theme.of(context);
-    final spots = colleges.asMap().entries.map((entry) {
-      final index = entry.key.toDouble();
-      final college = entry.value;
-      final readiness =
-          (college['readinessPercentage'] as num?)?.toDouble() ?? 0.0;
-      return FlSpot(index, readiness);
-    }).toList();
-
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+  Widget _buildLoadingState(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Theme.of(context).cardColor,
+      highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
+      child: ListView(
+        padding: EdgeInsets.all(16.w),
         children: [
-          Text(
-            'مستوى جاهزية الكليات',
-            style: theme.textTheme.titleMedium,
+          Container(
+              height: 140.h,
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r))),
+          SizedBox(height: 20.h),
+          Container(height: 20.h, width: 150.w, color: Colors.white),
+          SizedBox(height: 12.h),
+          buildShimmerCard(120.h),
+          SizedBox(height: 12.h),
+          buildShimmerCard(120.h),
+          SizedBox(height: 12.h),
+          buildShimmerCard(120.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, ReviewerError state) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          SizedBox(height: 12.h),
+          Text(state.message, textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<ReviewerCubit>().loadDashboard(),
+            label: const Text('إعادة المحاولة'),
           ),
-          SizedBox(height: 24.h),
-          SizedBox(
-            height: 200.h,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
-                maxY: 100,
-                lineTouchData: LineTouchData(
-                  handleBuiltInTouches: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => AppColors.navyBlue,
-                    tooltipBorder:
-                        const BorderSide(color: AppColors.cyan, width: 1),
-                    getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((spot) {
-                        final collegeName =
-                            _stringValue(colleges[spot.spotIndex]['name']);
-                        return LineTooltipItem(
-                          '$collegeName\n',
-                          TextStyle(
-                            fontFamily: 'Cairo',
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: 'الجاهزية: ${spot.y.toInt()}%',
-                              style: TextStyle(
-                                color: AppColors.cyan,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList();
-                    },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadedState(
+      BuildContext context, ReviewerDashboardLoaded state) {
+    return RefreshIndicator(
+      color: AppColors.cyan,
+      backgroundColor: AppColors.navyBlue,
+      strokeWidth: 3.0,
+      onRefresh: () async {
+        HapticFeedback.lightImpact();
+        await context.read<ReviewerCubit>().loadDashboard();
+      },
+      child: ListView(
+        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+        children: [
+          // ── Welcome + stats card ──
+          AppCard(
+            borderRadius: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'مرحباً بك في لوحة مراجعة الاعتماد',
+                    textAlign: TextAlign.right,
                   ),
                 ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 35,
-                      interval: 50,
-                      getTitlesWidget: (value, meta) => Text(
-                        '${value.toInt()}%',
-                        style: TextStyle(
-                            fontFamily: 'Cairo',
-                            fontSize: 10.sp,
-                            color: theme.hintColor),
+                SizedBox(height: 4.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    'هنا تجد الكليات المخصصة لك والملاحظات الحديثة',
+                    style: TextStyle(
+                        fontSize: 13.sp, color: Colors.grey[600]),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                SizedBox(height: 14.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: StatInfo(
+                        label: 'الكليات المكلفة',
+                        value: '${state.totalAssigned}',
+                        color: Colors.blue,
+                        icon: Icons.school_outlined,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: StatInfo(
+                        label: 'قيد المراجعة',
+                        value: '${state.pendingReviews}',
+                        color: Colors.orange,
+                        icon: Icons.hourglass_top_outlined,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: StatInfo(
+                        label: 'المكتملة',
+                        value: '${state.completedReviews}',
+                        color: Colors.green,
+                        icon: Icons.check_circle_outline,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ── Chart Card ────────────────────────────
+          if (state.assignedColleges.isNotEmpty) ...[
+            SizedBox(height: 20.h),
+            buildCollegesLineChart(
+              context,
+              state.assignedColleges,
+              stringValue: stringValue,
+            ),
+          ],
+
+          SizedBox(height: 20.h),
+
+          // ── Section title ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${state.assignedColleges.length} كلية',
+                style:
+                    TextStyle(fontSize: 13.sp, color: Colors.grey[500]),
+              ),
+              Text(
+                'الكليات المخصصة للمراجعة',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+
+          // ── College cards ──
+          if (state.assignedColleges.isEmpty)
+            AppCard(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 28.h),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined,
+                        size: 48, color: Colors.grey[400]),
+                    SizedBox(height: 12.h),
+                    Text('لا توجد كليات مخصصة للمراجعة حالياً',
+                        style: TextStyle(color: Colors.grey[500])),
+                  ],
+                ),
+              ),
+            )
+          else
+            ...state.assignedColleges.map((college) {
+              return _buildCollegeCard(context, college, state);
+            }),
+
+          // ── Recent activity ──
+          if (state.recentActivity.isNotEmpty) ...[
+            SizedBox(height: 20.h),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text('آخر النشاطات',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            SizedBox(height: 12.h),
+            ...state.recentActivity.map((item) {
+              final id =
+                  intValue(item['id'] ?? item['collegeId'] ?? item['sectionId']);
+              final title = stringValue(
+                  item['name'] ?? item['collegeName'] ?? item['title']);
+              final subtitle =
+                  stringValue(item['status'] ?? item['reviewStatus']);
+              return Padding(
+                padding: EdgeInsets.only(bottom: 10.h),
+                child: AppCard(
+                  child: ListTile(
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12.w),
+                    title: Text(title),
+                    subtitle: Text(subtitle),
+                    trailing: const Icon(Icons.chevron_left),
+                    onTap: id > 0
+                        ? () => context.go(AppRoutes.reviewerCollege
+                            .replaceAll(':collegeId', '$id'))
+                        : null,
+                  ),
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCollegeCard(
+    BuildContext context,
+    dynamic college,
+    ReviewerDashboardLoaded state,
+  ) {
+    final id = intValue(college['id'] ?? college['collegeId']);
+    final name = stringValue(
+        college['name'] ?? college['collegeName'] ?? college['college']);
+    final university = stringValue(college['university'] ?? '');
+    final institutionType = stringValue(college['institutionType'] ?? '');
+    final accreditationType = stringValue(
+        college['accreditationType'] ?? college['type'] ?? '');
+    final readiness =
+        (college['readinessPercentage'] as num?)?.toDouble() ?? 0.0;
+    final status = statusLabel(college);
+    final badgeColor = statusColor(status);
+    final lastUploadDate = formatDate(college['lastUploadDate']);
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 10.h),
+      child: AppCard(
+        borderRadius: 16,
+        onTap: () =>
+            context.go(AppRoutes.reviewerCollege.replaceAll(':collegeId', '$id')),
+        child: Padding(
+          padding: EdgeInsets.all(12.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // ── Row 1: image + name/university + status ──
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  AppBadge(label: status, color: badgeColor),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          name,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (university.isNotEmpty)
+                          Text(
+                            ' $university جامعة',
+                            style: TextStyle(
+                                fontSize: 12.sp, color: Colors.grey[600]),
+                            textAlign: TextAlign.right,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  buildCollegeImage(
+                      college['imagePath'] ?? college['image'] ?? college['logo']),
+                ],
+              ),
+
+              SizedBox(height: 10.h),
+              const Divider(height: 1, thickness: 0.6),
+              SizedBox(height: 10.h),
+
+              // ── Row 2: meta chips ──
+              Wrap(
+                spacing: 6.w,
+                runSpacing: 6.h,
+                alignment: WrapAlignment.end,
+                children: [
+                  if (lastUploadDate.isNotEmpty)
+                    MetaChip(
+                      icon: Icons.upload_file_outlined,
+                      label: lastUploadDate,
+                      color: Colors.teal,
+                    ),
+                  if (institutionType.isNotEmpty)
+                    MetaChip(
+                      icon: Icons.apartment_outlined,
+                      label: institutionType,
+                      color: Colors.indigo,
+                    ),
+                  if (accreditationType.isNotEmpty)
+                    MetaChip(
+                      icon: Icons.verified_outlined,
+                      label: accreditationType,
+                      color: Colors.purple,
+                    ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+
+              // ── Row 3: readiness progress bar ──
+              Row(
+                children: [
+                  Text(
+                    '${readiness.toInt()}%',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: readinessColor(readiness),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: LinearProgressIndicator(
+                        value: readiness / 100,
+                        minHeight: 7.h,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            readinessColor(readiness)),
                       ),
                     ),
                   ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index >= colleges.length) return const SizedBox();
-                        final name = _stringValue(colleges[index]['name']);
-                        return Padding(
-                          padding: EdgeInsets.only(top: 8.h),
-                          child: Text(name,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  fontFamily: 'Cairo',
-                                  fontSize: 10.sp,
-                                  color: theme.hintColor)),
-                        );
-                      },
-                    ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'نسبة الجاهزية',
+                    style:
+                        TextStyle(fontSize: 11.sp, color: Colors.grey[600]),
                   ),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                ),
-                lineBarsData: [_mainLine(spots)],
+                ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _shimmerCard(double height) => Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-      );
-
-  LineChartBarData _mainLine(List<FlSpot> spots) {
-    return LineChartBarData(
-      spots: spots,
-      isCurved: true,
-      curveSmoothness: 0.35,
-      color: AppColors.cyan,
-      barWidth: 4.w,
-      isStrokeCapRound: true,
-      dotData: FlDotData(
-        show: true,
-        getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-          radius: 4,
-          color: AppColors.cyan,
-          strokeWidth: 1.5,
-          strokeColor: AppColors.bgDark,
-        ),
-      ),
-      belowBarData: BarAreaData(
-        show: true,
-        color: AppColors.cyan.withOpacity(0.15),
-      ),
-    );
-  }
-
-  String _stringValue(dynamic value) {
-    if (value == null) return '';
-    return value.toString();
-  }
-
-  int _intValue(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    return int.tryParse(value.toString()) ?? 0;
-  }
-
-  String _formatDate(dynamic value) {
-    if (value == null) return '';
-    try {
-      final date = DateTime.parse(value.toString()).toLocal();
-      return '${date.year.toString().padLeft(4, '0')}-'
-          '${date.month.toString().padLeft(2, '0')}-'
-          '${date.day.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return value.toString();
-    }
-  }
-
-  String _statusLabel(dynamic college) {
-    final raw = college is Map
-        ? college['status'] ?? college['reviewStatus'] ?? college['statusName']
-        : null;
-    final value = raw?.toString().toLowerCase() ?? '';
-    if (value.contains('approve') ||
-        value.contains('موافق') ||
-        value.contains('معتمد')) {
-      return 'معتمد';
-    }
-    if (value.contains('reject') ||
-        value.contains('رفض') ||
-        value.contains('مرفوض')) {
-      return 'مرفوض';
-    }
-    if (value.contains('revision') || value.contains('تعديل')) {
-      return 'يحتاج تعديل';
-    }
-    if (value.contains('تسجيل') || value.contains('register')) {
-      return 'قيد التسجيل';
-    }
-    return 'قيد المراجعة';
-  }
-
-  Color _statusColor(String status) {
-    if (status == 'معتمد') return Colors.green;
-    if (status == 'مرفوض') return Colors.red;
-    if (status == 'يحتاج تعديل') return Colors.orange;
-    if (status == 'قيد التسجيل') return Colors.blueGrey;
-    return Colors.blue;
-  }
-
-  Color _readinessColor(double value) {
-    if (value >= 70) return Colors.green;
-    if (value >= 40) return Colors.orange;
-    return Colors.redAccent;
-  }
-
-  Widget _buildCollegeImage(dynamic imagePath) {
-    final url = _resolveImagePath(imagePath);
-    return Container(
-      width: 52.w,
-      height: 52.w,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(14.r),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14.r),
-        child: url.isEmpty
-            ? Center(
-                child: Icon(
-                  Icons.account_balance,
-                  size: 26.sp,
-                  color: Colors.grey[600],
-                ),
-              )
-            : Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Center(
-                  child: Icon(
-                    Icons.account_balance,
-                    size: 26.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-
-  String _resolveImagePath(dynamic imagePath) {
-    if (imagePath == null) return '';
-    final path = imagePath.toString().trim();
-    if (path.isEmpty) return '';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/')) {
-      return 'https://qualefai.runasp.net$path';
-    }
-    return 'https://qualefai.runasp.net/$path';
-  }
-}
-
-class _StatInfo extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  const _StatInfo({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        // 1. تغيير المحاذاة الأفقية للعمود إلى المنتصف
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            // 2. تغيير محاذاة عناصر الـ Row لتتوسط الكرت
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // إزالة الـ Expanded أو تركه بدون محاذاة يمين لضمان توسط النص بجانب الأيقونة
-              Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(fontSize: 11.sp, color: color),
-                  textAlign: TextAlign.center, // 3. توسط النص داخلياً
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox(width: 4.w),
-              Icon(icon, size: 13.sp, color: color),
             ],
           ),
-          SizedBox(height: 6.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22.sp,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-            textAlign: TextAlign.center, // 4. لضمان توسط الرقم تماماً
-          ),
-        ],
-      ),
-    );
-  }
-}
-// ── _MetaChip ──────────────────────────────────────────────
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _MetaChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: color.withOpacity(0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label, style: TextStyle(fontSize: 11.sp, color: color)),
-          SizedBox(width: 4.w),
-          Icon(icon, size: 12.sp, color: color),
-        ],
+        ),
       ),
     );
   }

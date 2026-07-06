@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:qualif_ai/features/admin/presentation/screens/support_repository.dart';
+import 'package:qualif_ai/features/admin/domain/repositories/support_repository.dart';
 
 import 'support_state.dart';
 

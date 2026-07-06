@@ -1,4 +1,4 @@
-﻿// lib/features/chat/presentation/screens/chat_screen.dart
+// lib/features/chat/presentation/screens/chat_screen.dart
 
 import 'package:flutter/material.dart';
 
@@ -15,6 +15,7 @@ import '../../../../core/permissions/permission_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 
 import '../cubit/chat_cubit.dart';
+import '../widgets/message_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final int collegeId;
@@ -30,27 +31,19 @@ class _ChatScreenState extends State<ChatScreen> {
 
   final _scrollCtrl = ScrollController();
 
-  // ✅ FIX: store cubit reference so we can call it after dispose check
-
   late final ChatCubit _cubit;
 
   @override
   void initState() {
     super.initState();
-
-    print('Chat Screen CollegeId => ${widget.collegeId}');
-
-    _cubit = sl<ChatCubit>()..openChat(widget.collegeId);
+    _cubit = sl<ChatCubit>()..openChat(collegeId: widget.collegeId);
   }
 
   @override
   void dispose() {
     _cubit.closeChat();
-
     _msgCtrl.dispose();
-
     _scrollCtrl.dispose();
-
     super.dispose();
   }
 
@@ -68,18 +61,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage(BuildContext ctx) {
     final text = _msgCtrl.text.trim();
-
     if (text.isEmpty) return;
-
-    // ✅ FIX: clear immediately for better UX, then send
 
     _msgCtrl.clear();
 
-    // ✅ إضافة logic مدير الجودة لإرسال الرسالة إلى موظف الجودة مباشرة
     final pm = PermissionManager(sl<HiveCache>());
     int? receiverId;
     if (pm.isManager) {
-      receiverId = 38; // المعرّف الخاص بموظف الجودة
+      receiverId = 38;
     }
 
     ctx
@@ -161,24 +150,17 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         body: BlocConsumer<ChatCubit, ChatState>(
           listener: (ctx, state) {
-            // ✅ FIX: scroll to bottom on every MessagesLoaded (including after send)
-
             if (state is MessagesLoaded) _scrollToBottom();
           },
           builder: (ctx, state) {
             final messages =
                 state is MessagesLoaded ? state.messages : <dynamic>[];
-
             final cache = sl<HiveCache>();
-
             final myData = cache.getUserData();
-
             final myEmail = myData?['email'] ?? '';
 
             return Column(
               children: [
-                // Messages list
-
                 Expanded(
                   child: state is MessagesLoading
                       ? const Center(child: CircularProgressIndicator())
@@ -215,7 +197,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               itemBuilder: (_, i) {
                                 final msg =
                                     messages[i] as Map<String, dynamic>? ?? {};
-
                                 final senderType = msg['senderType']
                                         ?.toString()
                                         .toLowerCase() ??
@@ -227,7 +208,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                   isMe = (senderType == 'manager') ||
                                       msg['__temp'] == true;
                                 } else {
-                                  // إبقاء المنطق القديم لموظف الجودة كخيار احتياطي لضمان عدم كسره
                                   final senderEmail = msg['senderEmail'] ??
                                       msg['sender']?['email'] ??
                                       '';
@@ -237,7 +217,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       msg['__temp'] == true;
                                 }
 
-                                return _MessageBubble(
+                                return MessageBubble(
                                   content: msg['content'] ?? '',
                                   isMe: isMe,
                                   time: msg['sentAt'] ?? msg['createdAt'] ?? '',
@@ -248,9 +228,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               },
                             ),
                 ),
-
-                // ✅ FIX: show error snackbar if send fails
-
                 if (state is ChatError)
                   Container(
                     color: AppColors.error.withOpacity(0.1),
@@ -271,9 +248,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ],
                     ),
                   ),
-
-                // Input bar
-
                 Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).scaffoldBackgroundColor,
@@ -286,9 +260,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     children: [
                       Icon(Icons.attach_file_outlined,
                           size: 22.sp, color: Theme.of(context).disabledColor),
-
-                      // Text input
-
                       Expanded(
                         child: Container(
                           padding: EdgeInsets.symmetric(
@@ -302,18 +273,12 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           child: TextField(
                             controller: _msgCtrl,
-
                             textAlign: TextAlign.right,
-
                             textDirection: TextDirection.rtl,
-
                             maxLines: 4,
-
                             minLines: 1,
-
                             style:
                                 TextStyle(fontFamily: 'Cairo', fontSize: 14.sp),
-
                             decoration: InputDecoration.collapsed(
                               hintText: 'اكتب رسالة...',
                               hintStyle: TextStyle(
@@ -321,19 +286,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                   fontSize: 14.sp,
                                   color: Theme.of(context).disabledColor),
                             ),
-
-                            // ✅ FIX: send on done keyboard action
-
                             textInputAction: TextInputAction.send,
-
                             onSubmitted: (_) => _sendMessage(ctx),
                           ),
                         ),
                       ),
-
                       SizedBox(width: 8.w),
-                      // Send button
-
                       GestureDetector(
                         onTap: () => _sendMessage(ctx),
                         child: Container(
@@ -346,7 +304,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               color: Colors.white, size: 18),
                         ),
                       ),
-
                       SizedBox(width: 8.w),
                     ],
                   ),
@@ -357,204 +314,5 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildComposer(BuildContext ctx) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-          16.w, 10.h, 16.w, MediaQuery.of(context).padding.bottom + 10.h),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              offset: const Offset(0, -2),
-              blurRadius: 10),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Attachments
-          IconButton(
-            icon: Icon(Icons.add_circle_outline,
-                color: theme.disabledColor, size: 26.sp),
-            onPressed: () {}, // Action for attachments
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          SizedBox(width: 12.w),
-
-          // Text Field
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
-                borderRadius: BorderRadius.circular(24.r),
-                border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
-              ),
-              child: TextField(
-                controller: _msgCtrl,
-                maxLines: 5,
-                minLines: 1,
-                textInputAction: TextInputAction.newline,
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp),
-                onChanged: (val) =>
-                    setState(() {}), // Refresh to toggle send button
-                decoration: InputDecoration(
-                  hintText: 'اكتب رسالة...',
-                  hintStyle: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 13.sp,
-                      color: theme.disabledColor),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-
-          // Send Button
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: _msgCtrl.text.trim().isNotEmpty
-                ? GestureDetector(
-                    onTap: () => _sendMessage(ctx),
-                    child: CircleAvatar(
-                      radius: 22.r,
-                      backgroundColor: AppColors.navyBlue,
-                      child: Icon(Icons.send, color: Colors.white, size: 20.sp),
-                    ),
-                  )
-                : CircleAvatar(
-                    radius: 22.r,
-                    backgroundColor: theme.scaffoldBackgroundColor,
-                    child: Icon(Icons.mic_none,
-                        color: theme.disabledColor, size: 24.sp),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessageBubble extends StatelessWidget {
-  final String content;
-
-  final bool isMe;
-
-  final String time;
-
-  final String senderName;
-
-  const _MessageBubble({
-    required this.content,
-    required this.isMe,
-    required this.time,
-    required this.senderName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment:
-                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(14.w, 10.h, 14.w, 6.h),
-                  decoration: BoxDecoration(
-                    color: isMe
-                        ? AppColors.navyBlue
-                        : (theme.brightness == Brightness.dark
-                            ? Colors.grey[800]
-                            : const Color(0xFFF2F4F8)),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16.r),
-                      topRight: Radius.circular(16.r),
-                      bottomRight:
-                          isMe ? Radius.circular(2.r) : Radius.circular(16.r),
-                      bottomLeft:
-                          isMe ? Radius.circular(16.r) : Radius.circular(2.r),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          offset: const Offset(0, 1),
-                          blurRadius: 2),
-                    ],
-                  ),
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.end,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      Text(
-                        content,
-                        style: TextStyle(
-                          fontFamily: 'Cairo',
-                          fontSize: 14.sp,
-                          color: isMe
-                              ? Colors.white
-                              : (theme.brightness == Brightness.dark
-                                  ? Colors.white
-                                  : AppColors.textDark),
-                          height: 1.4,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _formatTime(time),
-                            style: TextStyle(
-                              fontFamily: 'Cairo',
-                              fontSize: 10.sp,
-                              color:
-                                  isMe ? Colors.white70 : theme.disabledColor,
-                            ),
-                          ),
-                          if (isMe) ...[
-                            SizedBox(width: 4.w),
-                            Icon(Icons.done_all,
-                                size: 14.sp, color: Colors.white70),
-                          ]
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(String iso) {
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-
-      final h = dt.hour.toString().padLeft(2, '0');
-
-      final m = dt.minute.toString().padLeft(2, '0');
-
-      return '$h:$m';
-    } catch (_) {
-      return iso;
-    }
   }
 }

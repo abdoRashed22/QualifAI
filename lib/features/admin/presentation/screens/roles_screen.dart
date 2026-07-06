@@ -20,6 +20,8 @@ import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
 
 import '../cubit/admin_cubit.dart';
+import '../widgets/roles/summary_card.dart';
+import '../widgets/roles/info_chip.dart';
 
 class RolesScreen extends StatelessWidget {
   const RolesScreen({super.key});
@@ -156,14 +158,14 @@ class _RolesViewState extends State<_RolesView> {
                   Row(
                     children: [
                       Expanded(
-                          child: _SummaryCard(
+                          child: SummaryCard(
                               title: 'الأدوار النشطة',
                               value: '$totalRoles',
                               icon: Icons.security,
                               color: AppColors.cyan)),
                       SizedBox(width: 8.w),
                       Expanded(
-                          child: _SummaryCard(
+                          child: SummaryCard(
                               title: 'موظفين مرتبطين',
                               value: '$totalEmployees',
                               icon: Icons.people,
@@ -246,7 +248,7 @@ class _RolesViewState extends State<_RolesView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                _InfoChip(
+                InfoChip(
                     icon: Icons.people_alt_outlined,
                     label: '$empCount موظف',
                     color: AppColors.blue),
@@ -345,7 +347,7 @@ class _RolesViewState extends State<_RolesView> {
                 Text(data['roleDescription'] ?? 'لا يوجد وصف',
                     style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp)),
                 SizedBox(height: 16.h),
-                _InfoChip(
+                InfoChip(
                     icon: Icons.people_alt_outlined,
                     label: 'عدد الموظفين: $empCount',
                     color: AppColors.blue),
@@ -408,40 +410,6 @@ class _RolesViewState extends State<_RolesView> {
         cubit: context.read<AdminCubit>(),
       ),
     );
-  }
-
-  void _showAddRoleDialog(BuildContext context) {
-    final cubit = context.read<AdminCubit>();
-
-    final nameCtrl = TextEditingController();
-
-    final descCtrl = TextEditingController();
-
-    showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r)),
-              title: const Text('إنشاء دور جديد', textAlign: TextAlign.right),
-              content: Column(mainAxisSize: MainAxisSize.min, children: [
-                AppTextField(label: 'اسم الدور', controller: nameCtrl),
-                SizedBox(height: 12.h),
-                AppTextField(
-                    label: 'وصف الدور', controller: descCtrl, maxLines: 2),
-              ]),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('إلغاء')),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                      cubit.createRole(
-                          nameCtrl.text.trim(), descCtrl.text.trim());
-                    },
-                    child: const Text("إنشاء")),
-              ],
-            ));
   }
 
   void _showAssignExistingEmployeeDialog(BuildContext context, int roleId) {
@@ -562,87 +530,18 @@ class _RolesViewState extends State<_RolesView> {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _SummaryCard(
-      {required this.title,
-      required this.value,
-      required this.icon,
-      required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.all(12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(icon, size: 28.sp, color: color),
-          SizedBox(height: 8.h),
-          Text(value,
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
-          SizedBox(height: 4.h),
-          Text(title,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  const _InfoChip(
-      {required this.icon, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14.sp, color: color),
-          SizedBox(width: 4.w),
-          Text(label,
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 12.sp,
-                  color: color,
-                  fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
 class _PermissionsBottomSheet extends StatefulWidget {
   final int roleId;
   final String roleName;
   final List<dynamic> allPerms;
   final AdminCubit cubit;
 
-  const _PermissionsBottomSheet(
-      {required this.roleId,
-      required this.roleName,
-      required this.allPerms,
-      required this.cubit});
+  const _PermissionsBottomSheet({
+    required this.roleId,
+    required this.roleName,
+    required this.allPerms,
+    required this.cubit,
+  });
 
   @override
   State<_PermissionsBottomSheet> createState() =>
