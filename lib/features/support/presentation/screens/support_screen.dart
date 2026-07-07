@@ -1,11 +1,12 @@
+//lib/features/support/presentation/screens/support_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qualif_ai/core/di/injection.dart';
 import 'package:qualif_ai/core/theme/app_colors.dart';
-import 'package:qualif_ai/features/admin/presentation/widgets/support_form.dart';
 import 'package:qualif_ai/features/support/presentation/cubit/support_cubit.dart';
 import 'package:qualif_ai/features/support/presentation/cubit/support_state.dart';
+import 'package:qualif_ai/features/support/presentation/widgets/support_form.dart';
 
 import 'package:qualif_ai/features/support/presentation/widgets/support_header.dart';
 

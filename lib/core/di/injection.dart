@@ -4,10 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
-import 'package:qualif_ai/features/admin/presentation/cubit/support_cubit.dart';
-import 'package:qualif_ai/features/admin/data/remote/support_remote_ds.dart';
-import 'package:qualif_ai/features/admin/domain/repositories/support_repository.dart';
-import 'package:qualif_ai/features/admin/repository/support_repository_impl.dart';
+
+import 'package:qualif_ai/features/support/data/remote/support_remote_ds.dart';
+import 'package:qualif_ai/features/support/domain/repositories/support_repository.dart';
+import 'package:qualif_ai/features/support/domain/repository/support_repository_impl.dart';
+import 'package:qualif_ai/features/support/presentation/cubit/support_cubit.dart';
 import '../api/auth_interceptor.dart';
 import '../api/dio_client.dart';
 import '../cache/hive_cache.dart';

@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:qualif_ai/features/admin/data/remote/support_remote_ds.dart';
+import 'package:qualif_ai/features/support/data/remote/support_remote_ds.dart';
 import 'package:qualif_ai/features/support/domain/repositories/support_repository.dart';
 import '../../../../../../../core/errors/failures.dart';
 

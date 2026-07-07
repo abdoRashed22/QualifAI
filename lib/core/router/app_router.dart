@@ -3,18 +3,16 @@
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
-import 'package:qualif_ai/features/admin/presentation/screens/support_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/admin_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/employee_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/manager_scaffold.dart';
+import 'package:qualif_ai/features/support/presentation/screens/support_screen.dart';
 
 import '../../features/auth/presentation/screens/splash_screen.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
-
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 
 import '../../features/accreditation/presentation/screens/accreditation_types_screen.dart';
 
@@ -40,8 +38,6 @@ import '../../features/chat/presentation/screens/chat_screen.dart';
 
 import '../../features/profile/presentation/screens/profile_screen.dart';
 
-import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
-
 import '../../features/admin/presentation/screens/employees_screen.dart';
 
 import '../../features/admin/presentation/screens/roles_screen.dart';
@@ -54,7 +50,6 @@ import '../../features/admin/presentation/screens/activity_log_screen.dart';
 
 import '../permissions/pricing_screen.dart' as manager_pricing;
 
-import '../../features/reviewer/presentation/screens/reviewer_dashboard_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_college_review_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
 
