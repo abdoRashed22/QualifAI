@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qualif_ai/core/di/injection.dart';
@@ -12,6 +12,9 @@ import '../../../profile/data/remote/side_rail_navigation.dart';
 
 // NOTE: this screen currently reuses Dio directly like other admin screens
 // to keep the change minimal.
+
+import '../widgets/subscription_status/action_chip.dart';
+import '../widgets/subscription_status/detail_row.dart';
 
 class SubscriptionStatusScreen extends StatefulWidget {
   const SubscriptionStatusScreen({super.key});
@@ -147,7 +150,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                 ),
               ],
               SizedBox(height: 14.h),
-              _DetailRow(
+              SubscriptionStatusDetailRow(
                 label: 'الحالة',
                 value: status,
                 valueColor: _statusColor(status),
@@ -155,21 +158,21 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
               ),
               SizedBox(height: 10.h),
               if (planName.isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'الخطة',
                   value: planName,
                   icon: Icons.menu_book_outlined,
                 ),
               SizedBox(height: 10.h),
               if (planPrice.toString().trim().isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'السعر',
                   value: planPrice,
                   icon: Icons.attach_money_outlined,
                 ),
               SizedBox(height: 10.h),
               if (startDate.isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'بداية',
                   value: startDate.length >= 10
                       ? startDate.substring(0, 10)
@@ -178,7 +181,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                 ),
               SizedBox(height: 10.h),
               if (endDate.isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'نهاية',
                   value:
                       endDate.length >= 10 ? endDate.substring(0, 10) : endDate,
@@ -186,14 +189,14 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                 ),
               SizedBox(height: 10.h),
               if (institutionType.isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'نوع المؤسسة',
                   value: institutionType,
                   icon: Icons.apartment_outlined,
                 ),
               SizedBox(height: 10.h),
               if (accreditationType.isNotEmpty)
-                _DetailRow(
+                SubscriptionStatusDetailRow(
                   label: 'نوع الاعتماد',
                   value: accreditationType,
                   icon: Icons.verified_outlined,
@@ -204,7 +207,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _ActionChip(
+                    SubscriptionStatusActionChip(
                       label: 'فعال',
                       color: AppColors.success,
                       onTap: () async {
@@ -214,7 +217,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                       },
                     ),
                     SizedBox(width: 8.w),
-                    _ActionChip(
+                    SubscriptionStatusActionChip(
                       label: 'موقوف',
                       color: AppColors.warning,
                       onTap: () async {
@@ -224,7 +227,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                       },
                     ),
                     SizedBox(width: 8.w),
-                    _ActionChip(
+                    SubscriptionStatusActionChip(
                       label: 'منتهي',
                       color: AppColors.error,
                       onTap: () async {
@@ -362,7 +365,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    _ActionChip(
+                                    SubscriptionStatusActionChip(
                                       label: 'فعال',
                                       color: AppColors.success,
                                       onTap: () async {
@@ -373,7 +376,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                                       },
                                     ),
                                     SizedBox(width: 8.w),
-                                    _ActionChip(
+                                    SubscriptionStatusActionChip(
                                       label: 'موقوف',
                                       color: AppColors.warning,
                                       onTap: () async {
@@ -384,7 +387,7 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                                       },
                                     ),
                                     SizedBox(width: 8.w),
-                                    _ActionChip(
+                                    SubscriptionStatusActionChip(
                                       label: 'منتهي',
                                       color: AppColors.error,
                                       onTap: () async {
@@ -406,109 +409,6 @@ class _SubscriptionStatusScreenState extends State<SubscriptionStatusScreen> {
                     },
                   ),
                 ),
-    );
-  }
-}
-
-class _ActionChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionChip({
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
-          border: Border.all(color: color, width: 1),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color? valueColor;
-
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Theme.of(context).dividerColor, width: 1),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14.sp, color: Theme.of(context).disabledColor),
-              SizedBox(width: 6.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 10.sp,
-                      color: Theme.of(context).disabledColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w800,
-                      color: valueColor ??
-                          Theme.of(context).textTheme.bodyMedium?.color,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
