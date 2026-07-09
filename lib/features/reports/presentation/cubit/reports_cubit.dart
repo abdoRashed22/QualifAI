@@ -2,14 +2,14 @@
 import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:qualif_ai/core/api/api_endpoints.dart';
 import '../../domain/repositories/reports_repository.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/cache/hive_cache.dart';
 import '../../../../core/permissions/permission_manager.dart';
+import '../../data/models/report_mapper.dart';
 
-part 'reports_state.dart';
+import 'reports_state.dart';
 
 class ReportsCubit extends Cubit<ReportsState> {
   final ReportsRepository _repo;
@@ -26,54 +26,9 @@ class ReportsCubit extends Cubit<ReportsState> {
         : await _repo.getMyReports();
 
     r.fold((f) => emit(ReportsError(f.message)), (list) {
-      final mapped = <Map<String, dynamic>>[];
-
-      for (final raw in list.whereType<Map>()) {
-        final s = Map<String, dynamic>.from(raw);
-
-        if (s.containsKey('reports') && s['reports'] is List) {
-          // Flatten grouped structure from /Reports/all
-          final collegeName = s['collegeName'] ?? 'كلية';
-          for (final nested in (s['reports'] as List).whereType<Map>()) {
-            final nestedItem = Map<String, dynamic>.from(nested);
-            nestedItem['collegeName'] ??= collegeName;
-            mapped.add(_mapReportItem(nestedItem));
-          }
-        } else {
-          // Flat structure from /Reports/my
-          mapped.add(_mapReportItem(s));
-        }
-      }
-
+      final mapped = ReportMapper.mapListResponse(list);
       emit(ReportsLoaded(mapped));
     });
-  }
-
-  Map<String, dynamic> _mapReportItem(Map<String, dynamic> s) {
-    final rawId =
-        s['id'] ?? s['Id'] ?? s['reportId'] ?? s['ReportId'] ?? s['sectionId'];
-    final id = int.tryParse(rawId?.toString() ?? '') ?? 0;
-
-    final uploaded =
-        s['completedDocs'] ?? s['CompletedDocs'] ?? s['uploadedDocuments'] ?? 0;
-    final total =
-        s['totalDocs'] ?? s['TotalDocs'] ?? s['requiredDocumentsCount'] ?? 1;
-    final name = s['originalName'] ??
-        s['title'] ??
-        s['Title'] ??
-        s['name'] ??
-        s['Name'] ??
-        s['sectionName'] ??
-        s['collegeName'] ??
-        'تقرير';
-
-    return {
-      ...s,
-      'id': id,
-      'name': name,
-      'uploadedDocuments': uploaded,
-      'requiredDocumentsCount': total,
-    };
   }
 
   Future<void> loadDetail(int reportId) async {
@@ -86,7 +41,8 @@ class ReportsCubit extends Cubit<ReportsState> {
         : await _repo.getReportDetail(reportId);
 
     r.fold((f) => emit(ReportsError(f.message)), (data) {
-      emit(ReportDetailLoaded(data));
+      final mapped = ReportMapper.mapDetail(data);
+      emit(ReportDetailLoaded(mapped));
     });
   }
 

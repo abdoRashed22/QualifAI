@@ -1,25 +1,15 @@
 // lib/features/reports/presentation/screens/report_detail_screen.dart
-
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../core/di/injection.dart';
-
 import '../../../../core/router/app_router.dart';
-
 import '../../../../core/theme/app_colors.dart';
-
 import '../../../../shared/widgets/app_button.dart';
-
 import '../../../../shared/widgets/app_card.dart';
-
 import '../cubit/reports_cubit.dart';
+import '../cubit/reports_state.dart';
 
 class ReportDetailScreen extends StatelessWidget {
   final int reportId;
@@ -55,21 +45,11 @@ class _ReportDetailView extends StatelessWidget {
           if (state is ReportDetailLoaded) {
             final r = state.report;
 
-            final pct = (r['completionDegree'] is num
-                    ? (r['completionDegree'] as num).toDouble()
-                    : (r['completionPercentage'] is num
-                        ? (r['completionPercentage'] as num).toDouble() / 100
-                        : 0.0))
-                .clamp(0.0, 1.0);
+            final pct = r.completionRatio;
 
-            final aiAnalysis =
-                (r['aiAnalysis'] ?? 'لم يتم إتمام التحليل بعد').toString();
-            final reviewerFeedback = (r['reviewerFeedback'] ??
-                    r['reviewerAssessment'] ??
-                    'لا توجد ملاحظات من المراجع حتى الآن')
-                .toString();
-            final requiredRevisions =
-                (r['requiredRevisions'] ?? 'لا توجد تعديلات مطلوبة').toString();
+            final aiAnalysis = r.aiAnalysis;
+            final reviewerFeedback = r.reviewerFeedback;
+            final requiredRevisions = r.requiredRevisions;
 
             return ListView(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
@@ -86,7 +66,7 @@ class _ReportDetailView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'الاعتماد الأكاديمي  ›  ${r['name'] ?? 'تقرير'}',
+                        'الاعتماد الأكاديمي  ›  ${r.name}',
                         style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 13.sp,

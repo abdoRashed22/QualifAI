@@ -1,6 +1,9 @@
 // lib/features/reports/presentation/cubit/reports_state.dart
 
-part of 'reports_cubit.dart';
+import 'package:equatable/equatable.dart';
+
+import '../../data/models/report_detail_model.dart';
+import '../../data/models/report_list_item_model.dart';
 
 abstract class ReportsState extends Equatable {
   const ReportsState();
@@ -14,7 +17,7 @@ class ReportsInitial extends ReportsState {}
 class ReportsLoading extends ReportsState {}
 
 class ReportsLoaded extends ReportsState {
-  final List<dynamic> reports;
+  final List<ReportListItemModel> reports;
 
   const ReportsLoaded(this.reports);
 
@@ -23,7 +26,7 @@ class ReportsLoaded extends ReportsState {
 }
 
 class ReportDetailLoaded extends ReportsState {
-  final Map<String, dynamic> report;
+  final ReportDetailModel report;
 
   const ReportDetailLoaded(this.report);
 
@@ -43,13 +46,13 @@ class ReportsError extends ReportsState {
 class ReportDownloadSuccess extends ReportsState {
   final String url;
   const ReportDownloadSuccess(this.url);
+
   @override
   List<Object?> get props => [url];
 }
 
 class ReportActionSuccess extends ReportsState {
   final String message;
-
   const ReportActionSuccess(this.message);
 
   @override
