@@ -5,6 +5,7 @@ import 'package:qualif_ai/features/admin/presentation/screens/employees_screen.d
 import 'package:qualif_ai/features/admin/presentation/screens/roles_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/nav_rail_item.dart';
 import 'package:qualif_ai/features/admin/presentation/screens/activity_log_screen.dart';
+import 'package:qualif_ai/features/admin/presentation/screens/subscription_status_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart';
 
 import '../../../../core/permissions/pricing_screen.dart' as admin_pricing;
@@ -35,6 +36,10 @@ class AdminScaffold extends StatelessWidget {
             icon: Icons.monetization_on,
             label: 'ادارة الاشتراكات',
             screen: admin_pricing.PricingScreen()),
+        NavRailItem(
+            icon: Icons.query_stats,
+            label: 'حالة الاشتراك',
+            screen: SubscriptionStatusScreen()),
         NavRailItem(
             icon: Icons.notifications_outlined,
             label: 'الاشعارات',
