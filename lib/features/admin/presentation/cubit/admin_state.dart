@@ -1,6 +1,9 @@
 part of 'admin_cubit.dart';
 
-// ============================================================================
+// NOTE: part files must not declare imports.
+
+// ==========================================================================
+
 // ADMIN STATES (MERGED + CLEANED)
 // ============================================================================
 
@@ -34,7 +37,7 @@ class EmployeesLoaded extends AdminState {
 }
 
 class PermissionsLoadedList extends AdminState {
-  final List<dynamic> permissions;
+  final List<PermissionModel> permissions;
 
   const PermissionsLoadedList(this.permissions);
 
@@ -42,11 +45,9 @@ class PermissionsLoadedList extends AdminState {
   List<Object?> get props => [permissions];
 }
 
-// ⚠️ REMOVED duplication (Roles/Colleges/Plans/Activity not in NEW but kept OLD support)
-
 class RolesLoaded extends AdminState {
-  final List<dynamic> roles;
-  final List<dynamic> permissions;
+  final List<RoleModel> roles;
+  final List<PermissionModel> permissions;
 
   const RolesLoaded(this.roles, this.permissions);
 

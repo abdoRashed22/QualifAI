@@ -8,10 +8,18 @@ import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/api/api_endpoints.dart';
 
+import '../../data/models/permission_model.dart';
+import '../../data/models/role_model.dart';
+import '../../data/models/permission_mapper.dart';
+import '../../data/models/role_mapper.dart';
+
 part 'admin_state.dart';
 
 class AdminCubit extends Cubit<AdminState> {
   final AdminRepository _repo;
+  final _roleMapper = const RoleMapper();
+  final _permMapper = const PermissionMapper();
+
   bool _isDisposed = false;
 
   AdminCubit(this._repo) : super(AdminInitial());
@@ -133,14 +141,25 @@ class AdminCubit extends Cubit<AdminState> {
           emit(AdminError(f.message));
         }
       },
-      (roles) => permsR.fold(
+      (rolesJson) => permsR.fold(
         (f) {
           if (!isClosed && !_isDisposed) {
-            emit(RolesLoaded(roles, const []));
+            emit(RolesLoaded(
+              rolesJson
+                  .map((e) => _roleMapper.fromJson(e as Map<String, dynamic>))
+                  .toList(),
+              const [],
+            ));
           }
         },
-        (perms) {
+        (permsJson) {
           if (!isClosed && !_isDisposed) {
+            final roles = rolesJson
+                .map((e) => _roleMapper.fromJson(e as Map<String, dynamic>))
+                .toList();
+            final perms = permsJson
+                .map((e) => _permMapper.fromJson(e as Map<String, dynamic>))
+                .toList();
             emit(RolesLoaded(roles, perms));
           }
         },
@@ -176,16 +195,14 @@ class AdminCubit extends Cubit<AdminState> {
     if (isClosed || _isDisposed) return;
 
     final previous = state;
-    List<dynamic>? rollbackRoles;
-    List<dynamic>? rollbackPerms;
+
+    List<RoleModel>? rollbackRoles;
+    List<PermissionModel>? rollbackPerms;
+
     if (previous is RolesLoaded) {
       rollbackRoles = previous.roles;
       rollbackPerms = previous.permissions;
-      final updated = previous.roles.where((role) {
-        if (role is! Map) return true;
-        final roleId = role['id'] ?? role['roleId'];
-        return int.tryParse('$roleId') != id;
-      }).toList();
+      final updated = previous.roles.where((role) => role.id != id).toList();
       emit(RolesLoaded(updated, previous.permissions));
     } else {
       emit(AdminActionLoading());
@@ -199,7 +216,7 @@ class AdminCubit extends Cubit<AdminState> {
       (f) {
         if (!isClosed && !_isDisposed) {
           if (rollbackRoles != null && rollbackPerms != null) {
-            emit(RolesLoaded(rollbackRoles, rollbackPerms));
+            emit(RolesLoaded(rollbackRoles!, rollbackPerms!));
           }
           emit(AdminError(f.message));
         }
@@ -208,12 +225,9 @@ class AdminCubit extends Cubit<AdminState> {
         if (!isClosed && !_isDisposed) {
           emit(const AdminActionSuccess('تم حذف الدور'));
           if (rollbackRoles != null && rollbackPerms != null) {
-            final refreshed = rollbackRoles.where((role) {
-              if (role is! Map) return true;
-              final roleId = role['id'] ?? role['roleId'];
-              return int.tryParse('$roleId') != id;
-            }).toList();
-            emit(RolesLoaded(refreshed, rollbackPerms));
+            final refreshed =
+                rollbackRoles!.where((role) => role.id != id).toList();
+            emit(RolesLoaded(refreshed, rollbackPerms!));
           }
         }
       },
@@ -267,8 +281,13 @@ class AdminCubit extends Cubit<AdminState> {
       (f) {
         if (!isClosed && !_isDisposed) emit(AdminError(f.message));
       },
-      (perms) {
-        if (!isClosed && !_isDisposed) emit(PermissionsLoadedList(perms));
+      (permsJson) {
+        if (!isClosed && !_isDisposed) {
+          final perms = permsJson
+              .map((e) => _permMapper.fromJson(e as Map<String, dynamic>))
+              .toList();
+          emit(PermissionsLoadedList(perms));
+        }
       },
     );
   }

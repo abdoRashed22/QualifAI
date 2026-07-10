@@ -7,6 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:qualif_ai/features/admin/presentation/widgets/roles/info_chip.dart';
+import 'package:qualif_ai/features/admin/presentation/widgets/roles/summary_card.dart';
+import 'package:qualif_ai/shared/widgets/app_card.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
@@ -14,14 +17,13 @@ import '../../../../core/router/app_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-import '../../../../shared/widgets/app_card.dart';
-
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
 
 import '../cubit/admin_cubit.dart';
-import '../widgets/roles/summary_card.dart';
-import '../widgets/roles/info_chip.dart';
+
+import '../../data/models/permission_model.dart';
+import '../../data/models/role_model.dart';
 
 class RolesScreen extends StatelessWidget {
   const RolesScreen({super.key});
@@ -43,8 +45,9 @@ class _RolesView extends StatefulWidget {
 }
 
 class _RolesViewState extends State<_RolesView> {
-  List<dynamic> _cachedRoles = const [];
-  List<dynamic> _cachedPermissions = const [];
+  List<RoleModel> _cachedRoles = const [];
+  List<PermissionModel> _cachedPermissions = const [];
+
   String _searchQuery = '';
   final TextEditingController _searchCtrl = TextEditingController();
 
@@ -104,13 +107,14 @@ class _RolesViewState extends State<_RolesView> {
             ctx.read<AdminCubit>().loadRoles();
           }
 
-          if (state is AdminError)
+          if (state is AdminError) {
             ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
                 content: Text(state.message),
                 backgroundColor: AppColors.error));
+          }
         },
         builder: (ctx, state) {
-          if (state is AdminLoading)
+          if (state is AdminLoading) {
             return ListView.separated(
               padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
               itemCount: 6,
@@ -125,23 +129,21 @@ class _RolesViewState extends State<_RolesView> {
                         borderRadius: BorderRadius.circular(16.r))),
               ),
             );
+          }
 
           final rolesState = state is RolesLoaded
               ? state
               : RolesLoaded(_cachedRoles, _cachedPermissions);
 
           final allRoles = rolesState.roles;
-          final filteredRoles = allRoles.where((r) {
-            final name =
-                (r['roleName'] ?? r['name'] ?? '').toString().toLowerCase();
-            return name.contains(_searchQuery.toLowerCase());
-          }).toList();
+          final filteredRoles = allRoles
+              .where((r) =>
+                  r.roleName.toLowerCase().contains(_searchQuery.toLowerCase()))
+              .toList();
 
           final totalRoles = allRoles.length;
-          final totalEmployees = allRoles.fold(
-              0,
-              (sum, r) =>
-                  sum + (int.tryParse('${r['employeesCount'] ?? 0}') ?? 0));
+          final totalEmployees =
+              allRoles.fold(0, (sum, r) => sum + r.employeesCount);
 
           if (rolesState.roles.isNotEmpty || state is RolesLoaded) {
             return RefreshIndicator(
@@ -201,11 +203,14 @@ class _RolesViewState extends State<_RolesView> {
   }
 
   Widget _buildRoleCard(
-      Map<String, dynamic> r, BuildContext context, List<dynamic> allPerms) {
-    final roleId = int.tryParse('${r['id'] ?? r['roleId'] ?? 0}') ?? 0;
-    final roleName = r['roleName'] ?? r['name'] ?? 'دور';
-    final roleDesc = r['description'] ?? r['roleDescription'] ?? 'لا يوجد وصف';
-    final empCount = r['employeesCount'] ?? 0;
+    RoleModel role,
+    BuildContext context,
+    List<PermissionModel> allPerms,
+  ) {
+    final roleId = role.id;
+    final roleName = role.roleName;
+    final roleDesc = role.description;
+    final empCount = role.employeesCount;
 
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
@@ -216,7 +221,8 @@ class _RolesViewState extends State<_RolesView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: Icon(Icons.delete_outline, color: AppColors.error),
+                  icon:
+                      const Icon(Icons.delete_outline, color: AppColors.error),
                   onPressed: () => _confirmDelete(context, roleId),
                 ),
                 Expanded(
@@ -240,7 +246,8 @@ class _RolesViewState extends State<_RolesView> {
                 CircleAvatar(
                   radius: 24.r,
                   backgroundColor: AppColors.adminColor.withOpacity(0.12),
-                  child: Icon(Icons.security, color: AppColors.adminColor),
+                  child:
+                      const Icon(Icons.security, color: AppColors.adminColor),
                 ),
               ],
             ),
@@ -328,9 +335,10 @@ class _RolesViewState extends State<_RolesView> {
       builder: (ctx) => FutureBuilder<Map<String, dynamic>?>(
         future: context.read<AdminCubit>().fetchRoleDetails(roleId),
         builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox(
                 height: 200, child: Center(child: CircularProgressIndicator()));
+          }
           final data = snapshot.data ?? {};
           return Padding(
             padding: EdgeInsets.all(24.w),
