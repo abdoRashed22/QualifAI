@@ -12,6 +12,9 @@ import '../../data/models/permission_model.dart';
 import '../../data/models/role_model.dart';
 import '../../data/models/permission_mapper.dart';
 import '../../data/models/role_mapper.dart';
+import '../../data/models/employee_model.dart';
+import '../../data/models/college_model.dart';
+import '../../data/models/plan_model.dart';
 
 part 'admin_state.dart';
 
