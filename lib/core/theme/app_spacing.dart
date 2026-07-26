@@ -22,6 +22,7 @@ abstract class AppSpacing {
   static EdgeInsets all16() => EdgeInsets.all(16.w);
   static EdgeInsets all20() => EdgeInsets.all(20.w);
   static EdgeInsets all24() => EdgeInsets.all(24.w);
+  static EdgeInsets all32() => EdgeInsets.all(32.w);
 
   // EdgeInsets - Horizontal
   static EdgeInsets horizontal4() => EdgeInsets.symmetric(horizontal: 4.w);

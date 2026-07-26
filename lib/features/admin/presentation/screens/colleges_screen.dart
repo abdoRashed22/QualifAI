@@ -1,26 +1,21 @@
 // lib/features/admin/presentation/screens/colleges_screen.dart
-
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
-
 import '../../../../core/theme/app_colors.dart';
-
-import '../../../../shared/widgets/app_card.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/states/app_empty_state.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
 
 import '../cubit/admin_cubit.dart';
+import '../widgets/colleges/college_card.dart';
+import '../widgets/colleges/college_shimmer_card.dart';
+import '../widgets/colleges/add_college_dialog.dart';
 
 class CollegesScreen extends StatelessWidget {
   const CollegesScreen({super.key});
@@ -28,8 +23,9 @@ class CollegesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-        create: (_) => sl<AdminCubit>()..loadColleges(),
-        child: const _CollegesView());
+      create: (_) => sl<AdminCubit>()..loadColleges(),
+      child: const _CollegesView(),
+    );
   }
 }
 
@@ -78,58 +74,25 @@ class _CollegesView extends StatelessWidget {
           }
         },
         builder: (ctx, state) {
-          if (state is AdminLoading)
+          if (state is AdminLoading) {
             return ListView.separated(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              padding: AppSpacing.listPadding(),
               itemCount: 6,
-              separatorBuilder: (_, __) => SizedBox(height: 10.h),
-              itemBuilder: (_, __) => Shimmer.fromColors(
-                baseColor: Theme.of(context).cardColor,
-                highlightColor: Theme.of(context).cardColor.withOpacity(0.5),
-                child: AppCard(
-                  child: Row(
-                    children: [
-                      Container(
-                          width: 45.w,
-                          height: 25.h,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8.r))),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Container(
-                                width: double.infinity,
-                                height: 14.h,
-                                color: Colors.white),
-                            SizedBox(height: 8.h),
-                            Container(
-                                width: 120.w,
-                                height: 10.h,
-                                color: Colors.white),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Container(
-                          width: 32.sp,
-                          height: 32.sp,
-                          decoration: const BoxDecoration(
-                              color: Colors.white, shape: BoxShape.circle)),
-                    ],
-                  ),
-                ),
-              ),
+              separatorBuilder: (_, __) => AppSpacing.h10(),
+              itemBuilder: (_, __) => const CollegeShimmerCard(),
             );
+          }
 
           if (state is CollegesLoaded || state is CollegesLoadedSuccess) {
             final colleges = state is CollegesLoadedSuccess
                 ? state.colleges
                 : (state as CollegesLoaded).colleges;
-            if (colleges.isEmpty)
-              return const Center(child: Text('لا توجد كليات'));
+            if (colleges.isEmpty) {
+              return const AppEmptyState(
+                icon: Icons.account_balance,
+                message: 'لا توجد كليات',
+              );
+            }
 
             return RefreshIndicator(
               color: AppColors.cyan,
@@ -140,230 +103,20 @@ class _CollegesView extends StatelessWidget {
                 await ctx.read<AdminCubit>().loadColleges();
               },
               child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+                padding: AppSpacing.listPadding(),
                 itemCount: colleges.length,
-                separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                separatorBuilder: (_, __) => AppSpacing.h10(),
                 itemBuilder: (_, i) {
                   final c = colleges[i] as Map<String, dynamic>? ?? {};
-                  final id = c['id'] ?? 0;
-                  final name = c['CollegeName'] ??
-                      c['collegeName'] ??
-                      c['name'] ??
-                      'كلية';
-                  final university = c['UniversityName'] ??
-                      c['universityName'] ??
-                      c['university'] ??
-                      '';
-                  final institutionType =
-                      (c['institutionType'] ?? '').toString();
-                  final accreditationType =
-                      (c['accreditationType'] ?? '').toString();
-                  final status = (c['status'] ?? 'غير محدد').toString();
-                  final statusColorStr =
-                      (c['statusColor'] ?? '').toString().toLowerCase();
-                  final lastUploadDate = (c['lastUploadDate'] ?? '').toString();
-                  final readiness =
-                      (c['readinessPercentage'] as num?)?.toDouble() ?? 0.0;
-
-                  Color badgeColor = AppColors.navyBlue;
-                  if (statusColorStr.contains('gray') ||
-                      statusColorStr.contains('grey'))
-                    badgeColor = Colors.blueGrey;
-                  else if (statusColorStr.contains('green'))
-                    badgeColor = AppColors.success;
-                  else if (statusColorStr.contains('red'))
-                    badgeColor = AppColors.error;
-                  else if (statusColorStr.contains('yellow') ||
-                      statusColorStr.contains('orange'))
-                    badgeColor = AppColors.warning;
-                  else if (statusColorStr.contains('blue'))
-                    badgeColor = AppColors.blue;
-
-                  Color readinessColor = Colors.green;
-                  if (readiness < 40)
-                    readinessColor = Colors.redAccent;
-                  else if (readiness < 70) readinessColor = Colors.orange;
-
-                  String formattedDate = lastUploadDate;
-                  if (lastUploadDate.isNotEmpty &&
-                      lastUploadDate.length >= 10) {
-                    formattedDate = lastUploadDate.substring(0, 10);
-                  }
-
-                  return AppCard(
-                    padding: EdgeInsets.all(12.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 10.w, vertical: 5.h),
-                              decoration: BoxDecoration(
-                                color: AppColors.error,
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                              child: GestureDetector(
-                                onTap: () =>
-                                    ctx.read<AdminCubit>().deleteCollege(id),
-                                child: Text('حذف',
-                                    style: TextStyle(
-                                        fontFamily: 'Cairo',
-                                        fontSize: 11.sp,
-                                        color: Colors.white)),
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            if (status.isNotEmpty && status != 'غير محدد')
-                              AppBadge(
-                                  label: status,
-                                  color: badgeColor,
-                                  small: true),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.right,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (university.isNotEmpty) ...[
-                                    SizedBox(height: 4.h),
-                                    Text(
-                                      'جامعة $university',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                      textAlign: TextAlign.right,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Builder(builder: (context) {
-                              final imagePath = (c['image'] ??
-                                          c['imagePath'] ??
-                                          c['logo'] ??
-                                          c['Image'])
-                                      ?.toString()
-                                      .trim() ??
-                                  '';
-                              String url = '';
-                              if (imagePath.isNotEmpty) {
-                                if (imagePath.startsWith('http')) {
-                                  url = imagePath;
-                                } else if (imagePath.startsWith('/')) {
-                                  url = 'https://qualefai.runasp.net$imagePath';
-                                } else {
-                                  url =
-                                      'https://qualefai.runasp.net/$imagePath';
-                                }
-                              }
-                              return Container(
-                                width: 48.w,
-                                height: 48.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                ),
-                                child: url.isEmpty
-                                    ? Icon(Icons.account_balance,
-                                        size: 24.sp, color: Colors.grey[600])
-                                    : ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(12.r),
-                                        child: Image.network(
-                                          url,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Icon(
-                                              Icons.account_balance,
-                                              size: 24.sp,
-                                              color: Colors.grey[600]),
-                                        ),
-                                      ),
-                              );
-                            }),
-                          ],
-                        ),
-                        if (institutionType.isNotEmpty ||
-                            accreditationType.isNotEmpty ||
-                            formattedDate.isNotEmpty) ...[
-                          SizedBox(height: 12.h),
-                          const Divider(height: 1, thickness: 0.5),
-                          SizedBox(height: 10.h),
-                          Wrap(
-                            spacing: 6.w,
-                            runSpacing: 6.h,
-                            alignment: WrapAlignment.end,
-                            children: [
-                              if (formattedDate.isNotEmpty)
-                                _buildMetaChip(Icons.upload_file_outlined,
-                                    formattedDate, Colors.teal),
-                              if (institutionType.isNotEmpty)
-                                _buildMetaChip(Icons.apartment_outlined,
-                                    institutionType, Colors.indigo),
-                              if (accreditationType.isNotEmpty)
-                                _buildMetaChip(Icons.verified_outlined,
-                                    accreditationType, Colors.purple),
-                            ],
-                          ),
-                        ],
-                        if (c.containsKey('readinessPercentage')) ...[
-                          SizedBox(height: 10.h),
-                          Row(
-                            children: [
-                              /* Text(
-                                '${readiness.toInt()}%',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: readinessColor,
-                                ),
-                              ),*/
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  child: LinearProgressIndicator(
-                                    value: readiness / 100,
-                                    minHeight: 7.h,
-                                    backgroundColor: Colors.grey.shade200,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        readinessColor),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                'نسبة الجاهزية',
-                                style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: Colors.grey[600],
-                                    fontFamily: 'Cairo'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
+                  return CollegeCard(college: c, cubit: ctx.read<AdminCubit>());
                 },
               ),
             );
           }
 
-          if (state is AdminError) return Center(child: Text(state.message));
+          if (state is AdminError) {
+            return Center(child: Text(state.message));
+          }
 
           return const SizedBox();
         },
@@ -371,202 +124,15 @@ class _CollegesView extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: color.withOpacity(0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontFamily: 'Cairo', fontSize: 11.sp, color: color)),
-          SizedBox(width: 4.w),
-          Icon(icon, size: 12.sp, color: color),
-        ],
-      ),
-    );
-  }
-
   void _showAddCollegeDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final universityController = TextEditingController();
-    final managerEmailController = TextEditingController();
-    final managerPasswordController = TextEditingController();
-    var institutionType = 2;
-    var accreditationType = 1;
-    final subscriptionDate = DateTime.now();
-    File? selectedImage;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('إضافة كلية جديدة', textAlign: TextAlign.right),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Center(
-                  child: GestureDetector(
-                    onTap: () async {
-                      try {
-                        final picker = ImagePicker();
-                        final pickedFile =
-                            await picker.pickImage(source: ImageSource.gallery);
-                        if (pickedFile != null) {
-                          setState(() {
-                            selectedImage = File(pickedFile.path);
-                          });
-                        }
-                      } catch (e) {
-                        debugPrint('Error picking image: $e');
-                      }
-                    },
-                    child: Container(
-                      width: 100.w,
-                      height: 100.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.grey[400]!),
-                      ),
-                      child: selectedImage != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12.r),
-                              child:
-                                  Image.file(selectedImage!, fit: BoxFit.cover),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_a_photo,
-                                    color: Colors.grey[600], size: 30.sp),
-                                SizedBox(height: 8.h),
-                                Text('شعار الكلية',
-                                    style: TextStyle(
-                                        fontSize: 12.sp,
-                                        color: Colors.grey[600],
-                                        fontFamily: 'Cairo')),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                TextField(
-                  controller: nameController,
-                  textAlign: TextAlign.right,
-                  decoration: const InputDecoration(
-                    labelText: 'اسم الكلية',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: universityController,
-                  textAlign: TextAlign.right,
-                  decoration: const InputDecoration(
-                    labelText: 'اسم الجامعة',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: institutionType,
-                  decoration: const InputDecoration(
-                    labelText: 'نوع المؤسسة',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text('حكومية')),
-                    DropdownMenuItem(value: 2, child: Text('جامعة أهلية')),
-                    DropdownMenuItem(value: 3, child: Text('جامعة خاصة')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      institutionType = value;
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<int>(
-                  value: accreditationType,
-                  decoration: const InputDecoration(
-                    labelText: 'نوع الاعتماد',
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text('أكاديمي')),
-                    DropdownMenuItem(value: 2, child: Text('برامجي')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      accreditationType = value;
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: managerEmailController,
-                  textAlign: TextAlign.right,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'البريد الإلكتروني للمدير',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: managerPasswordController,
-                  textAlign: TextAlign.right,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'كلمة مرور المدير',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final name = nameController.text.trim();
-                final university = universityController.text.trim();
-                final managerEmail = managerEmailController.text.trim();
-                final managerPassword = managerPasswordController.text;
-                if (name.isNotEmpty &&
-                    university.isNotEmpty &&
-                    managerEmail.isNotEmpty &&
-                    managerPassword.isNotEmpty) {
-                  context.read<AdminCubit>().createCollege({
-                    'UniversityName': university,
-                    'CollegeName': name,
-                    'InstitutionType': institutionType,
-                    'AccreditationType': accreditationType,
-                    'SubscriptionStartDate': subscriptionDate.toIso8601String(),
-                    'ManagerEmail': managerEmail,
-                    'ManagerPassword': managerPassword,
-                    if (selectedImage != null) 'Image': selectedImage,
-                  });
-                  Navigator.of(ctx).pop();
-                }
-              },
-              child: const Text('حفظ'),
-            ),
-          ],
-        ),
-      ),
-    );
+    // TODO: [REFACTOR] Old inline dialog code replaced by AddCollegeDialog
+    // Old code had ~150 lines of inline dialog with image picker, form fields, dropdowns
+    AddCollegeDialog.show(context, context.read<AdminCubit>());
   }
 }
 
 // ── PricingScreen ─────────────────────────────────────────────────────────────
-
+// TODO: [REFACTOR] This screen should be moved to its own file in future refactoring
 class PricingScreen extends StatelessWidget {
   const PricingScreen({super.key});
 
@@ -607,14 +173,12 @@ class _PricingView extends StatelessWidget {
               return const Center(child: Text('لا توجد باقات'));
 
             return ListView.separated(
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
+              padding: AppSpacing.listPadding(),
               itemCount: state.plans.length,
-              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+              separatorBuilder: (_, __) => AppSpacing.h12(),
               itemBuilder: (_, i) {
                 final p = state.plans[i] as Map<String, dynamic>? ?? {};
-
                 final features = (p['features'] as List?) ?? [];
-
                 final isPopular = i == 1;
 
                 return Container(
@@ -647,18 +211,13 @@ class _PricingView extends StatelessWidget {
                                       fontSize: 11.sp,
                                       color: AppColors.navyBlue,
                                       fontWeight: FontWeight.w700))),
-
                         Text(p['name'] ?? '',
                             style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.w700,
                                 color: isPopular ? Colors.white : null)),
-
-                        SizedBox(height: 4.h),
-
-                        // ✅ FIX: API بيبعت 'price' كـ double مش string
-
+                        AppSpacing.h4(),
                         Text('£ ${(p['price'] ?? 0).toStringAsFixed(0)}',
                             style: TextStyle(
                                 fontFamily: 'Cairo',
@@ -667,17 +226,12 @@ class _PricingView extends StatelessWidget {
                                 color: isPopular
                                     ? AppColors.cyan
                                     : AppColors.navyBlue)),
-
                         Text('/ سنويًا',
                             style: TextStyle(
                                 fontFamily: 'Cairo',
                                 fontSize: 12.sp,
                                 color: isPopular ? Colors.white60 : null)),
-
-                        SizedBox(height: 4.h),
-
-                        // ✅ NEW: description من الـ API
-
+                        AppSpacing.h4(),
                         if ((p['description'] ?? '').toString().isNotEmpty)
                           Text(p['description'].toString(),
                               style: TextStyle(
@@ -687,14 +241,9 @@ class _PricingView extends StatelessWidget {
                                       ? Colors.white70
                                       : Theme.of(context).disabledColor),
                               textAlign: TextAlign.right),
-
-                        SizedBox(height: 12.h),
-
+                        AppSpacing.h12(),
                         ...features.map((f) {
                           final fStr = f.toString();
-
-                          // ✅ FIX: skip 'string' placeholder values from API
-
                           if (fStr == 'string' || fStr.isEmpty)
                             return const SizedBox.shrink();
 
@@ -710,7 +259,7 @@ class _PricingView extends StatelessWidget {
                                             color: isPopular
                                                 ? Colors.white70
                                                 : null)),
-                                    SizedBox(width: 6.w),
+                                    AppSpacing.w6(),
                                     Icon(Icons.check_circle_outline,
                                         size: 14.sp,
                                         color: isPopular
