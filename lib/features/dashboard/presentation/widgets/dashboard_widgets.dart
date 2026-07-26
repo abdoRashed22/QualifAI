@@ -11,40 +11,41 @@ class StatCard extends StatelessWidget {
   final Color color;
 
   const StatCard({
+    super.key,
     required this.label,
     required this.value,
     required this.color,
-    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 90.h,
-      child: AppCard(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w700,
-                color: color,
+    return AppCard(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+      child: AspectRatio(
+        aspectRatio: 1.15,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
               ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

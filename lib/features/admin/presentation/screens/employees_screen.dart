@@ -439,6 +439,47 @@ class _EmployeesViewState extends State<_EmployeesView> {
                 SizedBox(height: 12.h),
                 DropdownButtonFormField<int>(
                   value: selectedRoleId,
+                  isExpanded: true, // 1️⃣ يضمن توزيع المساحة داخلياً بشكل صحيح
+                  decoration: InputDecoration(
+                    labelText: 'الصلاحية (الدور)',
+                    labelStyle: const TextStyle(fontFamily: 'Cairo'),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Expanded(
+                          child: Text('مدير النظام (Admin)',
+                              style: TextStyle(
+                                  fontFamily:
+                                      'Cairo'))), // 2️⃣ تغليف النص بـ Expanded
+                    ),
+                    DropdownMenuItem(
+                      value: 2,
+                      child: Expanded(
+                          child: Text('مدير الجودة (Manager)',
+                              style: TextStyle(fontFamily: 'Cairo'))),
+                    ),
+                    DropdownMenuItem(
+                      value: 3,
+                      child: Expanded(
+                          child: Text('موظف الجودة (Employee)',
+                              style: TextStyle(fontFamily: 'Cairo'))),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        selectedRoleId = val;
+                      });
+                    }
+                  },
+                ),
+/*
+                DropdownButtonFormField<int>(
+                  value: selectedRoleId,
                   decoration: InputDecoration(
                     labelText: 'الصلاحية (الدور)',
                     border: OutlineInputBorder(
@@ -461,6 +502,7 @@ class _EmployeesViewState extends State<_EmployeesView> {
                     }
                   },
                 ),
+            */
               ]),
             ),
           ),
@@ -563,7 +605,41 @@ class _EmployeesViewState extends State<_EmployeesView> {
                   controller: passCtrl,
                   obscure: true,
                 ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 18.h),
+                DropdownButtonFormField<int>(
+                  value: selectedRoleId,
+                  isExpanded: true, // 1️⃣ يضمن توزيع المساحة داخلياً
+                  decoration: InputDecoration(
+                    labelText: 'الصلاحية (الدور)',
+                    labelStyle: const TextStyle(fontFamily: 'Cairo'),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r)),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Expanded(
+                          child: Text('مدير النظام (Admin)',
+                              style: TextStyle(fontFamily: 'Cairo'))),
+                    ),
+                    DropdownMenuItem(
+                      value: 2,
+                      child: Expanded(
+                          child: Text('مدير الجودة (Manager)',
+                              style: TextStyle(fontFamily: 'Cairo'))),
+                    ),
+                    DropdownMenuItem(
+                      value: 3,
+                      child: Expanded(
+                          child: Text('موظف الجودة (Employee)',
+                              style: TextStyle(fontFamily: 'Cairo'))),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => selectedRoleId = val);
+                  },
+                ),
+                /*
                 DropdownButtonFormField<int>(
                   value: selectedRoleId,
                   decoration: InputDecoration(
@@ -583,6 +659,7 @@ class _EmployeesViewState extends State<_EmployeesView> {
                     if (val != null) setState(() => selectedRoleId = val);
                   },
                 ),
+             */
               ]),
             ),
           ),

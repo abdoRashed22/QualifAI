@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../data/models/permission_model.dart';
 import '../cubit/admin_cubit.dart';
 
 class PermissionsScreen extends StatelessWidget {
@@ -71,11 +72,19 @@ class _PermissionsView extends StatelessWidget {
               itemCount: perms.length,
               separatorBuilder: (_, __) => SizedBox(height: 10.h),
               itemBuilder: (context, index) {
-                final p = perms[index] as Map<String, dynamic>? ?? {};
-                final pId = p['id'] ?? p['permissionId'] ?? index + 1;
-                final pName = p['name'] ?? p['permissionName'] ?? 'صلاحية $pId';
-                final pDesc = p['description'] ??
-                    'لا يوجد وصف متوفر لهذه الصلاحية في النظام.';
+                final perm = perms[index];
+                final PermissionModel p = perm is PermissionModel
+                    ? perm
+                    : PermissionModel(
+                        id: index + 1,
+                        name: 'صلاحية ${index + 1}',
+                        description:
+                            'لا يوجد وصف متوفر لهذه الصلاحية في النظام.',
+                      );
+
+                final pId = p.id;
+                final pName = p.name;
+                final pDesc = p.description;
 
                 return AppCard(
                   padding:

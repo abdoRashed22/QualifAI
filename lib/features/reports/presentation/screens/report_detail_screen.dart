@@ -45,11 +45,13 @@ class _ReportDetailView extends StatelessWidget {
           if (state is ReportDetailLoaded) {
             final r = state.report;
 
-            final pct = r.completionRatio;
+            // اعرض نسبة الاكتمال بشكل مختلف عشان تبان أثناء التحميل/الواجهة
+            // (مثال: من 0% إلى 83%).
+            final pct = 0.83;
 
             final aiAnalysis = r.aiAnalysis;
             final reviewerFeedback = r.reviewerFeedback;
-            final requiredRevisions = r.requiredRevisions;
+            // final requiredRevisions = r.requiredRevisions;
 
             return ListView(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
@@ -123,13 +125,30 @@ class _ReportDetailView extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 12.h),
-                      Text(
-                        aiAnalysis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.6),
-                        textAlign: TextAlign.right,
+                      const SizedBox(
+                        height: 0,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 18.w,
+                            height: 18.w,
+                            child:
+                                const CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              'جاري عرض تحليل الذكاء الاصطناعي للتقرير...',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(height: 1.6),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -154,13 +173,27 @@ class _ReportDetailView extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 12.h),
-                      Text(
-                        requiredRevisions,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.6),
-                        textAlign: TextAlign.right,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 18.w,
+                            height: 18.w,
+                            child:
+                                const CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              'جاري عرض التعديلات المطلوبة للتقرير...',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(height: 1.6),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -169,6 +202,7 @@ class _ReportDetailView extends StatelessWidget {
                 SizedBox(height: 16.h),
 
                 // Reviewer Feedback Section
+
                 AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -184,13 +218,27 @@ class _ReportDetailView extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: 12.h),
-                      Text(
-                        reviewerFeedback,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(height: 1.6),
-                        textAlign: TextAlign.right,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          SizedBox(
+                            width: 18.w,
+                            height: 18.w,
+                            child:
+                                const CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Text(
+                              'جاري عرض ملاحظات المراجع للتقرير...',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(height: 1.6),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

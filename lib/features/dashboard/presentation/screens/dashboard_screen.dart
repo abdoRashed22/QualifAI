@@ -221,8 +221,8 @@ class _DashboardViewState extends State<_DashboardView> {
           ),
           SizedBox(height: 16.h),
 
-          // ── Stats Row ─────────────────────────────
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: StatCard(
@@ -231,7 +231,7 @@ class _DashboardViewState extends State<_DashboardView> {
                   color: pctColor(overallPct),
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 6.w),
               Expanded(
                 child: StatCard(
                   label: 'الملفات المرفوعة',
@@ -239,7 +239,7 @@ class _DashboardViewState extends State<_DashboardView> {
                   color: AppColors.blue,
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 6.w),
               Expanded(
                 child: StatCard(
                   label: 'المعايير',
@@ -249,6 +249,38 @@ class _DashboardViewState extends State<_DashboardView> {
               ),
             ],
           ),
+
+          /*        // ── Stats Row ─────────────────────────────
+Row(
+  crossAxisAlignment: CrossAxisAlignment.start, // Let them align at the top cleanly
+  children: [
+    Expanded(
+      child: StatCard(
+        label: 'درجة الاكتمال',
+        value: '${(overallPct * 100).round()}%',
+        color: pctColor(overallPct),
+      ),
+    ),
+    SizedBox(width: 6.w),
+    Expanded(
+      child: StatCard(
+        label: 'الملفات المرفوعة',
+        value: '$totalUploaded',
+        color: AppColors.blue,
+      ),
+    ),
+    SizedBox(width: 6.w),
+    Expanded(
+      child: StatCard(
+        label: 'المعايير',
+        value: '${sections.length}',
+        color: AppColors.warning,
+      ),
+    ),
+  ],
+),
+*/
+
           SizedBox(height: 16.h),
 
           // ── Chart Card ────────────────────────────

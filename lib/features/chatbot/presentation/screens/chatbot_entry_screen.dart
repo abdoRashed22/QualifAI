@@ -41,12 +41,12 @@ class ChatbotEntryScreen extends StatelessWidget {
               inputOptions: const InputOptions(
                 sendButtonVisibilityMode: SendButtonVisibilityMode.editing,
               ),
-              theme: DefaultChatTheme(
+              theme: const DefaultChatTheme(
                 primaryColor: AppColors.blue,
                 secondaryColor: AppColors.surfaceDark,
                 backgroundColor: Colors.transparent,
                 inputBackgroundColor: AppColors.inputDark,
-                inputTextColor: AppColors.textLight,
+                inputTextColor: Colors.black,
                 inputContainerDecoration: BoxDecoration(
                   color: AppColors.surfaceDark,
                   border: Border(
@@ -58,11 +58,11 @@ class ChatbotEntryScreen extends StatelessWidget {
                   Icons.attach_file,
                   color: AppColors.subTextDark,
                 ),
-                sendButtonIcon: const Icon(
+                sendButtonIcon: Icon(
                   Icons.send,
                   color: AppColors.cyan,
                 ),
-                sentMessageBodyTextStyle: const TextStyle(
+                sentMessageBodyTextStyle: TextStyle(
                     fontFamily: 'Cairo', color: Colors.white, fontSize: 15),
                 receivedMessageBodyTextStyle: TextStyle(
                   fontFamily: 'Cairo',
