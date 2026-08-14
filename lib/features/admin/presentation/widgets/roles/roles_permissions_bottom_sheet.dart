@@ -1,19 +1,24 @@
+// lib/features/admin/presentation/widgets/roles/roles_permissions_bottom_sheet.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../../../../core/theme/app_colors.dart';
+import '../../../../../../core/theme/app_spacing.dart';
+import '../../../../../../core/theme/app_typography.dart';
+import '../../../data/models/permission_model.dart';
 import '../../cubit/admin_cubit.dart';
 
 class RolesPermissionsBottomSheet extends StatefulWidget {
+  final AdminCubit cubit;
   final int roleId;
   final String roleName;
   final List<dynamic> allPerms;
-  const RolesPermissionsBottomSheet(
-      {super.key,
-      required this.roleId,
-      required this.roleName,
-      required this.allPerms});
+  const RolesPermissionsBottomSheet({
+    super.key,
+    required this.cubit,
+    required this.roleId,
+    required this.roleName,
+    required this.allPerms,
+  });
 
   @override
   State<RolesPermissionsBottomSheet> createState() =>
@@ -32,8 +37,7 @@ class _RolesPermissionsBottomSheetState
   }
 
   Future<void> _load() async {
-    final cubit = context.read<AdminCubit>();
-    final ids = await cubit.fetchRolePermissions(widget.roleId);
+    final ids = await widget.cubit.fetchRolePermissions(widget.roleId);
     if (!mounted) return;
     setState(() {
       _selectedIds
@@ -45,8 +49,6 @@ class _RolesPermissionsBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<AdminCubit>();
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -60,37 +62,42 @@ class _RolesPermissionsBottomSheetState
         children: [
           Text(
             'صلاحيات ${widget.roleName}',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTypography.titleMedium(),
           ),
-          SizedBox(height: 16.h),
+          AppSpacing.h16(),
           if (_isLoading)
             const SizedBox(
-                height: 200, child: Center(child: CircularProgressIndicator()))
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            )
           else if (widget.allPerms.isEmpty)
-            const SizedBox(
+            SizedBox(
               height: 100,
               child: Center(
-                child: Text('لا توجد صلاحيات متاحة في النظام',
-                    style: TextStyle(fontFamily: 'Cairo')),
+                child: Text(
+                  'لا توجد صلاحيات متاحة في النظام',
+                  style: AppTypography.bodyMedium(),
+                ),
               ),
             )
           else
             ConstrainedBox(
               constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5),
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
+              ),
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: widget.allPerms.length,
                 itemBuilder: (ctx, i) {
-                  final p = widget.allPerms[i] as Map<String, dynamic>;
-                  final pId =
-                      int.tryParse('${p['id'] ?? p['permissionId']}') ?? 0;
-                  final pName =
-                      p['name'] ?? p['permissionName'] ?? 'صلاحية $pId';
+                  final p = widget.allPerms[i] is PermissionModel
+                      ? widget.allPerms[i] as PermissionModel
+                      : PermissionModel(
+                          id: i + 1,
+                          name: 'صلاحية ${i + 1}',
+                          description: 'لا يوجد وصف متوفر لهذه الصلاحية',
+                        );
+                  final pId = p.id;
+                  final pName = p.name;
                   final isSelected = _selectedIds.contains(pId);
 
                   return CheckboxListTile(
@@ -98,8 +105,9 @@ class _RolesPermissionsBottomSheetState
                     onChanged: (val) {
                       setState(() {
                         if (val == true) {
-                          if (!_selectedIds.contains(pId))
+                          if (!_selectedIds.contains(pId)) {
                             _selectedIds.add(pId);
+                          }
                         } else {
                           _selectedIds.remove(pId);
                         }
@@ -107,7 +115,7 @@ class _RolesPermissionsBottomSheetState
                     },
                     title: Text(
                       pName,
-                      style: TextStyle(fontFamily: 'Cairo', fontSize: 14.sp),
+                      style: AppTypography.bodyMedium(),
                       textAlign: TextAlign.right,
                     ),
                     controlAffinity: ListTileControlAffinity.leading,
@@ -117,7 +125,7 @@ class _RolesPermissionsBottomSheetState
                 },
               ),
             ),
-          SizedBox(height: 16.h),
+          AppSpacing.h16(),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -128,19 +136,17 @@ class _RolesPermissionsBottomSheetState
               onPressed: _isLoading
                   ? null
                   : () {
-                      cubit.assignRolePermissions(widget.roleId, _selectedIds);
+                      widget.cubit
+                          .assignRolePermissions(widget.roleId, _selectedIds);
                       Navigator.pop(context);
                     },
-              child: const Text(
+              child: Text(
                 'حفظ التغييرات',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.bold),
+                style: AppTypography.buttonText(color: Colors.white),
               ),
             ),
           ),
-          SizedBox(height: 24.h),
+          AppSpacing.h24(),
         ],
       ),
     );

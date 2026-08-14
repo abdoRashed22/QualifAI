@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:qualif_ai/core/permissions/pricing_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/admin_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/employee_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/manager_scaffold.dart';

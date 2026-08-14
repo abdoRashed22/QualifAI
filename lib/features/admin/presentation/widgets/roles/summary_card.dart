@@ -1,6 +1,8 @@
+// lib/features/admin/presentation/widgets/roles/summary_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import '../../../../../core/theme/app_spacing.dart';
+import '../../../../../core/theme/app_typography.dart';
 import '../../../../../shared/widgets/app_card.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -25,17 +27,17 @@ class SummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 28.sp, color: color),
-          SizedBox(height: 8.h),
-          Text(value,
-              style: TextStyle(
-                  fontFamily: 'Cairo',
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
-          SizedBox(height: 4.h),
-          Text(title,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center),
+          AppSpacing.h8(),
+          Text(
+            value,
+            style: AppTypography.headlineSmall()?.copyWith(color: color),
+          ),
+          AppSpacing.h4(),
+          Text(
+            title,
+            style: AppTypography.caption(),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
