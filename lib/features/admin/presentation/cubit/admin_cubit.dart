@@ -4,14 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/repositories/admin_repository.dart';
-import 'package:dio/dio.dart';
-import '../../../../core/di/injection.dart';
-import '../../../../core/api/api_endpoints.dart';
 
-import '../../data/models/permission_model.dart';
-import '../../data/models/role_model.dart';
-import '../../data/models/permission_mapper.dart';
-import '../../data/models/role_mapper.dart';
 import '../../data/models/employee_model.dart';
 import '../../data/models/college_model.dart';
 import '../../data/models/plan_model.dart';
@@ -20,8 +13,6 @@ part 'admin_state.dart';
 
 class AdminCubit extends Cubit<AdminState> {
   final AdminRepository _repo;
-  final _roleMapper = const RoleMapper();
-  final _permMapper = const PermissionMapper();
 
   bool _isDisposed = false;
 
@@ -72,17 +63,7 @@ class AdminCubit extends Cubit<AdminState> {
     };
 
     if ((payload['roleId'] as int) <= 0) {
-      final rolesResult = await _repo.getRoles();
-      rolesResult.fold((_) {}, (roles) {
-        if (roles.isNotEmpty && roles.first is Map) {
-          final firstRole = roles.first as Map;
-          payload['roleId'] =
-              int.tryParse('${firstRole['id'] ?? firstRole['roleId'] ?? 1}') ??
-                  1;
-        } else {
-          payload['roleId'] = 1;
-        }
-      });
+      payload['roleId'] = 1;
     }
 
     final r = await _repo.createEmployee(payload);
@@ -123,173 +104,6 @@ class AdminCubit extends Cubit<AdminState> {
         if (!isClosed && !_isDisposed) {
           emit(const AdminActionSuccess('تم حذف الموظف'));
           loadEmployees();
-        }
-      },
-    );
-  }
-
-  Future<void> loadRoles() async {
-    if (isClosed || _isDisposed) return;
-
-    emit(AdminLoading());
-
-    final rolesR = await _repo.getRoles();
-    final permsR = await _repo.getPermissions();
-
-    if (isClosed || _isDisposed) return;
-
-    rolesR.fold(
-      (f) {
-        if (!isClosed && !_isDisposed) {
-          emit(AdminError(f.message));
-        }
-      },
-      (rolesJson) => permsR.fold(
-        (f) {
-          if (!isClosed && !_isDisposed) {
-            emit(RolesLoaded(
-              rolesJson
-                  .map((e) => _roleMapper.fromJson(e as Map<String, dynamic>))
-                  .toList(),
-              const [],
-            ));
-          }
-        },
-        (permsJson) {
-          if (!isClosed && !_isDisposed) {
-            final roles = rolesJson
-                .map((e) => _roleMapper.fromJson(e as Map<String, dynamic>))
-                .toList();
-            final perms = permsJson
-                .map((e) => _permMapper.fromJson(e as Map<String, dynamic>))
-                .toList();
-            emit(RolesLoaded(roles, perms));
-          }
-        },
-      ),
-    );
-  }
-
-  Future<void> createRole(String name, String desc) async {
-    if (isClosed || _isDisposed) return;
-
-    emit(AdminActionLoading());
-
-    final r = await _repo.createRole(name, desc);
-
-    if (isClosed || _isDisposed) return;
-
-    r.fold(
-      (f) {
-        if (!isClosed && !_isDisposed) {
-          emit(AdminError(f.message));
-        }
-      },
-      (_) {
-        if (!isClosed && !_isDisposed) {
-          emit(const AdminActionSuccess('تم إنشاء الدور'));
-          loadRoles();
-        }
-      },
-    );
-  }
-
-  Future<void> deleteRole(int id) async {
-    if (isClosed || _isDisposed) return;
-
-    final previous = state;
-
-    List<RoleModel>? rollbackRoles;
-    List<PermissionModel>? rollbackPerms;
-
-    if (previous is RolesLoaded) {
-      rollbackRoles = previous.roles;
-      rollbackPerms = previous.permissions;
-      final updated = previous.roles.where((role) => role.id != id).toList();
-      emit(RolesLoaded(updated, previous.permissions));
-    } else {
-      emit(AdminActionLoading());
-    }
-
-    final r = await _repo.deleteRole(id);
-
-    if (isClosed || _isDisposed) return;
-
-    r.fold(
-      (f) {
-        if (!isClosed && !_isDisposed) {
-          if (rollbackRoles != null && rollbackPerms != null) {
-            emit(RolesLoaded(rollbackRoles!, rollbackPerms!));
-          }
-          emit(AdminError(f.message));
-        }
-      },
-      (_) {
-        if (!isClosed && !_isDisposed) {
-          emit(const AdminActionSuccess('تم حذف الدور'));
-          if (rollbackRoles != null && rollbackPerms != null) {
-            final refreshed =
-                rollbackRoles!.where((role) => role.id != id).toList();
-            emit(RolesLoaded(refreshed, rollbackPerms!));
-          }
-        }
-      },
-    );
-  }
-
-  Future<Map<String, dynamic>?> fetchRoleDetails(int id) async {
-    try {
-      final res = await sl<Dio>().get(ApiEndpoints.roleById(id));
-      return res.data as Map<String, dynamic>;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<List<int>> fetchRolePermissions(int id) async {
-    try {
-      final res = await sl<Dio>().get(ApiEndpoints.rolePermissions(id));
-      if (res.data is List) {
-        return (res.data as List).map((e) => int.tryParse('$e') ?? 0).toList();
-      }
-      return [];
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<void> assignRolePermissions(int roleId, List<int> permIds) async {
-    if (isClosed || _isDisposed) return;
-    emit(const AdminActionLoading());
-
-    final r = await _repo.setRolePermissions(roleId, permIds);
-
-    if (isClosed || _isDisposed) return;
-
-    r.fold(
-      (f) => emit(AdminError(f.message)),
-      (_) {
-        emit(const AdminActionSuccess('تم تحديث الصلاحيات بنجاح'));
-        loadRoles();
-      },
-    );
-  }
-
-  Future<void> loadPermissionsOnly() async {
-    if (isClosed || _isDisposed) return;
-    emit(const AdminLoading());
-    final r = await _repo.getPermissions();
-    if (isClosed || _isDisposed) return;
-    r.fold(
-      (f) {
-        if (!isClosed && !_isDisposed) emit(AdminError(f.message));
-      },
-      (permsJson) {
-        if (!isClosed && !_isDisposed) {
-          final perms = permsJson
-              .map((e) => _permMapper.fromJson(e as Map<String, dynamic>))
-              .toList();
-          emit(PermissionsLoadedList(perms));
         }
       },
     );
@@ -460,8 +274,7 @@ class AdminCubit extends Cubit<AdminState> {
       },
       (_) {
         emit(const AdminActionSuccess('تم تحديث بيانات الموظف بنجاح'));
-        loadRoles();
-        loadEmployees(); // تحديث شاشة الموظفين إذا كانت مفتوحة
+        loadEmployees();
       },
     );
   }

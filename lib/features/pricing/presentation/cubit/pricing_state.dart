@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../data/models/pricing_plan_model.dart';
+
 abstract class PricingState extends Equatable {
   const PricingState();
 
@@ -12,7 +14,8 @@ class PricingInitial extends PricingState {}
 class PricingLoading extends PricingState {}
 
 class PricingLoaded extends PricingState {
-  final List<dynamic> plans;
+  final List<PricingPlanModel> plans;
+
   const PricingLoaded(this.plans);
 
   @override
@@ -21,6 +24,7 @@ class PricingLoaded extends PricingState {
 
 class PricingError extends PricingState {
   final String message;
+
   const PricingError(this.message);
 
   @override
@@ -31,6 +35,7 @@ class PricingSubscribeLoading extends PricingState {}
 
 class PricingActionSuccess extends PricingState {
   final String message;
+
   const PricingActionSuccess(this.message);
 
   @override

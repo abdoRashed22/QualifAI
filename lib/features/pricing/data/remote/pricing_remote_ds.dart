@@ -1,18 +1,22 @@
 import 'package:dio/dio.dart';
-import '../errors/failures.dart';
+
+import '../../../../core/errors/failures.dart';
 
 class PricingRemoteDs {
   final Dio _dio;
 
   const PricingRemoteDs(this._dio);
 
-  Future<List<dynamic>> getPlans() async {
+  Future<List<Map<String, dynamic>>> getPlans() async {
     try {
       final res = await _dio.get('/Pricing');
       if (res.data is List) {
-        return res.data as List;
+        return (res.data as List)
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
       }
-      return [];
+      return const [];
     } on DioException catch (e) {
       throw dioToFailure(e);
     }

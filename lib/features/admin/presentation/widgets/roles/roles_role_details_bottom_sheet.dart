@@ -10,7 +10,7 @@ import '../../cubit/admin_cubit.dart';
 import 'roles_assign_employee_dialog.dart';
 
 class RolesRoleDetailsBottomSheet extends StatelessWidget {
-  final AdminCubit cubit;
+  final dynamic cubit;
   final int roleId;
   final int empCount;
   const RolesRoleDetailsBottomSheet({

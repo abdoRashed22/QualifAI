@@ -5,10 +5,9 @@ import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_spacing.dart';
 import '../../../../../../core/theme/app_radius.dart';
 import '../../../../../../core/theme/app_typography.dart';
-import '../../cubit/admin_cubit.dart';
 
 class RolesAssignEmployeeDialog extends StatefulWidget {
-  final AdminCubit cubit;
+  final dynamic cubit;
   final int roleId;
   const RolesAssignEmployeeDialog({
     super.key,

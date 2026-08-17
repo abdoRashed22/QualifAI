@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,7 +9,10 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../data/models/permission_model.dart';
-import '../cubit/admin_cubit.dart';
+import '../../data/remote/permissions_remote_ds.dart';
+import '../../data/repository/permissions_repository_impl.dart';
+import '../cubit/permissions_cubit.dart';
+import '../cubit/permissions_state.dart';
 
 class PermissionsScreen extends StatelessWidget {
   const PermissionsScreen({super.key});
@@ -16,7 +20,9 @@ class PermissionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<AdminCubit>()..loadPermissionsOnly(),
+      create: (_) => PermissionsCubit(
+        PermissionsRepositoryImpl(PermissionsRemoteDs(sl<Dio>())),
+      )..loadPermissions(),
       child: const _PermissionsView(),
     );
   }
@@ -36,9 +42,9 @@ class _PermissionsView extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: BlocBuilder<AdminCubit, AdminState>(
+      body: BlocBuilder<PermissionsCubit, PermissionsState>(
         builder: (ctx, state) {
-          if (state is AdminLoading) {
+          if (state is PermissionsLoading) {
             return ListView.separated(
               padding: EdgeInsets.all(16.w),
               itemCount: 8,
@@ -57,7 +63,7 @@ class _PermissionsView extends StatelessWidget {
             );
           }
 
-          if (state is PermissionsLoadedList) {
+          if (state is PermissionsLoaded) {
             final perms = state.permissions;
 
             if (perms.isEmpty) {
@@ -82,7 +88,6 @@ class _PermissionsView extends StatelessWidget {
                             'لا يوجد وصف متوفر لهذه الصلاحية في النظام.',
                       );
 
-                final pId = p.id;
                 final pName = p.name;
                 final pDesc = p.description;
 
@@ -125,7 +130,7 @@ class _PermissionsView extends StatelessWidget {
             );
           }
 
-          if (state is AdminError)
+          if (state is PermissionsError)
             return Center(
                 child: Text(state.message,
                     style: const TextStyle(fontFamily: 'Cairo')));

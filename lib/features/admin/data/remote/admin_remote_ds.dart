@@ -48,51 +48,6 @@ class AdminRemoteDs {
     }
   }
 
-  // Roles
-
-  Future<List<dynamic>> getRoles() async {
-    try {
-      final r = await _dio.get(ApiEndpoints.roles);
-      return r.data is List ? r.data : [];
-    } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
-  Future<void> createRole(String name, String description) async {
-    try {
-      await _dio.post(ApiEndpoints.roles,
-          data: {'roleName': name, 'description': description});
-    } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
-  Future<void> deleteRole(int id) async {
-    try {
-      await _dio.delete(ApiEndpoints.roleById(id));
-    } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
-  Future<List<dynamic>> getPermissions() async {
-    try {
-      final r = await _dio.get(ApiEndpoints.permissions);
-      return r.data is List ? r.data : [];
-    } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
-  Future<void> setRolePermissions(int roleId, List<int> permIds) async {
-    try {
-      await _dio.post(ApiEndpoints.rolePermissions(roleId), data: permIds);
-    } on DioException catch (e) {
-      throw dioToFailure(e);
-    }
-  }
-
   // Colleges
 
   Future<List<dynamic>> getColleges() async {

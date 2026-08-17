@@ -1,27 +1,28 @@
-// lib/features/admin/presentation/screens/roles_screen.dart
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/widgets/dialogs/app_confirmation_dialog.dart';
 import '../../../../shared/widgets/inputs/app_search_bar.dart';
 import '../../../../shared/widgets/states/app_empty_state.dart';
-import '../../../../shared/widgets/dialogs/app_confirmation_dialog.dart';
 import '../../../profile/data/remote/side_rail_navigation.dart';
-
-import '../cubit/admin_cubit.dart';
+import '../../../admin/presentation/widgets/roles/roles_role_card.dart';
+import '../../../admin/presentation/widgets/roles/summary_card.dart';
+import '../../../admin/presentation/widgets/roles/roles_permissions_bottom_sheet.dart';
+import '../../../admin/presentation/widgets/roles/roles_role_details_bottom_sheet.dart';
 import '../../data/models/role_model.dart';
-import '../../data/models/permission_model.dart';
-import '../widgets/roles/summary_card.dart';
-import '../widgets/roles/roles_role_card.dart';
-import '../widgets/roles/roles_permissions_bottom_sheet.dart';
-import '../widgets/roles/roles_role_details_bottom_sheet.dart';
+import '../../data/remote/roles_remote_ds.dart';
+import '../../data/repository/roles_repository_impl.dart';
+import '../cubit/roles_cubit.dart';
+import '../cubit/roles_state.dart';
 
 class RolesScreen extends StatelessWidget {
   const RolesScreen({super.key});
@@ -29,7 +30,11 @@ class RolesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<AdminCubit>()..loadRoles(),
+      create: (_) => RolesCubit(
+        RolesRepositoryImpl(RolesRemoteDs(sl<Dio>())),
+      )
+        ..loadRoles()
+        ..loadPermissions(),
       child: const _RolesView(),
     );
   }
@@ -44,7 +49,7 @@ class _RolesView extends StatefulWidget {
 
 class _RolesViewState extends State<_RolesView> {
   List<RoleModel> _cachedRoles = const [];
-  List<PermissionModel> _cachedPermissions = const [];
+  List<dynamic> _cachedPermissions = const [];
   String _searchQuery = '';
   final TextEditingController _searchCtrl = TextEditingController();
 
@@ -75,26 +80,27 @@ class _RolesViewState extends State<_RolesView> {
           ),
         ],
       ),
-      body: BlocConsumer<AdminCubit, AdminState>(
+      body: BlocConsumer<RolesCubit, RolesState>(
         listener: (ctx, state) {
           if (state is RolesLoaded) {
             _cachedRoles = state.roles;
             _cachedPermissions = state.permissions;
           }
-          if (state is AdminActionSuccess) {
+          if (state is RolesActionSuccess) {
             ScaffoldMessenger.of(ctx).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
-            ctx.read<AdminCubit>().loadRoles();
+            ctx.read<RolesCubit>().loadRoles();
+            ctx.read<RolesCubit>().loadPermissions();
           }
-          if (state is AdminError) {
+          if (state is RolesError) {
             ScaffoldMessenger.of(ctx).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
           }
         },
         builder: (ctx, state) {
-          if (state is AdminLoading) {
+          if (state is RolesLoading) {
             return ListView.separated(
               padding: AppSpacing.screenPadding(),
               itemCount: 6,
@@ -134,7 +140,8 @@ class _RolesViewState extends State<_RolesView> {
               strokeWidth: 3.0,
               onRefresh: () async {
                 HapticFeedback.lightImpact();
-                await ctx.read<AdminCubit>().loadRoles();
+                await ctx.read<RolesCubit>().loadRoles();
+                await ctx.read<RolesCubit>().loadPermissions();
               },
               child: ListView(
                 padding: AppSpacing.screenPadding(),
@@ -185,7 +192,7 @@ class _RolesViewState extends State<_RolesView> {
             );
           }
 
-          if (state is AdminError) {
+          if (state is RolesError) {
             return Center(child: Text(state.message));
           }
 
@@ -204,13 +211,13 @@ class _RolesViewState extends State<_RolesView> {
       cancelText: 'إلغاء',
       confirmColor: AppColors.error,
       icon: Icons.delete_outline,
-      onConfirm: () => context.read<AdminCubit>().deleteRole(id),
+      onConfirm: () => context.read<RolesCubit>().deleteRole(id),
     );
   }
 
   void _showPermissions(BuildContext context, int roleId, String roleName,
       List<dynamic> allPerms) {
-    final cubit = context.read<AdminCubit>();
+    final cubit = context.read<RolesCubit>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -227,7 +234,7 @@ class _RolesViewState extends State<_RolesView> {
   }
 
   void _showDetails(BuildContext context, int roleId, int empCount) {
-    final cubit = context.read<AdminCubit>();
+    final cubit = context.read<RolesCubit>();
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(

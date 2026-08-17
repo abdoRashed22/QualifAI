@@ -1,184 +1,25 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:qualif_ai/core/permissions/pricing_cubit.dart';
-import 'package:qualif_ai/core/permissions/pricing_remote_ds.dart';
-import 'package:qualif_ai/core/permissions/pricing_repository_impl.dart';
-import 'package:qualif_ai/core/permissions/pricing_state.dart';
-import 'package:go_router/go_router.dart';
 
-import '../router/app_router.dart';
-import '../di/injection.dart';
-import '../theme/app_colors.dart';
-import '../../features/profile/data/remote/side_rail_navigation.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../data/models/pricing_plan_model.dart';
 
-class PricingScreen extends StatelessWidget {
-  const PricingScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      // Bypassing injection configuration edits dynamically by building our required dependencies directly.
-      create: (_) => PricingCubit(
-        PricingRepositoryImpl(PricingRemoteDs(sl<Dio>())),
-      )..loadPlans(),
-      child: const _PricingView(),
-    );
-  }
-}
-
-class _PricingView extends StatelessWidget {
-  const _PricingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('الاسعار', style: TextStyle(fontFamily: 'Cairo')),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => SideRailNavigation.of(context)?.openDrawer(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.push(AppRoutes.notifications),
-          ),
-        ],
-      ),
-      body: BlocConsumer<PricingCubit, PricingState>(
-        listener: (context, state) {
-          if (state is PricingActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.success),
-            );
-          } else if (state is PricingError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.error),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is PricingLoading || state is PricingSubscribeLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is PricingError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(state.message,
-                      style: TextStyle(fontFamily: 'Cairo', fontSize: 16.sp)),
-                  SizedBox(height: 16.h),
-                  ElevatedButton(
-                    onPressed: () => context.read<PricingCubit>().loadPlans(),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.navyBlue),
-                    child: const Text('إعادة المحاولة',
-                        style: TextStyle(color: Colors.white)),
-                  )
-                ],
-              ),
-            );
-          }
-          if (state is PricingLoaded) {
-            final plans = state.plans;
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(Icons.workspace_premium_rounded,
-                      size: 64.sp, color: AppColors.warning),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'باقات الاشتراكات - QualifAI',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.w900,
-                      color: Theme.of(context).textTheme.titleLarge?.color,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'ارتقِ بجودة مؤسستك التعليمية مع باقاتنا المتميزة',
-                    style: TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 15.sp,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 32.h),
-                  ...plans.map((planMap) {
-                    final plan = planMap as Map<String, dynamic>;
-
-                    // إخفاء الباقات الوهمية القادمة من الـ API
-                    if (plan['name'] == 'string') {
-                      return const SizedBox.shrink();
-                    }
-
-                    final subscriptions = plan['subscriptions'] as List?;
-                    final isActive =
-                        subscriptions != null && subscriptions.isNotEmpty;
-
-                    return _PlanCard(
-                      plan: plan,
-                      isActive: isActive,
-                    );
-                  }),
-                ],
-              ),
-            );
-          }
-          return const SizedBox();
-        },
-      ),
-    );
-  }
-}
-
-class _PlanCard extends StatelessWidget {
-  final Map<String, dynamic> plan;
+class PricingPlanCard extends StatelessWidget {
+  final PricingPlanModel plan;
   final bool isActive;
+  final void Function(Map<String, dynamic>) onSubscribe;
 
-  const _PlanCard({
+  const PricingPlanCard({
+    super.key,
     required this.plan,
     required this.isActive,
+    required this.onSubscribe,
   });
 
   @override
   Widget build(BuildContext context) {
-    final name = plan['name']?.toString() ?? '';
-    final price = plan['price']?.toString() ?? '0';
-    final description = plan['description']?.toString() ?? '';
-
-    final rawFeatures = plan['features'];
-    List<String> features = [];
-    if (rawFeatures is List) {
-      features = rawFeatures
-          .map((e) => e.toString())
-          .where((f) => f.trim().isNotEmpty && f != 'string')
-          .toList();
-    } else if (rawFeatures is String) {
-      features = rawFeatures
-          .split('\n')
-          .where((f) => f.trim().isNotEmpty && f != 'string')
-          .toList();
-    }
-
     final theme = Theme.of(context);
+    final features = plan.features;
 
     return Container(
       margin: EdgeInsets.only(bottom: 24.h),
@@ -258,7 +99,7 @@ class _PlanCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        name,
+                        plan.name,
                         style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 22.sp,
@@ -297,7 +138,7 @@ class _PlanCard extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        price,
+                        plan.price,
                         style: TextStyle(
                           fontFamily: 'Cairo',
                           fontSize: 40.sp,
@@ -310,10 +151,10 @@ class _PlanCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (description.isNotEmpty) ...[
+                  if (plan.description.isNotEmpty) ...[
                     SizedBox(height: 16.h),
                     Text(
-                      description,
+                      plan.description,
                       style: TextStyle(
                         fontFamily: 'Cairo',
                         fontSize: 14.sp,
@@ -372,11 +213,12 @@ class _PlanCard extends StatelessWidget {
                           : () {
                               showDialog(
                                 context: context,
-                                builder: (dialogCtx) =>
-                                    _PaymentDialog(onSubmit: (data) {
-                                  Navigator.pop(dialogCtx); // إغلاق النافذة
-                                  context.read<PricingCubit>().subscribe(data);
-                                }),
+                                builder: (dialogCtx) => PaymentDialog(
+                                  onSubmit: (data) {
+                                    Navigator.pop(dialogCtx);
+                                    onSubscribe(data);
+                                  },
+                                ),
                               );
                             },
                       style: ElevatedButton.styleFrom(
@@ -422,16 +264,16 @@ class _PlanCard extends StatelessWidget {
   }
 }
 
-class _PaymentDialog extends StatefulWidget {
+class PaymentDialog extends StatefulWidget {
   final void Function(Map<String, dynamic>) onSubmit;
 
-  const _PaymentDialog({required this.onSubmit});
+  const PaymentDialog({required this.onSubmit, super.key});
 
   @override
-  State<_PaymentDialog> createState() => _PaymentDialogState();
+  State<PaymentDialog> createState() => _PaymentDialogState();
 }
 
-class _PaymentDialogState extends State<_PaymentDialog> {
+class _PaymentDialogState extends State<PaymentDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _cardCtrl = TextEditingController();
@@ -595,11 +437,11 @@ class _PaymentDialogState extends State<_PaymentDialog> {
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
                                 widget.onSubmit({
-                                  "cardHolderName": _nameCtrl.text.trim(),
-                                  "cardNumber": _cardCtrl.text.trim(),
-                                  "cvv": _cvvCtrl.text.trim(),
-                                  "expiryDate": _expiryCtrl.text.trim(),
-                                  "rememberCardInfo": _remember,
+                                  'cardHolderName': _nameCtrl.text.trim(),
+                                  'cardNumber': _cardCtrl.text.trim(),
+                                  'cvv': _cvvCtrl.text.trim(),
+                                  'expiryDate': _expiryCtrl.text.trim(),
+                                  'rememberCardInfo': _remember,
                                 });
                               }
                             },

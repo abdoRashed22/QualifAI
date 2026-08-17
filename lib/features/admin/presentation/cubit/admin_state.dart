@@ -36,25 +36,6 @@ class EmployeesLoaded extends AdminState {
   List<Object?> get props => [employees];
 }
 
-class PermissionsLoadedList extends AdminState {
-  final List<PermissionModel> permissions;
-
-  const PermissionsLoadedList(this.permissions);
-
-  @override
-  List<Object?> get props => [permissions];
-}
-
-class RolesLoaded extends AdminState {
-  final List<RoleModel> roles;
-  final List<PermissionModel> permissions;
-
-  const RolesLoaded(this.roles, this.permissions);
-
-  @override
-  List<Object?> get props => [roles, permissions];
-}
-
 class CollegesLoaded extends AdminState {
   final List<dynamic> colleges;
 

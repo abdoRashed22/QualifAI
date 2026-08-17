@@ -8,7 +8,7 @@ import '../../../data/models/permission_model.dart';
 import '../../cubit/admin_cubit.dart';
 
 class RolesPermissionsBottomSheet extends StatefulWidget {
-  final AdminCubit cubit;
+  final dynamic cubit;
   final int roleId;
   final String roleName;
   final List<dynamic> allPerms;

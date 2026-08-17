@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
-import 'package:qualif_ai/core/permissions/pricing_screen.dart';
+import 'package:qualif_ai/features/pricing/presentation/screens/pricing_screen.dart';
 import 'package:qualif_ai/features/profile/data/remote/admin_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/employee_scaffold.dart';
 import 'package:qualif_ai/features/profile/data/remote/manager_scaffold.dart';
@@ -41,15 +41,13 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 
 import '../../features/admin/presentation/screens/employees_screen.dart';
 
-import '../../features/admin/presentation/screens/roles_screen.dart';
+import '../../features/roles/presentation/screens/roles_screen.dart';
 
-import '../../features/admin/presentation/screens/permissions_screen.dart';
+import '../../features/permissions/presentation/screens/permissions_screen.dart';
 
 import '../../features/admin/presentation/screens/colleges_screen.dart';
 
 import '../../features/admin/presentation/screens/activity_log_screen.dart';
-
-import '../permissions/pricing_screen.dart' as manager_pricing;
 
 import '../../features/reviewer/presentation/screens/reviewer_college_review_screen.dart';
 import '../../features/reviewer/presentation/screens/reviewer_section_review_screen.dart';
@@ -308,7 +306,7 @@ GoRouter buildRouter(HiveCache cache) {
       ),
       GoRoute(
         path: AppRoutes.pricing,
-        builder: (ctx, _) => const manager_pricing.PricingScreen(),
+        builder: (ctx, _) => const PricingScreen(),
       ),
       GoRoute(
         path: AppRoutes.employees,

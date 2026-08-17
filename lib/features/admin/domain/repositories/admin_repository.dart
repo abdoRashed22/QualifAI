@@ -14,17 +14,6 @@ abstract class AdminRepository {
 
   Future<Either<Failure, void>> deleteEmployee(int id);
 
-  Future<Either<Failure, List<dynamic>>> getRoles();
-
-  Future<Either<Failure, void>> createRole(String name, String description);
-
-  Future<Either<Failure, void>> deleteRole(int id);
-
-  Future<Either<Failure, List<dynamic>>> getPermissions();
-
-  Future<Either<Failure, void>> setRolePermissions(
-      int roleId, List<int> permIds);
-
   Future<Either<Failure, List<dynamic>>> getColleges();
 
   Future<Either<Failure, void>> createCollege(Map<String, dynamic> data);

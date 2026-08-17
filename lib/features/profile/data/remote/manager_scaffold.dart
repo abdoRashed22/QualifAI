@@ -6,7 +6,8 @@ import 'package:qualif_ai/features/profile/data/remote/side_rail_navigation.dart
 import '../../../accreditation/presentation/screens/accreditation_types_screen.dart';
 import '../../../deadlines/presentation/screens/deadlines_screen.dart';
 import '../../../reports/presentation/screens/reports_list_screen.dart';
-import '../../../../core/permissions/pricing_screen.dart' as manager_pricing;
+import '../../../pricing/presentation/screens/pricing_screen.dart'
+    as manager_pricing;
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../chat/presentation/screens/chat_list_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';

@@ -59,54 +59,6 @@ class AdminRepositoryImpl implements AdminRepository {
   }
 
   @override
-  Future<Either<Failure, List<dynamic>>> getRoles() async {
-    try {
-      return _wrap(await _r.getRoles());
-    } catch (e) {
-      return _err(e);
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> createRole(String n, String d) async {
-    try {
-      await _r.createRole(n, d);
-      return const Right(null);
-    } catch (e) {
-      return _err(e);
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> deleteRole(int id) async {
-    try {
-      await _r.deleteRole(id);
-      return const Right(null);
-    } catch (e) {
-      return _err(e);
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<dynamic>>> getPermissions() async {
-    try {
-      return _wrap(await _r.getPermissions());
-    } catch (e) {
-      return _err(e);
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> setRolePermissions(int id, List<int> p) async {
-    try {
-      await _r.setRolePermissions(id, p);
-      return const Right(null);
-    } catch (e) {
-      return _err(e);
-    }
-  }
-
-  @override
   Future<Either<Failure, List<dynamic>>> getColleges() async {
     try {
       return _wrap(await _r.getColleges());

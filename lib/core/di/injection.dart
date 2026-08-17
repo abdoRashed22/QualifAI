@@ -66,6 +66,11 @@ import '../../features/reviewer/repository/reviewer_repository_impl.dart';
 import '../../features/reviewer/domain/repositories/reviewer_repository.dart';
 import '../../features/reviewer/presentation/cubit/reviewer_cubit.dart';
 
+import '../../features/pricing/data/remote/pricing_remote_ds.dart';
+import '../../features/pricing/data/repository/pricing_repository_impl.dart';
+import '../../features/pricing/domain/repositories/pricing_repository.dart';
+import '../../features/pricing/presentation/cubit/pricing_cubit.dart';
+
 final sl = GetIt.instance;
 
 Future<void> setupDI() async {
@@ -209,6 +214,15 @@ Future<void> setupDI() async {
     () => AdminRepositoryImpl(sl<AdminRemoteDs>()),
   );
   sl.registerFactory<AdminCubit>(() => AdminCubit(sl<AdminRepository>()));
+
+  // ── Pricing ──────────────────────────────────────
+  sl.registerLazySingleton<PricingRemoteDs>(
+    () => PricingRemoteDs(sl<Dio>()),
+  );
+  sl.registerLazySingleton<PricingRepository>(
+    () => PricingRepositoryImpl(sl<PricingRemoteDs>()),
+  );
+  sl.registerFactory<PricingCubit>(() => PricingCubit(sl<PricingRepository>()));
 
   // ── Support ───────────────────────────────────────
   sl.registerLazySingleton<SupportRemoteDs>(

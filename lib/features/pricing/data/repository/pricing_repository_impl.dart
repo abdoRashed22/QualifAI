@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
-import 'package:qualif_ai/core/permissions/pricing_remote_ds.dart';
-import 'package:qualif_ai/core/permissions/pricing_repository.dart';
-import '../errors/failures.dart';
+
+import '../../../../core/errors/failures.dart';
+import '../../data/models/pricing_plan_model.dart';
+import '../../data/remote/pricing_remote_ds.dart';
+import '../../domain/repositories/pricing_repository.dart';
 
 class PricingRepositoryImpl implements PricingRepository {
   final PricingRemoteDs remoteDs;
@@ -9,10 +11,12 @@ class PricingRepositoryImpl implements PricingRepository {
   PricingRepositoryImpl(this.remoteDs);
 
   @override
-  Future<Either<Failure, List<dynamic>>> getPlans() async {
+  Future<Either<Failure, List<PricingPlanModel>>> getPlans() async {
     try {
       final result = await remoteDs.getPlans();
-      return Right(result);
+      final plans =
+          result.map((json) => PricingPlanModel.fromJson(json)).toList();
+      return Right(plans);
     } catch (e) {
       if (e is Failure) return Left(e);
       return Left(ServerFailure(e.toString()));
